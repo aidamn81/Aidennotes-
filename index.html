@@ -1,0 +1,50 @@
+import SwiftUI
+
+struct GothicNoteEditor: View {
+    @State private var noteContent: String = ""
+    @State private var noteTitle: String = ""
+    
+    // Custom Vampire Colors
+    let oxblood = Color(red: 0.12, green: 0.02, blue: 0.02)
+    let parchment = Color(red: 0.96, green: 0.90, blue: 0.83)
+    let crimson = Color(red: 0.55, green: 0.0, blue: 0.0)
+
+    var body: some View {
+        ZStack {
+            oxblood.ignoresSafeArea() // The deep dark background
+            
+            VStack(alignment: .leading, spacing: 15) {
+                // Header
+                TextField("Note Title...", text: $noteTitle)
+                    .font(.custom("Cinzel-Bold", size: 28)) // Use a Serif font
+                    .foregroundColor(crimson)
+                    .padding(.horizontal)
+
+                Divider()
+                    .background(crimson.opacity(0.5))
+
+                // The Writing Area
+                TextEditor(text: $noteContent)
+                    .font(.custom("PlayfairDisplay-Regular", size: 18))
+                    .scrollContentBackground(.hidden) // Makes background transparent
+                    .background(Color.black.opacity(0.3))
+                    .foregroundColor(parchment)
+                    .cornerRadius(12)
+                    .padding()
+                
+                Spacer()
+                
+                // Quick Sync Indicator
+                HStack {
+                    Image(systemName: "vial.fill") // A thematic icon
+                        .foregroundColor(crimson)
+                    Text("Saved to Grimoire")
+                        .font(.caption)
+                        .italic()
+                        .foregroundColor(.gray)
+                }
+                .padding()
+            }
+        }
+    }
+}
