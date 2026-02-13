@@ -28,17 +28,17 @@
 
         #note-body { min-height: 50vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         
-        /* --- RESIZABLE CONTAINERS (Image & Table) --- */
+        /* --- RELIC CONTAINERS --- */
         .relic-container { 
-            display: block; position: relative; margin: 15px 0; 
+            display: block; position: relative; margin: 20px 0; 
             border: 2px solid var(--crimson); width: fit-content; 
-            min-width: 100px; touch-action: none;
+            min-width: 100px; touch-action: none; cursor: move;
         }
         .relic-container img { display: block; max-width: 100%; height: auto; pointer-events: none; }
         
         /* Table Styling */
-        .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.5); color: var(--parchment); }
-        .relic-table td { border: 1px solid var(--crimson); padding: 8px; min-width: 40px; }
+        .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); color: var(--parchment); table-layout: fixed; }
+        .relic-table td { border: 1px solid var(--crimson); padding: 10px; min-width: 50px; word-wrap: break-word; }
 
         .resize-handle { 
             position: absolute; bottom: -5px; right: -5px; width: 25px; height: 25px; 
@@ -69,7 +69,7 @@
 
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div id="folder-modal">
-    <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">Vault Folders</h3>
+    <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">Archive Folder</h3>
     <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📜 New Folder</button>
     <div id="existing-folders-list"></div>
     <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">Cancel</button>
@@ -86,14 +86,14 @@
 
     <main id="main-editor">
         <div class="scroll-content">
-            <input type="text" id="note-title" placeholder="Untitled Chronicle...">
+            <input type="text" id="note-title" placeholder="Chronicle Title...">
             <div class="sub-title-toolbar">
                 <button class="tool-btn" onclick="doFormat('bold')">B</button>
                 <button class="tool-btn" onclick="doFormat('italic')">I</button>
                 <button class="tool-btn" onclick="doFormat('underline')">U</button>
                 <input type="color" class="color-picker" onchange="doFormat('foreColor', this.value)">
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷 IMG</button>
-                <button class="tool-btn" onclick="insertTable()">📊 TABLE</button>
+                <button class="tool-btn" onclick="customTable()">📊 TABLE</button>
                 <button class="tool-btn" style="background:var(--crimson); color:white;" onclick="saveQuick()">QUICK SAVE</button>
                 <button class="tool-btn" onclick="openFolders()">FOLDER</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
@@ -138,17 +138,14 @@
     });
 
     window.handleLogin = () => {
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
-        auth.signInWithEmailAndPassword(email, pass).catch(err => {
-            document.getElementById('login-error').innerText = err.message;
-        });
+        const e = document.getElementById('login-email').value;
+        const p = document.getElementById('login-pass').value;
+        auth.signInWithEmailAndPassword(e, p).catch(err => document.getElementById('login-error').innerText = err.message);
     };
 
     window.handleLogout = () => auth.signOut();
     window.doFormat = (cmd, val = null) => document.execCommand(cmd, false, val);
 
-    // IMAGE UPLOAD
     window.insertImg = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -157,15 +154,14 @@
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                let width = img.width; let height = img.height;
-                const MAX_SIZE = 1000;
-                if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
-                canvas.width = width; canvas.height = height;
+                let w = img.width; let h = img.height;
+                const MAX = 1000;
+                if (w > MAX) { h *= MAX / w; w = MAX; }
+                canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                const compressedData = canvas.toDataURL('image/jpeg', 0.7);
-                
-                const html = `<div class="relic-container" style="width:250px;"><img src="${compressedData}"><div class="resize-handle"></div></div><p><br></p>`;
+                ctx.drawImage(img, 0, 0, w, h);
+                const data = canvas.toDataURL('image/jpeg', 0.7);
+                const html = `<div class="relic-container" style="width:250px;"><img src="${data}"><div class="resize-handle"></div></div><p><br></p>`;
                 insertAtCursor(html);
             };
             img.src = ev.target.result;
@@ -173,17 +169,22 @@
         reader.readAsDataURL(file);
     };
 
-    // TABLE INSERT
-    window.insertTable = () => {
-        const html = `
-            <div class="relic-container" style="width:300px;">
-                <table class="relic-table">
-                    <tr><td>Cell</td><td>Cell</td></tr>
-                    <tr><td>Cell</td><td>Cell</td></tr>
-                </table>
-                <div class="resize-handle"></div>
-            </div><p><br></p>`;
-        insertAtCursor(html);
+    // --- CUSTOM TABLE PROMPT ---
+    window.customTable = () => {
+        const rows = prompt("How many Rows?", "2");
+        const cols = prompt("How many Columns?", "2");
+        if(!rows || !cols) return;
+
+        let tableHtml = `<table class="relic-table">`;
+        for(let i=0; i<rows; i++) {
+            tableHtml += `<tr>`;
+            for(let j=0; j<cols; j++) { tableHtml += `<td>Cell</td>`; }
+            tableHtml += `</tr>`;
+        }
+        tableHtml += `</table>`;
+
+        const finalHtml = `<div class="relic-container" style="width:90%;">${tableHtml}<div class="resize-handle"></div></div><p><br></p>`;
+        insertAtCursor(finalHtml);
     };
 
     function insertAtCursor(html) {
@@ -198,11 +199,11 @@
         containers.forEach(container => {
             if (container.dataset.ready === "true") return;
             container.dataset.ready = "true";
-
             const handle = container.querySelector('.resize-handle');
 
-            // Drag/Move
+            // Drag/Move Logic
             container.addEventListener('touchstart', (e) => {
+                // Only drag if touching container border or table padding, NOT typing in a cell
                 if (e.target === handle || e.target.tagName === 'TD') return;
                 const t = e.touches[0];
                 let oX = t.clientX - container.offsetLeft;
@@ -219,7 +220,7 @@
                 window.addEventListener('touchend', stop);
             });
 
-            // Resize
+            // Resize Logic
             handle.addEventListener('touchstart', (e) => {
                 e.stopPropagation(); e.preventDefault();
                 const t = e.touches[0];
@@ -243,7 +244,7 @@
         const title = document.getElementById('note-title').value || "Untitled";
         const body = document.getElementById('note-body').innerHTML;
         const data = { title, body, folder: fName, timestamp: Date.now() };
-        if (currentEditingId) db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Note Updated."));
+        if (currentEditingId) db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Parchment Sealed."));
         else notesRef.push(data).then(()=>location.reload());
     }
 
@@ -286,12 +287,11 @@
             currentEditingId = id; currentFolderName = n.folder;
             document.getElementById('note-title').value = n.title;
             document.getElementById('note-body').innerHTML = n.body;
-            // Scan for containers after HTML is loaded
             setTimeout(initRelicEngine, 500);
         });
     };
 
-    window.deleteNote = (id, title) => { if (confirm(`Delete "${title}"?`)) db.ref('notes/'+id).remove(); };
+    window.deleteNote = (id, title) => { if (confirm(`Burn "${title}"?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
 
     function renderModalFolders() {
