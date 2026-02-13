@@ -92,12 +92,13 @@
                 <button class="tool-btn" onclick="doFormat('justifyCenter')">|=|</button>
                 <button class="tool-btn" onclick="doFormat('justifyRight')">⫸</button>
                 <button class="tool-btn" onclick="addWebLink()">🔗 LINK</button>
-                
                 <input type="color" onchange="doFormat('foreColor', this.value)" style="width:20px; height:20px; border:none; background:none;">
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷 IMG</button>
                 <button class="tool-btn" onclick="customTable()">📊 TAB</button>
                 <button class="tool-btn" style="background:var(--crimson);" onclick="saveQuick()">SAVE</button>
                 <button class="tool-btn" onclick="openFolders()">DIR</button>
+                <button class="tool-btn" onclick="doFormat('undo')">↶</button>
+                <button class="tool-btn" onclick="doFormat('redo')">↷</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
             <div id="note-body" contenteditable="true"></div>
@@ -162,9 +163,15 @@
     // --- CORE TOOLS ---
     window.doFormat = (c, v=null) => document.execCommand(c, false, v);
     
+    // UPDATED LINK LOGIC
     window.addWebLink = () => {
-        const url = prompt("Enter URL (include http://):");
-        if (url) doFormat('createLink', url);
+        const url = prompt("Enter URL (include http://):", "https://");
+        if (!url) return;
+        const displayName = prompt("Enter the display name for this link:", "Click here");
+        if (displayName) {
+            const linkHTML = `<a href="${url}" target="_blank">${displayName}</a>`;
+            document.execCommand('insertHTML', false, linkHTML);
+        }
     };
 
     window.insertImg = (e) => {
@@ -240,8 +247,8 @@
                     const fId = f.replace(/\s+/g, '-');
                     const noteHtml = notes.filter(n => n.folder === f).map(n => `
                         <div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
-                            <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
-                            <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
+                            <span onclick="loadNote('${n.id}')">📜 ${data[n.id].title}</span>
+                            <span onclick="deleteNote('${n.id}', '${data[n.id].title}')">🗑️</span>
                         </div>
                     `).join('');
                     side.innerHTML += `<div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1)">📁 ${f}</div><div id="${fId}" class="folder-content">${noteHtml}</div>`;
