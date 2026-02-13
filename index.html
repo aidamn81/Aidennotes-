@@ -1,50 +1,142 @@
-import SwiftUI
-
-struct GothicNoteEditor: View {
-    @State private var noteContent: String = ""
-    @State private var noteTitle: String = ""
-    
-    // Custom Vampire Colors
-    let oxblood = Color(red: 0.12, green: 0.02, blue: 0.02)
-    let parchment = Color(red: 0.96, green: 0.90, blue: 0.83)
-    let crimson = Color(red: 0.55, green: 0.0, blue: 0.0)
-
-    var body: some View {
-        ZStack {
-            oxblood.ignoresSafeArea() // The deep dark background
-            
-            VStack(alignment: .leading, spacing: 15) {
-                // Header
-                TextField("Note Title...", text: $noteTitle)
-                    .font(.custom("Cinzel-Bold", size: 28)) // Use a Serif font
-                    .foregroundColor(crimson)
-                    .padding(.horizontal)
-
-                Divider()
-                    .background(crimson.opacity(0.5))
-
-                // The Writing Area
-                TextEditor(text: $noteContent)
-                    .font(.custom("PlayfairDisplay-Regular", size: 18))
-                    .scrollContentBackground(.hidden) // Makes background transparent
-                    .background(Color.black.opacity(0.3))
-                    .foregroundColor(parchment)
-                    .cornerRadius(12)
-                    .padding()
-                
-                Spacer()
-                
-                // Quick Sync Indicator
-                HStack {
-                    Image(systemName: "vial.fill") // A thematic icon
-                        .foregroundColor(crimson)
-                    Text("Saved to Grimoire")
-                        .font(.caption)
-                        .italic()
-                        .foregroundColor(.gray)
-                }
-                .padding()
-            }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grimoire | Nocturnal Notes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --oxblood: #1a0505;
+            --crimson: #8b0000;
+            --parchment: #f5e6d3;
+            --ink: #0a0a0a;
+            --silver: #a9a9a9;
         }
-    }
-}
+
+        body {
+            background-color: var(--ink);
+            color: var(--parchment);
+            font-family: 'Playfair Display', serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar / Categories */
+        #sidebar {
+            width: 250px;
+            background-color: var(--oxblood);
+            border-right: 1px solid var(--crimson);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--crimson);
+            font-size: 1.5rem;
+            text-align: center;
+            border-bottom: 2px solid var(--crimson);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .category-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .category-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(139, 0, 0, 0.2);
+            transition: 0.3s;
+        }
+
+        .category-item:hover {
+            background: rgba(139, 0, 0, 0.3);
+            color: white;
+        }
+
+        /* Main Editor Area */
+        #editor-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: radial-gradient(circle, #1a0505 0%, #0a0a0a 100%);
+            padding: 40px;
+        }
+
+        #note-title {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--crimson);
+            color: var(--crimson);
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            outline: none;
+            margin-bottom: 20px;
+        }
+
+        #note-body {
+            background: transparent;
+            border: none;
+            color: var(--parchment);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            height: 100%;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            font-size: 0.8rem;
+            color: var(--silver);
+            font-style: italic;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .sync-orb {
+            width: 10px;
+            height: 10px;
+            background-color: var(--crimson);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--crimson);
+        }
+    </style>
+</head>
+<body>
+
+    <section id="sidebar">
+        <h1>Grimoire</h1>
+        <ul class="category-list">
+            <li class="category-item">📜 Recent Notes</li>
+            <li class="category-item">🧛 Bloodlines</li>
+            <li class="category-item">🌑 Rituals</li>
+            <li class="category-item">🏰 Architecture</li>
+        </ul>
+    </section>
+
+    <main id="editor-container">
+        <input type="text" id="note-title" placeholder="Untitled Chronicle...">
+        <textarea id="note-body" placeholder="Begin your writing, eternal one..."></textarea>
+        
+        <div class="status-bar">
+            <span>Linked via Remote+</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>Synced to the shadows</span>
+                <div class="sync-orb"></div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
