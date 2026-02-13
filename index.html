@@ -12,12 +12,11 @@
         
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         
-        /* --- SIDEBAR --- */
+        /* SIDEBAR */
         #sidebar { width: 220px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; gap: 5px; }
         .sidebar-item:hover { background: var(--crimson); }
-        .side-actions { display: flex; gap: 8px; opacity: 0.6; }
-        .side-actions span:hover { color: white; transform: scale(1.2); }
+        .side-actions { display: flex; gap: 8px; opacity: 0.8; }
         .folder-content { padding-left: 8px; background: rgba(0,0,0,0.3); display: none; }
 
         @media (max-width: 600px) {
@@ -26,26 +25,27 @@
             .sidebar-item { display: inline-flex; width: auto; min-width: 48%; margin: 1%; }
         }
 
-        /* --- EDITOR --- */
+        /* EDITOR */
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
-        .sub-title-toolbar { display: flex; gap: 5px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; }
-        .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 7px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; }
+        .sub-title-toolbar { display: flex; gap: 5px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; }
+        .tool-btn, .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 7px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; }
 
         #note-body { min-height: 50vh; color: var(--parchment); font-size: 1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         
-        /* --- RELIC OBJECTS --- */
-        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); width: fit-content; min-width: 100px; touch-action: none; background: rgba(0,0,0,0.2); }
-        .relic-container img { display: block; max-width: 100%; height: auto; pointer-events: none; }
-        .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); color: var(--parchment); table-layout: fixed; }
-        .relic-table td { border: 1px solid var(--crimson); padding: 10px; min-width: 40px; outline: none; }
+        /* RELIC OBJECTS (Move & Resize Fix) */
+        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.4); width: 250px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.1); }
+        .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }
+        .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); color: var(--parchment); table-layout: fixed; }
+        .relic-table td { border: 1px solid var(--crimson); padding: 8px; min-width: 30px; outline: none; }
 
-        .table-menu { position: absolute; top: -32px; left: -1px; display: flex; gap: 4px; background: var(--crimson); padding: 4px; border-radius: 4px 4px 0 0; z-index: 110; }
-        .menu-btn { background: var(--oxblood); border: none; color: white; font-size: 9px; padding: 4px 6px; cursor: pointer; font-family: 'Cinzel'; border-radius: 2px; }
+        .table-menu { position: absolute; top: -35px; left: -1px; display: flex; gap: 3px; background: var(--crimson); padding: 4px; border-radius: 4px 4px 0 0; z-index: 110; }
+        .menu-btn { background: var(--oxblood); border: none; color: white; font-size: 8px; padding: 4px; cursor: pointer; font-family: 'Cinzel'; border-radius: 2px; }
 
+        /* 2D Resize Handle */
         .resize-handle { position: absolute; bottom: -5px; right: -5px; width: 44px; height: 44px; background: transparent; cursor: nwse-resize; z-index: 120; }
-        .resize-handle::after { content: '⌟'; position: absolute; bottom: 8px; right: 8px; color: var(--crimson); font-size: 20px; font-weight: bold; }
+        .resize-handle::after { content: '⌟'; position: absolute; bottom: 8px; right: 8px; color: var(--crimson); font-size: 22px; font-weight: bold; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     </style>
@@ -77,6 +77,11 @@
                 <button class="tool-btn" onclick="doFormat('bold')">B</button>
                 <button class="tool-btn" onclick="doFormat('italic')">I</button>
                 <button class="tool-btn" onclick="doFormat('underline')">U</button>
+                <select class="tool-select" onchange="doFormat('fontSize', this.value)">
+                    <option value="3">Size</option><option value="1">Small</option>
+                    <option value="3">Normal</option><option value="5">Large</option>
+                    <option value="7">Huge</option>
+                </select>
                 <input type="color" onchange="doFormat('foreColor', this.value)" style="width:20px; height:20px; border:none; background:none; cursor:pointer;">
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷 IMG</button>
                 <button class="tool-btn" onclick="customTable()">📊 TAB</button>
@@ -107,26 +112,28 @@
     const auth = firebase.auth();
     let currentEditingId = null;
 
-    // --- AGGRESSIVE RELIC ENGINE ---
-    // This function clears old listeners and forces new ones onto saved elements
+    // --- ENHANCED RELIC ENGINE (MOVE & 2D RESIZE) ---
     function wakeRelics() {
-        const containers = document.querySelectorAll('.relic-container');
-        containers.forEach(container => {
-            // Force reset the "brain" of the object
-            const oldHandle = container.querySelector('.resize-handle');
-            if (oldHandle) oldHandle.remove();
+        document.querySelectorAll('.relic-container').forEach(container => {
+            if (container.dataset.active === "true") return; 
+            container.dataset.active = "true";
 
-            const handle = document.createElement('div');
-            handle.className = 'resize-handle';
-            container.appendChild(handle);
+            let handle = container.querySelector('.resize-handle');
+            if (!handle) {
+                handle = document.createElement('div');
+                handle.className = 'resize-handle';
+                container.appendChild(handle);
+            }
 
-            // Dragging Logic
+            // Body Drag (Move)
             container.ontouchstart = (e) => {
                 if (e.target.tagName === 'TD' || e.target === handle || e.target.closest('.table-menu')) return;
                 const t = e.touches[0];
                 let oX = t.clientX - container.offsetLeft;
                 let oY = t.clientY - container.offsetTop;
+                
                 const move = (me) => {
+                    me.preventDefault();
                     const mt = me.touches[0];
                     container.style.position = 'relative';
                     container.style.left = (mt.clientX - oX) + 'px';
@@ -136,15 +143,19 @@
                 window.ontouchmove = move;
             };
 
-            // Resizing Logic
+            // Corner Drag (2D Resize: Width & Height)
             handle.ontouchstart = (e) => {
                 e.preventDefault(); e.stopPropagation();
                 const t = e.touches[0];
-                const sX = t.clientX; const sW = container.offsetWidth;
+                const sX = t.clientX; const sY = t.clientY;
+                const sW = container.offsetWidth; const sH = container.offsetHeight;
+
                 const resize = (re) => {
                     const rt = re.touches[0];
                     const nW = sW + (rt.clientX - sX);
-                    if (nW > 60) container.style.width = nW + 'px';
+                    const nH = sH + (rt.clientY - sY);
+                    if (nW > 50) container.style.width = nW + 'px';
+                    if (nH > 30) container.style.height = nH + 'px';
                 };
                 window.ontouchend = () => window.ontouchmove = null;
                 window.ontouchmove = resize;
@@ -152,19 +163,17 @@
         });
     }
 
-    // Run wakeRelics every 1.5 seconds to ensure newly loaded content is always active
-    setInterval(wakeRelics, 1500);
+    setInterval(wakeRelics, 1000);
 
-    // --- CORE FEATURES ---
+    // --- FEATURES ---
     window.doFormat = (c, v=null) => { document.execCommand(c, false, v); wakeRelics(); };
     
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const html = `<div class="relic-container" style="width:200px;"><img src="${ev.target.result}"><div class="resize-handle"></div></div><p><br></p>`;
+            const html = `<div class="relic-container" style="width:200px; height:auto;"><img src="${ev.target.result}"><div class="resize-handle"></div></div><p><br></p>`;
             document.getElementById('note-body').focus();
             document.execCommand('insertHTML', false, html);
-            wakeRelics();
         };
         reader.readAsDataURL(e.target.files[0]);
     };
@@ -175,16 +184,17 @@
         let t = `<table class="relic-table">`;
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
         t += `</table>`;
-        const html = `<div class="relic-container" style="width:250px;"><div class="table-menu"><button class="menu-btn" onclick="modifyTable(this, 'row')">+R</button><button class="menu-btn" onclick="modifyTable(this, 'col')">+C</button><button class="menu-btn" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle"></div></div><p><br></p>`;
+        const html = `<div class="relic-container" style="width:250px; height:100px;"><div class="table-menu"><button class="menu-btn" onclick="modifyTable(this, 'row')">+R</button><button class="menu-btn" onclick="modifyTable(this, 'del-row')">-R</button><button class="menu-btn" onclick="modifyTable(this, 'col')">+C</button><button class="menu-btn" onclick="modifyTable(this, 'del-col')">-C</button><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle"></div></div><p><br></p>`;
         document.getElementById('note-body').focus();
         document.execCommand('insertHTML', false, html);
-        wakeRelics();
     };
 
     window.modifyTable = (btn, action) => {
         const table = btn.closest('.relic-container').querySelector('table');
         if (action === 'row') { const r = table.insertRow(); for(let i=0; i<table.rows[0].cells.length; i++) r.insertCell().contentEditable = "true"; }
         else if (action === 'col') { for(let i=0; i<table.rows.length; i++) table.rows[i].insertCell().contentEditable = "true"; }
+        else if (action === 'del-row' && table.rows.length > 1) { table.deleteRow(-1); }
+        else if (action === 'del-col' && table.rows[0].cells.length > 1) { for(let i=0; i<table.rows.length; i++) table.rows[i].deleteCell(-1); }
     };
 
     window.saveQuick = () => {
@@ -195,7 +205,6 @@
 
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; };
 
-    // --- SIDEBAR EDIT/DELETE RESTORED ---
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const div = document.getElementById('current-notes-folder');
