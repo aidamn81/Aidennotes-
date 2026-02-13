@@ -2,156 +2,161 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grimoire | Nocturnal Notes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>AidenNotes | Gothic Grimoire</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3;
-            --ink: #0a0a0a; --silver: #a9a9a9;
-        }
-
-        body {
-            background-color: var(--ink); color: var(--parchment);
-            font-family: 'Playfair Display', serif; margin: 0;
-            display: flex; height: 100vh; overflow: hidden;
-        }
-
-        /* Sidebar & Recent Notes */
-        #sidebar {
-            width: 280px; background-color: var(--oxblood);
-            border-right: 1px solid var(--crimson); padding: 20px;
-            display: flex; flex-direction: column;
-        }
-
-        h1 { font-family: 'Cinzel', serif; color: var(--crimson); text-align: center; border-bottom: 2px solid var(--crimson); padding-bottom: 10px; }
-
-        .recent-list { list-style: none; padding: 0; overflow-y: auto; flex-grow: 1; }
-        .note-thumb { 
-            padding: 10px; border-bottom: 1px solid rgba(139, 0, 0, 0.3); 
-            cursor: pointer; font-size: 0.9rem; transition: 0.3s;
-        }
-        .note-thumb:hover { background: rgba(139, 0, 0, 0.2); }
-
-        /* Toolbar */
-        .toolbar {
-            display: flex; gap: 15px; background: rgba(0,0,0,0.5);
-            padding: 10px; border-bottom: 1px solid var(--crimson);
-        }
-        .tool-btn { 
-            background: none; border: 1px solid var(--crimson); 
-            color: var(--parchment); cursor: pointer; font-family: 'Cinzel';
-            padding: 5px 10px; font-size: 0.8rem;
-        }
-        .tool-btn:hover { background: var(--crimson); color: white; }
-
-        /* Editor Area */
-        #editor-container { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle, #1a0505 0%, #0a0a0a 100%); }
+        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
+        html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; }
+        .app-container { display: flex; height: 100vh; width: 100vw; }
         
-        #note-title {
-            background: transparent; border: none; border-bottom: 1px solid var(--crimson);
-            color: var(--crimson); font-family: 'Cinzel', serif; font-size: 2rem;
-            outline: none; margin: 20px 40px;
-        }
+        /* Sidebar */
+        #sidebar { width: 260px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid var(--crimson); }
+        .category-folder { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.2); font-family: 'Cinzel'; font-size: 0.8rem; transition: 0.3s; }
+        .category-folder:hover, .active-cat { background: var(--crimson); color: white; }
+        #recent-list { overflow-y: auto; flex-grow: 1; }
 
-        #note-body {
-            flex-grow: 1; margin: 0 40px; padding: 20px;
-            color: var(--parchment); font-size: 1.2rem; line-height: 1.6;
-            outline: none; overflow-y: auto;
-        }
+        /* Main Editor */
+        #main-editor { flex-grow: 1; display: flex; flex-direction: column; height: 100%; position: relative; background: radial-gradient(circle, #1a0505 0%, #0a0a0a 100%); }
+        .toolbar { position: sticky; top: 0; z-index: 10; background: rgba(10,10,10,0.9); display: flex; gap: 10px; padding: 10px 20px; border-bottom: 1px solid var(--crimson); flex-wrap: wrap; align-items: center; }
+        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 30px; -webkit-overflow-scrolling: touch; }
+        #note-title { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--crimson); color: var(--crimson); font-family: 'Cinzel'; font-size: 1.8rem; outline: none; margin-bottom: 20px; }
+        #note-body { min-height: 400px; color: var(--parchment); font-size: 1.2rem; line-height: 1.6; outline: none; }
+        #note-body img { max-width: 250px; border: 1px solid var(--crimson); margin: 15px; display: block; box-shadow: 0 0 10px var(--crimson); }
 
-        /* Image Thumbnails in Note */
-        #note-body img {
-            max-width: 200px; border: 2px solid var(--crimson);
-            margin: 10px; box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
-        }
-
-        .save-btn {
-            background: var(--crimson); color: white; border: none;
-            font-family: 'Cinzel'; padding: 10px; cursor: pointer;
-            margin-top: 10px; box-shadow: 0 0 10px var(--crimson);
-        }
+        /* Buttons & Controls */
+        .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px 12px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; }
+        .tool-btn:hover { background: var(--crimson); }
+        .editor-footer { padding: 15px 20px; border-top: 1px solid var(--crimson); background: var(--oxblood); display: flex; justify-content: space-between; align-items: center; }
+        
+        @media (max-width: 600px) { #sidebar { width: 100px; } .sidebar-header h1 { font-size: 0.7rem; } .category-folder { font-size: 0.6rem; padding: 10px; } }
     </style>
 </head>
 <body>
 
+<div class="app-container">
     <section id="sidebar">
-        <h1>Grimoire</h1>
-        <button class="save-btn" onclick="saveNote()">+ Create New Entry</button>
-        <h3 style="font-family: 'Cinzel'; font-size: 0.8rem; margin-top: 20px; color: var(--silver);">Recent Chronicles</h3>
-        <div id="recent-list" class="recent-list"></div>
+        <div class="sidebar-header"><h1 style="font-family:'Cinzel'; color:var(--crimson); margin:0;">AidenNotes</h1></div>
+        <div class="category-folder active-cat" onclick="setFilter('All')">🌑 All Scrolls</div>
+        <div class="category-folder" onclick="setFilter('Bloodlines')">🧛 Bloodlines</div>
+        <div class="category-folder" onclick="setFilter('Rituals')">🕯️ Rituals</div>
+        <div class="category-folder" onclick="setFilter('Lore')">📜 Lore</div>
+        <div id="recent-list"></div>
     </section>
 
-    <main id="editor-container">
+    <main id="main-editor">
         <div class="toolbar">
-            <button class="tool-btn" onclick="format('bold')">B</button>
-            <button class="tool-btn" onclick="format('italic')">I</button>
-            <button class="tool-btn" onclick="document.getElementById('imgInput').click()">Add Relic (Image)</button>
+            <button class="tool-btn" onclick="execCmd('bold')">B</button>
+            <button class="tool-btn" onclick="execCmd('italic')">I</button>
+            <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷 Relic</button>
+            <select id="catSelect" class="tool-btn">
+                <option value="Bloodlines">Bloodlines</option>
+                <option value="Rituals">Rituals</option>
+                <option value="Lore">Lore</option>
+            </select>
             <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImage(event)">
         </div>
 
-        <input type="text" id="note-title" placeholder="Untitled Chronicle...">
-        <div id="note-body" contenteditable="true" placeholder="Begin your writing..."></div>
+        <div class="scroll-content">
+            <input type="text" id="note-title" placeholder="Title of the Chronicle...">
+            <div id="note-body" contenteditable="true" placeholder="Etch your thoughts here..."></div>
+        </div>
+
+        <div class="editor-footer">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div id="sync-orb" style="width:8px; height:8px; background:var(--crimson); border-radius:50%; box-shadow: 0 0 5px var(--crimson);"></div>
+                <span style="font-size:0.7rem; color:var(--silver);">Eternal Sync Active</span>
+            </div>
+            <button class="tool-btn" style="background:var(--crimson); color:white; padding: 8px 20px;" onclick="saveToFirebase()">Seal Note</button>
+        </div>
     </main>
+</div>
 
-    <script>
-        // Formatting function
-        function format(cmd) {
-            document.execCommand(cmd, false, null);
-        }
+<script type="module">
+    // --- FIREBASE INTEGRATION ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Image handling
-        function insertImage(event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = `<img src="${e.target.result}" class="note-img" />`;
-                document.execCommand('insertHTML', false, img);
-            }
-            reader.readAsDataURL(file);
-        }
+    const firebaseConfig = {
+        apiKey: "AIzaSyCfLzNKz2vtqbCPFbatVYVzKryUoc9CI3w",
+        authDomain: "aidennotes.firebaseapp.com",
+        databaseURL: "https://aidennotes-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "aidennotes",
+        storageBucket: "aidennotes.firebasestorage.app",
+        messagingSenderId: "375700296601",
+        appId: "1:375700296601:web:890c92b813038d4cf0b908"
+    };
 
-        // Save to LocalStorage (Syncs via Browser/Account)
-        function saveNote() {
-            const title = document.getElementById('note-title').value || "Untitled";
-            const body = document.getElementById('note-body').innerHTML;
-            const timestamp = new Date().toLocaleString();
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const notesRef = ref(db, 'notes');
 
-            if (!body) return;
+    // --- APP LOGIC ---
+    window.execCmd = (cmd) => document.execCommand(cmd, false, null);
 
-            const note = { title, body, timestamp };
-            let notes = JSON.parse(localStorage.getItem('gothic_notes') || '[]');
-            notes.unshift(note);
-            localStorage.setItem('gothic_notes', JSON.stringify(notes));
-            
-            renderRecent();
-            clearEditor();
-        }
+    window.insertImage = (event) => {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = `<img src="${e.target.result}" />`;
+            document.execCommand('insertHTML', false, img);
+        };
+        reader.readAsDataURL(file);
+    };
 
-        function renderRecent() {
-            const list = document.getElementById('recent-list');
-            const notes = JSON.parse(localStorage.getItem('gothic_notes') || '[]');
-            list.innerHTML = notes.map((n, i) => `
-                <div class="note-thumb" onclick="loadNote(${i})">
-                    <strong>${n.title}</strong><br>
-                    <small style="color:var(--silver)">${n.timestamp}</small>
-                </div>
-            `).join('');
-        }
+    window.saveToFirebase = () => {
+        const title = document.getElementById('note-title').value || "Untitled";
+        const body = document.getElementById('note-body').innerHTML;
+        const category = document.getElementById('catSelect').value;
 
-        function loadNote(index) {
-            const notes = JSON.parse(localStorage.getItem('gothic_notes') || '[]');
-            const note = notes[index];
-            document.getElementById('note-title').value = note.title;
-            document.getElementById('note-body').innerHTML = note.body;
-        }
+        if (!body || body === "<br>") return;
 
-        function clearEditor() {
+        push(notesRef, {
+            title, body, category,
+            timestamp: Date.now()
+        }).then(() => {
             document.getElementById('note-title').value = "";
             document.getElementById('note-body').innerHTML = "";
-        }
+            alert("Note sealed in the cloud.");
+        });
+    };
 
-        window.onload = renderRecent;
-    </script>
+    // --- SYNC & RENDER ---
+    let currentFilter = 'All';
+    onValue(notesRef, (snapshot) => {
+        const data = snapshot.val();
+        const list = document.getElementById('recent-list');
+        list.innerHTML = "";
+        
+        if (data) {
+            const notesArray = Object.keys(data).map(key => ({ id: key, ...data[key] })).reverse();
+            const filtered = currentFilter === 'All' ? notesArray : notesArray.filter(n => n.category === currentFilter);
+
+            filtered.forEach(note => {
+                const item = document.createElement('div');
+                item.className = 'category-folder';
+                item.style.fontSize = '0.7rem';
+                item.innerHTML = `<strong>${note.title}</strong><br><span style="color:var(--silver)">${note.category}</span>`;
+                item.onclick = () => {
+                    document.getElementById('note-title').value = note.title;
+                    document.getElementById('note-body').innerHTML = note.body;
+                    document.getElementById('catSelect').value = note.category;
+                };
+                list.appendChild(item);
+            });
+        }
+    });
+
+    window.setFilter = (cat) => {
+        currentFilter = cat;
+        // Visual toggle
+        document.querySelectorAll('.category-folder').forEach(el => el.classList.remove('active-cat'));
+        event.target.classList.add('active-cat');
+        // Refresh view
+        location.reload(); // Simplest way to re-trigger the onValue listener with new filter
+    };
+</script>
+
 </body>
 </html>
