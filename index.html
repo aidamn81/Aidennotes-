@@ -32,8 +32,7 @@
         .tool-btn, .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 7px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; user-select: none; }
 
         #note-body { min-height: 60vh; color: var(--parchment); font-size: 1rem; outline: none; line-height: 1.6; padding-bottom: 400px; }
-        /* Link styling and interaction */
-        #note-body a { color: var(--crimson); text-decoration: underline; cursor: pointer !important; }
+        #note-body a { color: var(--crimson); text-decoration: underline; pointer-events: auto !important; }
         
         /* RELIC OBJECTS */
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 50px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); }
@@ -127,21 +126,32 @@
     let currentEditingId = null;
     let currentFolderName = "Current Notes";
 
+    // --- REINFORCED COMMANDS ---
     function exec(cmd, val = null) {
         document.getElementById('note-body').focus();
         document.execCommand(cmd, false, val);
     }
 
-    // UPDATED: Link insertion ensures target="_blank" and protocol
+    // FIXED LINK LOGIC: Standard link structure with global tap listener
     window.addWebLink = () => {
         let url = prompt("Enter URL:", "https://");
         if (!url || url === "https://") return;
         const displayName = prompt("Link Display Name:", "Click here");
         if (displayName) {
-            const html = `<a href="${url}" target="_blank" rel="noopener noreferrer" onclick="window.open('${url}', '_blank'); return false;">${displayName}</a>`;
+            const html = `<a href="${url}" target="_blank" rel="noopener noreferrer">${displayName}</a>`;
             exec('insertHTML', html);
         }
     };
+
+    // --- GLOBAL LINK INTERCEPTOR FOR IOS ---
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#note-body a');
+        if (link) {
+            // Force open the link even if browser is suppressing it due to contenteditable
+            window.open(link.href, '_blank');
+            e.preventDefault();
+        }
+    }, true);
 
     // --- UNIVERSAL RELIC ENGINE ---
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
