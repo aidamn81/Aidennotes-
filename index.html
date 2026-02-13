@@ -10,19 +10,16 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; }
         
-        /* Login Screen */
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
         .login-box { background: var(--oxblood); border: 2px solid var(--crimson); padding: 30px; width: 100%; max-width: 350px; text-align: center; }
         .login-input { width: 100%; background: #000; border: 1px solid var(--crimson); color: white; padding: 12px; margin: 10px 0; font-family: 'Cinzel'; outline: none; }
 
-        /* Main Structure */
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         #sidebar { width: 260px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
         .sidebar-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.2); font-family: 'Cinzel'; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: var(--crimson); }
         .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: none; }
 
-        /* Editor */
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.8rem; outline: none; margin-bottom: 10px; }
@@ -31,18 +28,18 @@
 
         #note-body { min-height: 50vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         
-        /* --- STRICT IMAGE CONTAINER --- */
-        .img-container { 
-            display: block; position: relative; margin: 10px 0; 
-            border: 2px solid var(--crimson); 
-            width: fit-content; height: fit-content;
-            cursor: move; /* Shows user it can be moved */
-            touch-action: none; /* Critical for custom drag logic */
+        /* --- RESIZABLE CONTAINERS (Image & Table) --- */
+        .relic-container { 
+            display: block; position: relative; margin: 15px 0; 
+            border: 2px solid var(--crimson); width: fit-content; 
+            min-width: 100px; touch-action: none;
         }
-        .img-container img { 
-            display: block; max-width: 100%; height: auto; 
-            pointer-events: none; /* Allows the container to catch the touch */
-        }
+        .relic-container img { display: block; max-width: 100%; height: auto; pointer-events: none; }
+        
+        /* Table Styling */
+        .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.5); color: var(--parchment); }
+        .relic-table td { border: 1px solid var(--crimson); padding: 8px; min-width: 40px; }
+
         .resize-handle { 
             position: absolute; bottom: -5px; right: -5px; width: 25px; height: 25px; 
             background: var(--crimson); cursor: nwse-resize; z-index: 100;
@@ -88,7 +85,7 @@
     </section>
 
     <main id="main-editor">
-        <div class="scroll-content" id="editor-scroll">
+        <div class="scroll-content">
             <input type="text" id="note-title" placeholder="Untitled Chronicle...">
             <div class="sub-title-toolbar">
                 <button class="tool-btn" onclick="doFormat('bold')">B</button>
@@ -96,6 +93,7 @@
                 <button class="tool-btn" onclick="doFormat('underline')">U</button>
                 <input type="color" class="color-picker" onchange="doFormat('foreColor', this.value)">
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷 IMG</button>
+                <button class="tool-btn" onclick="insertTable()">📊 TABLE</button>
                 <button class="tool-btn" style="background:var(--crimson); color:white;" onclick="saveQuick()">QUICK SAVE</button>
                 <button class="tool-btn" onclick="openFolders()">FOLDER</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
@@ -150,6 +148,7 @@
     window.handleLogout = () => auth.signOut();
     window.doFormat = (cmd, val = null) => document.execCommand(cmd, false, val);
 
+    // IMAGE UPLOAD
     window.insertImg = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -166,72 +165,74 @@
                 ctx.drawImage(img, 0, 0, width, height);
                 const compressedData = canvas.toDataURL('image/jpeg', 0.7);
                 
-                const imgHtml = `
-                    <div class="img-container" style="width:200px;">
-                        <img src="${compressedData}">
-                        <div class="resize-handle"></div>
-                    </div><p><br></p>`;
-                
-                document.getElementById('note-body').focus();
-                document.execCommand('insertHTML', false, imgHtml);
-                setTimeout(initRelicLogic, 500);
+                const html = `<div class="relic-container" style="width:250px;"><img src="${compressedData}"><div class="resize-handle"></div></div><p><br></p>`;
+                insertAtCursor(html);
             };
             img.src = ev.target.result;
         };
         reader.readAsDataURL(file);
     };
 
-    // --- DRAG & RESIZE ENGINE ---
-    function initRelicLogic() {
-        const containers = document.querySelectorAll('.img-container');
+    // TABLE INSERT
+    window.insertTable = () => {
+        const html = `
+            <div class="relic-container" style="width:300px;">
+                <table class="relic-table">
+                    <tr><td>Cell</td><td>Cell</td></tr>
+                    <tr><td>Cell</td><td>Cell</td></tr>
+                </table>
+                <div class="resize-handle"></div>
+            </div><p><br></p>`;
+        insertAtCursor(html);
+    };
+
+    function insertAtCursor(html) {
+        document.getElementById('note-body').focus();
+        document.execCommand('insertHTML', false, html);
+        initRelicEngine();
+    }
+
+    // --- RELIC ENGINE (DRAG & RESIZE) ---
+    function initRelicEngine() {
+        const containers = document.querySelectorAll('.relic-container');
         containers.forEach(container => {
-            if (container.dataset.initialized === "true") return;
-            container.dataset.initialized = "true";
+            if (container.dataset.ready === "true") return;
+            container.dataset.ready = "true";
 
             const handle = container.querySelector('.resize-handle');
 
-            // 1. Move/Drag Logic (Touch on image)
+            // Drag/Move
             container.addEventListener('touchstart', (e) => {
-                if (e.target === handle) return; // Don't drag if resizing
-                const touch = e.touches[0];
-                let offsetX = touch.clientX - container.offsetLeft;
-                let offsetY = touch.clientY - container.offsetTop;
+                if (e.target === handle || e.target.tagName === 'TD') return;
+                const t = e.touches[0];
+                let oX = t.clientX - container.offsetLeft;
+                let oY = t.clientY - container.offsetTop;
 
-                const moveRelic = (me) => {
+                const move = (me) => {
                     const mt = me.touches[0];
                     container.style.position = 'relative';
-                    container.style.left = (mt.clientX - offsetX) + 'px';
-                    container.style.top = (mt.clientY - offsetY) + 'px';
+                    container.style.left = (mt.clientX - oX) + 'px';
+                    container.style.top = (mt.clientY - oY) + 'px';
                 };
-
-                const stopRelic = () => {
-                    window.removeEventListener('touchmove', moveRelic);
-                };
-
-                window.addEventListener('touchmove', moveRelic, {passive: false});
-                window.addEventListener('touchend', stopRelic);
+                const stop = () => window.removeEventListener('touchmove', move);
+                window.addEventListener('touchmove', move, {passive: false});
+                window.addEventListener('touchend', stop);
             });
 
-            // 2. Resize Logic (Touch on handle)
+            // Resize
             handle.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                const touch = e.touches[0];
-                const startX = touch.clientX;
-                const startW = container.offsetWidth;
+                e.stopPropagation(); e.preventDefault();
+                const t = e.touches[0];
+                const sX = t.clientX; const sW = container.offsetWidth;
 
-                const resizeRelic = (re) => {
+                const resize = (re) => {
                     const rt = re.touches[0];
-                    const newWidth = startW + (rt.clientX - startX);
-                    if (newWidth > 50) container.style.width = newWidth + 'px';
+                    const nW = sW + (rt.clientX - sX);
+                    if (nW > 60) container.style.width = nW + 'px';
                 };
-
-                const stopResize = () => {
-                    window.removeEventListener('touchmove', resizeRelic);
-                };
-
-                window.addEventListener('touchmove', resizeRelic, {passive: false});
-                window.addEventListener('touchend', stopResize);
+                const stopR = () => window.removeEventListener('touchmove', resize);
+                window.addEventListener('touchmove', resize, {passive: false});
+                window.addEventListener('touchend', stopR);
             });
         });
     }
@@ -242,7 +243,7 @@
         const title = document.getElementById('note-title').value || "Untitled";
         const body = document.getElementById('note-body').innerHTML;
         const data = { title, body, folder: fName, timestamp: Date.now() };
-        if (currentEditingId) db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Sealed."));
+        if (currentEditingId) db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Note Updated."));
         else notesRef.push(data).then(()=>location.reload());
     }
 
@@ -276,7 +277,6 @@
                     }
                 });
             }
-            setTimeout(initRelicLogic, 1000);
         });
     }
 
@@ -286,7 +286,8 @@
             currentEditingId = id; currentFolderName = n.folder;
             document.getElementById('note-title').value = n.title;
             document.getElementById('note-body').innerHTML = n.body;
-            setTimeout(initRelicLogic, 500);
+            // Scan for containers after HTML is loaded
+            setTimeout(initRelicEngine, 500);
         });
     };
 
