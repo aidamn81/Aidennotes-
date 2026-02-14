@@ -14,145 +14,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
         :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
-        
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; margin: 0; padding: 0; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; overflow: hidden; }
         
-        /* FIXED: Body acts as a viewport anchor */
-        html, body { 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            background-color: var(--ink); 
-            color: var(--parchment); 
-            font-family: 'Playfair Display', serif; 
-            overflow: hidden; 
-        }
+        #login-screen { position: fixed; inset: 0; background: radial-gradient(circle, #2a0a0a 0%, #0a0a0a 100%); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: var(--oxblood); padding: 40px; border: 2px solid var(--crimson); text-align: center; box-shadow: 0 0 20px rgba(139, 0, 0, 0.5); width: 90%; max-width: 400px; }
+
+        .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         
-        /* LOGIN SCREEN - Visible by default */
-        #login-screen { 
-            position: fixed; 
-            inset: 0; 
-            background: radial-gradient(circle, #2a0a0a 0%, #0a0a0a 100%); 
-            z-index: 2000; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-        }
-
-        .login-box { 
-            background: var(--oxblood); 
-            padding: 40px; 
-            border: 2px solid var(--crimson); 
-            text-align: center; 
-            box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
-            width: 90%;
-            max-width: 400px;
-        }
-
-        /* MAIN APP CONTAINER */
-        .app-container { 
-            display: none; /* Switch to flex via JS */
-            height: 100vh; 
-            width: 100vw; 
-            flex-direction: row; 
-        }
-        
-        /* SIDEBAR */
-        #sidebar { 
-            width: 240px; 
-            background-color: var(--oxblood); 
-            border-right: 1px solid var(--crimson); 
-            display: flex; 
-            flex-direction: column; 
-            flex-shrink: 0; 
-            overflow-y: auto; 
-        }
-
-        .sidebar-item { 
-            padding: 15px; 
-            cursor: pointer; 
-            border-bottom: 1px solid rgba(139,0,0,0.2); 
-            font-family: 'Cinzel'; 
-            font-size: 0.75rem; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
+        #sidebar { width: 260px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.2); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; gap: 5px;}
         .sidebar-item:hover { background: var(--crimson); }
-        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: none; border-left: 2px solid var(--crimson); }
+        .folder-content { padding-left: 15px; background: rgba(0,0,0,0.3); display: none; border-left: 2px solid var(--crimson); }
+        .actions { display: flex; gap: 8px; opacity: 0.6; }
+        .actions span:hover { opacity: 1; color: white; }
 
         @media (max-width: 600px) {
             .app-container { flex-direction: column; } 
-            #sidebar { width: 100%; height: auto; max-height: 180px; border-right: none; border-bottom: 2px solid var(--crimson); }
+            #sidebar { width: 100%; height: auto; max-height: 200px; border-right: none; border-bottom: 2px solid var(--crimson); }
         }
 
-        /* EDITOR SCROLLING FIX */
-        #main-editor { 
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column; 
-            background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); 
-            position: relative; 
-            overflow-y: auto; /* Enable scrolling here */
-            -webkit-overflow-scrolling: touch;
-        }
+        #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .scroll-content { padding: 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.8rem; outline: none; margin-bottom: 5px; }
+        #current-path-display { font-size: 0.6rem; color: var(--silver); font-family: 'Cinzel'; margin-bottom: 15px; }
 
-        .scroll-content { 
-            padding: 30px; 
-            max-width: 900px; 
-            margin: 0 auto; 
-            width: 100%;
-        }
+        .sub-title-toolbar { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 20px; position: sticky; top: 0; background: rgba(10, 10, 10, 0.95); z-index: 10; }
+        .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
+        .color-picker { width: 30px; height: 30px; border: 1px solid var(--crimson); background: none; cursor: pointer; padding: 0; }
 
-        #note-title { 
-            width: 100%; 
-            background: transparent; 
-            border: none; 
-            color: var(--crimson); 
-            font-family: 'Cinzel'; 
-            font-size: 2rem; 
-            outline: none; 
-            margin-bottom: 10px;
-        }
+        #note-body { min-height: 70vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.7; padding-bottom: 250px; word-wrap: break-word; }
 
-        .sub-title-toolbar { 
-            display: flex; 
-            gap: 8px; 
-            flex-wrap: wrap; 
-            padding: 10px 0; 
-            border-bottom: 1px solid var(--crimson); 
-            margin-bottom: 20px; 
-            position: sticky; 
-            top: 0; 
-            background: rgba(10, 10, 10, 0.9);
-            z-index: 10;
-        }
-
-        .tool-btn, .tool-select { 
-            background: var(--ink); 
-            border: 1px solid var(--crimson); 
-            color: var(--parchment); 
-            padding: 8px; 
-            cursor: pointer; 
-            font-family: 'Cinzel'; 
-            font-size: 0.7rem; 
-            border-radius: 3px; 
-        }
-
-        #note-body { 
-            min-height: 70vh; 
-            color: var(--parchment); 
-            font-size: 1.15rem; 
-            outline: none; 
-            line-height: 1.8; 
-            padding-bottom: 200px; /* Crucial for long text */
-            white-space: pre-wrap; /* Keeps formatting */
-            word-wrap: break-word;
-        }
-
-        /* MODALS */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1001; }
-        #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
+        #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 380px; }
+        .folder-option { background: rgba(0,0,0,0.3); padding: 10px; margin: 5px 0; border: 1px solid var(--crimson); cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; }
     </style>
 </head>
 <body>
@@ -170,8 +65,9 @@
 <div id="folder-modal">
     <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">Archives</h3>
     <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📜 Create New Folder</button>
-    <div id="existing-folders-list"></div>
-    <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">Close</button>
+    <div style="font-size: 0.6rem; color: var(--silver); margin-bottom: 5px;">SELECT DESTINATION:</div>
+    <div id="existing-folders-list" style="max-height: 200px; overflow-y: auto;"></div>
+    <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">Cancel</button>
 </div>
 
 <div class="app-container" id="app">
@@ -183,16 +79,17 @@
 
     <main id="main-editor">
         <div class="scroll-content">
+            <div id="current-path-display">Archives / Current Notes</div>
             <input type="text" id="note-title" placeholder="Untitled...">
             <div class="sub-title-toolbar">
                 <button class="tool-btn" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onclick="exec('italic')">I</button>
                 <button class="tool-btn" onclick="exec('underline')">U</button>
+                <input type="color" class="color-picker" onchange="exec('foreColor', this.value)" title="Text Color">
                 <button class="tool-btn" onclick="addWebLink()">🔗</button>
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
-                <button class="tool-btn" onclick="customTable()">📊</button>
                 <button class="tool-btn" style="background:var(--crimson);" onclick="saveQuick()">SAVE</button>
-                <button class="tool-btn" onclick="openFolders()">DIR</button>
+                <button class="tool-btn" onclick="openFolders()">MOVE</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
             <div id="note-body" contenteditable="true"></div>
@@ -220,7 +117,6 @@
     let currentEditingId = null;
     let currentFolderName = "Current Notes";
 
-    // --- AUTH LOGIC ---
     auth.onAuthStateChanged(u => {
         if(u) {
             document.getElementById('app').style.display = 'flex';
@@ -237,53 +133,116 @@
         const pass = document.getElementById('login-pass').value;
         auth.signInWithEmailAndPassword(email, pass).catch(err => alert(err.message));
     };
-
     window.handleLogout = () => auth.signOut();
 
-    // --- CORE FUNCTIONS ---
     function exec(cmd, val = null) {
         document.getElementById('note-body').focus();
         document.execCommand(cmd, false, val);
     }
 
-    window.saveQuick = () => pushData(currentFolderName);
+    // --- FOLDER & NOTE CORE ---
 
-    function pushData(fName) {
+    function initApp() {
+        // Sync Folders and Notes
+        db.ref().on('value', (snap) => {
+            const data = snap.val() || {};
+            const notes = data.notes || {};
+            const folders = data.folders || {"Current Notes": {name: "Current Notes", parent: null}};
+            
+            renderSidebar(folders, notes);
+            renderModalFolders(folders);
+        });
+    }
+
+    function renderSidebar(folders, notes) {
+        const container = document.getElementById('folder-list-sidebar');
+        container.innerHTML = "";
+        
+        Object.keys(folders).forEach(fKey => {
+            const f = folders[fKey];
+            const safeId = fKey.replace(/\s+/g, '-');
+            
+            let folderHtml = `
+                <div class="sidebar-item" onclick="toggleFolder('${safeId}')" style="background:rgba(139,0,0,0.1)">
+                    <span>📁 ${f.name}</span>
+                    <div class="actions">
+                        <span onclick="event.stopPropagation(); renameFolder('${fKey}')">✏️</span>
+                        <span onclick="event.stopPropagation(); deleteFolder('${fKey}')">🗑️</span>
+                    </div>
+                </div>
+                <div id="${safeId}" class="folder-content">
+            `;
+
+            // Add notes belonging to this folder
+            Object.keys(notes).forEach(nKey => {
+                const n = notes[nKey];
+                if(n.folder === fKey) {
+                    folderHtml += `
+                        <div class="sidebar-item" style="font-size:0.65rem;">
+                            <span onclick="loadNote('${nKey}')">📜 ${n.title}</span>
+                            <div class="actions">
+                                <span onclick="event.stopPropagation(); renameNote('${nKey}')">✏️</span>
+                                <span onclick="event.stopPropagation(); deleteNote('${nKey}')">🗑️</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            folderHtml += `</div>`;
+            container.innerHTML += folderHtml;
+        });
+    }
+
+    window.createNewFolder = () => {
+        const name = prompt("Folder Name:");
+        if(!name) return;
+        const parent = prompt("Is this a subfolder? Enter Parent Folder Name (or leave blank for root):");
+        const folderData = { name: name, parent: parent || null };
+        db.ref('folders/' + name).set(folderData);
+        closeModal();
+    };
+
+    window.renameFolder = (oldName) => {
+        const newName = prompt("Rename folder to:", oldName);
+        if(newName && newName !== oldName) {
+            db.ref('folders/' + oldName).once('value', s => {
+                let data = s.val();
+                data.name = newName;
+                db.ref('folders/' + newName).set(data);
+                db.ref('folders/' + oldName).remove();
+                // Update all notes in that folder
+                db.ref('notes').once('value', snap => {
+                    const notes = snap.val();
+                    for(let id in notes) {
+                        if(notes[id].folder === oldName) db.ref('notes/'+id+'/folder').set(newName);
+                    }
+                });
+            });
+        }
+    };
+
+    window.deleteFolder = (name) => {
+        if(confirm(`Delete folder "${name}"? Notes inside will remain in limbo until moved.`)) {
+            db.ref('folders/' + name).remove();
+        }
+    };
+
+    window.saveQuick = () => {
         const data = { 
             title: document.getElementById('note-title').value || "Untitled", 
             body: document.getElementById('note-body').innerHTML, 
-            folder: fName, 
+            folder: currentFolderName, 
             timestamp: Date.now() 
         };
         if (currentEditingId) { 
-            db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Note Updated")); 
+            db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Saved")); 
         } else { 
-            db.ref('notes').push(data).then(()=> { alert("New Note Created"); location.reload(); }); 
+            const newRef = db.ref('notes').push();
+            currentEditingId = newRef.key;
+            newRef.set(data).then(()=>alert("Note Created")); 
         }
-    }
-
-    function initApp() {
-        db.ref('notes').on('value', (snap) => {
-            const side = document.getElementById('folder-list-sidebar');
-            side.innerHTML = "";
-            const data = snap.val();
-            if (data) {
-                const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
-                [...new Set(notes.map(n => n.folder))].forEach(f => {
-                    const fId = f.replace(/\s+/g, '-');
-                    const noteHtml = notes.filter(n => n.folder === f).map(n => `
-                        <div class="sidebar-item" style="font-size:0.65rem; padding-left:25px;">
-                            <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
-                            <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
-                        </div>
-                    `).join('');
-                    side.innerHTML += `
-                        <div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1)">📁 ${f}</div>
-                        <div id="${fId}" class="folder-content">${noteHtml}</div>`;
-                });
-            }
-        });
-    }
+    };
 
     window.loadNote = (id) => {
         db.ref('notes/'+id).once('value', (s) => {
@@ -292,23 +251,46 @@
             currentFolderName = n.folder;
             document.getElementById('note-title').value = n.title;
             document.getElementById('note-body').innerHTML = n.body;
+            document.getElementById('current-path-display').innerText = "Archives / " + n.folder;
         });
     };
 
-    window.startNewNote = () => {
-        currentEditingId = null;
-        document.getElementById('note-title').value = "";
-        document.getElementById('note-body').innerHTML = "";
+    window.renameNote = (id) => {
+        const newTitle = prompt("New Title:");
+        if(newTitle) db.ref('notes/'+id+'/title').set(newTitle);
     };
 
-    window.toggleFolder = (id) => {
-        const el = document.getElementById(id);
-        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
-    };
+    function renderModalFolders(folders) {
+        const list = document.getElementById('existing-folders-list');
+        list.innerHTML = "";
+        Object.keys(folders).forEach(fKey => {
+            const div = document.createElement('div');
+            div.className = "folder-option";
+            div.innerText = folders[fKey].name;
+            div.onclick = () => {
+                currentFolderName = fKey;
+                document.getElementById('current-path-display').innerText = "Archives / " + fKey;
+                if(currentEditingId) db.ref('notes/'+currentEditingId+'/folder').set(fKey);
+                closeModal();
+            };
+            list.appendChild(div);
+        });
+    }
 
     window.deleteNote = (id, title) => { if (confirm(`Delete "${title}"?`)) db.ref('notes/'+id).remove(); };
+    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; document.getElementById('current-path-display').innerText = "Archives / Current Notes"; };
+    window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
+
+    window.insertImg = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const html = `<img src="${ev.target.result}" style="max-width:100%; border:1px solid var(--crimson);">`;
+            exec('insertHTML', html);
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
 </script>
 </body>
 </html>
