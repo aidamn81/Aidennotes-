@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>AidenNotes | Universal</title>
+    
+    <link rel="apple-touch-icon" href="YOUR_GITHUB_IMAGE_URL_HERE">
+    <link rel="icon" href="YOUR_GITHUB_IMAGE_URL_HERE">
+
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
         :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
@@ -32,7 +36,7 @@
         .tool-btn, .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 7px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; user-select: none; }
 
         #note-body { min-height: 60vh; color: var(--parchment); font-size: 1rem; outline: none; line-height: 1.6; padding-bottom: 400px; }
-        #note-body a { color: var(--crimson); text-decoration: underline; pointer-events: auto; }
+        #note-body a { color: var(--crimson); text-decoration: underline; pointer-events: auto !important; }
         
         /* RELIC OBJECTS */
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 50px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); }
@@ -66,16 +70,16 @@
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div id="folder-modal">
     <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">Archives</h3>
-    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onmousedown="event.preventDefault()" onclick="createNewFolder()">ð Create New Folder</button>
+    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onmousedown="event.preventDefault()" onclick="createNewFolder()">📜 Create New Folder</button>
     <div id="existing-folders-list"></div>
     <button class="tool-btn" style="width:100%; margin-top:15px;" onmousedown="event.preventDefault()" onclick="closeModal()">Close</button>
 </div>
 
 <div class="app-container" id="app">
     <aside id="sidebar">
-        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center;" onclick="startNewNote()">â¨ NEW NOTE</div>
+        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center;" onclick="startNewNote()">✨ NEW NOTE</div>
         <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">ðª EXIT</div>
+        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
     </aside>
 
     <main id="main-editor">
@@ -88,17 +92,17 @@
                 <select class="tool-select" onchange="exec('fontSize', this.value)">
                     <option value="3">Size</option><option value="2">XS</option><option value="3">S</option><option value="5">M</option><option value="7">XL</option>
                 </select>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyLeft')">â«·</button>
+                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyLeft')">⫷</button>
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyCenter')">|=|</button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyRight')">â«¸</button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="addWebLink()">ð LINK</button>
+                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyRight')">⫸</button>
+                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="addWebLink()">🔗 LINK</button>
                 <input type="color" onchange="exec('foreColor', this.value)" style="width:20px; height:20px; border:none; background:none;">
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="document.getElementById('imgInput').click()">ð· IMG</button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="customTable()">ð TAB</button>
+                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="document.getElementById('imgInput').click()">📷 IMG</button>
+                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="customTable()">📊 TAB</button>
                 <button class="tool-btn" style="background:var(--crimson);" onmousedown="event.preventDefault()" onclick="saveQuick()">SAVE</button>
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="openFolders()">DIR</button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('undo')">â¶</button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('redo')">â·</button>
+                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('undo')">↶</button>
+                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('redo')">↷</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
             <div id="note-body" contenteditable="true"></div>
@@ -126,15 +130,14 @@
     let currentEditingId = null;
     let currentFolderName = "Current Notes";
 
-    // --- REINFORCED COMMANDS ---
     function exec(cmd, val = null) {
         document.getElementById('note-body').focus();
         document.execCommand(cmd, false, val);
     }
 
     window.addWebLink = () => {
-        const url = prompt("Enter URL:", "https://");
-        if (!url) return;
+        let url = prompt("Enter URL:", "https://");
+        if (!url || url === "https://") return;
         const displayName = prompt("Link Display Name:", "Click here");
         if (displayName) {
             const html = `<a href="${url}" target="_blank" rel="noopener noreferrer">${displayName}</a>`;
@@ -142,7 +145,14 @@
         }
     };
 
-    // --- UNIVERSAL RELIC ENGINE ---
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('#note-body a');
+        if (link) {
+            window.open(link.href, '_blank');
+            e.preventDefault();
+        }
+    }, true);
+
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
 
     document.addEventListener('touchstart', (e) => {
@@ -179,7 +189,7 @@
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const html = `<div class="relic-container" style="width:200px; height:auto;"><img src="${ev.target.result}"><div class="resize-handle">â</div></div><p><br></p>`;
+            const html = `<div class="relic-container" style="width:200px; height:auto;"><img src="${ev.target.result}"><div class="resize-handle">⌟</div></div><p><br></p>`;
             exec('insertHTML', html);
         };
         reader.readAsDataURL(e.target.files[0]);
@@ -191,7 +201,7 @@
         let t = `<table class="relic-table">`;
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
         t += `</table>`;
-        const html = `<div class="relic-container" style="width:250px; height:100px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" onclick="modifyTable(this, 'row')">+R</button><button class="menu-btn" onclick="modifyTable(this, 'del-row')">-R</button><button class="menu-btn" onclick="modifyTable(this, 'col')">+C</button><button class="menu-btn" onclick="modifyTable(this, 'del-col')">-C</button><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">ðï¸</button></div>${t}<div class="resize-handle">â</div></div><p><br></p>`;
+        const html = `<div class="relic-container" style="width:250px; height:100px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" onclick="modifyTable(this, 'row')">+R</button><button class="menu-btn" onclick="modifyTable(this, 'del-row')">-R</button><button class="menu-btn" onclick="modifyTable(this, 'col')">+C</button><button class="menu-btn" onclick="modifyTable(this, 'del-col')">-C</button><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
         exec('insertHTML', html);
     };
 
@@ -203,7 +213,6 @@
         else if (action === 'del-col' && table.rows[0].cells.length > 1) { for(let i=0; i<table.rows.length; i++) table.rows[i].deleteCell(-1); }
     };
 
-    // --- SAVING & FOLDERS ---
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; renderModalFolders(); };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     window.createNewFolder = () => { const n = prompt("New Folder Name:"); if(n) { currentEditingId = null; pushData(n); closeModal(); } };
@@ -243,11 +252,11 @@
                     const fId = f.replace(/\s+/g, '-');
                     const noteHtml = notes.filter(n => n.folder === f).map(n => `
                         <div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
-                            <span onclick="loadNote('${n.id}')">ð ${data[n.id].title}</span>
-                            <span onclick="deleteNote('${n.id}', '${data[n.id].title}')">ðï¸</span>
+                            <span onclick="loadNote('${n.id}')">📜 ${data[n.id].title}</span>
+                            <span onclick="deleteNote('${n.id}', '${data[n.id].title}')">🗑️</span>
                         </div>
                     `).join('');
-                    side.innerHTML += `<div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1)">ð ${f}</div><div id="${fId}" class="folder-content">${noteHtml}</div>`;
+                    side.innerHTML += `<div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1)">📁 ${f}</div><div id="${fId}" class="folder-content">${noteHtml}</div>`;
                 });
             }
         });
@@ -270,3 +279,4 @@
 </script>
 </body>
 </html>
+
