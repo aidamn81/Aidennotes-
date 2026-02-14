@@ -21,6 +21,7 @@
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: var(--crimson); }
         .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: none; border-left: 2px solid var(--crimson); }
+        .sub-folder-header { padding: 8px 12px; font-size: 0.65rem; color: var(--silver); border-bottom: 1px solid rgba(139,0,0,0.2); cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
         @media (max-width: 600px) {
             .app-container { flex-direction: column; } 
@@ -70,7 +71,7 @@
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div id="folder-modal">
     <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">Archives</h3>
-    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onmousedown="event.preventDefault()" onclick="createNewFolder()">📜 Create New Folder</button>
+    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onmousedown="event.preventDefault()" onclick="createNewFolder()">📜 New Main or Sub Folder</button>
     <div id="existing-folders-list"></div>
     <button class="tool-btn" style="width:100%; margin-top:15px;" onmousedown="event.preventDefault()" onclick="closeModal()">Close</button>
 </div>
@@ -147,14 +148,10 @@
 
     document.addEventListener('click', function(e) {
         const link = e.target.closest('#note-body a');
-        if (link) {
-            window.open(link.href, '_blank');
-            e.preventDefault();
-        }
+        if (link) { window.open(link.href, '_blank'); e.preventDefault(); }
     }, true);
 
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
-
     document.addEventListener('touchstart', (e) => {
         const container = e.target.closest('.relic-container');
         if (!container) return;
@@ -215,7 +212,13 @@
 
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; renderModalFolders(); };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
-    window.createNewFolder = () => { const n = prompt("New Folder Name:"); if(n) { currentEditingId = null; pushData(n); closeModal(); } };
+    
+    // UPDATED FOR SUBFOLDERS
+    window.createNewFolder = () => { 
+        const n = prompt("Enter Folder Path (e.g. 'Work' or 'Work/SubFolder'):", currentFolderName); 
+        if(n) { currentEditingId = null; pushData(n); closeModal(); } 
+    };
+
     window.saveQuick = () => pushData(currentFolderName);
 
     function pushData(fName) {
@@ -241,6 +244,7 @@
         });
     }
 
+    // UPDATED SIDEBAR LOGIC FOR HIERARCHY
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar');
@@ -248,15 +252,29 @@
             const data = snap.val();
             if (data) {
                 const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
-                [...new Set(notes.map(n => n.folder))].forEach(f => {
-                    const fId = f.replace(/\s+/g, '-');
-                    const noteHtml = notes.filter(n => n.folder === f).map(n => `
-                        <div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
-                            <span onclick="loadNote('${n.id}')">📜 ${data[n.id].title}</span>
-                            <span onclick="deleteNote('${n.id}', '${data[n.id].title}')">🗑️</span>
+                const paths = [...new Set(notes.map(n => n.folder))];
+                
+                paths.sort().forEach(fullPath => {
+                    const parts = fullPath.split('/');
+                    const isSub = parts.length > 1;
+                    const fId = fullPath.replace(/[^a-zA-Z0-9]/g, '-');
+                    
+                    const noteHtml = notes.filter(n => n.folder === fullPath).map(n => `
+                        <div class="sidebar-item" style="font-size:0.6rem; padding-left:${isSub ? '40' : '20'}px;">
+                            <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
+                            <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
                         </div>
                     `).join('');
-                    side.innerHTML += `<div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1)">📁 ${f}</div><div id="${fId}" class="folder-content">${noteHtml}</div>`;
+
+                    const displayLabel = isSub ? `↳ ${parts[parts.length-1]}` : `📁 ${fullPath}`;
+                    const padding = isSub ? '20' : '0';
+
+                    side.innerHTML += `
+                        <div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1); padding-left:${padding}px">
+                            ${displayLabel}
+                        </div>
+                        <div id="${fId}" class="folder-content">${noteHtml}</div>
+                    `;
                 });
             }
         });
@@ -279,4 +297,3 @@
 </script>
 </body>
 </html>
-
