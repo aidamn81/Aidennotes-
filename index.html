@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>AidenNotes | Universal</title>
+
+    <link rel="apple-touch-icon" href="https://filedn.eu/lmLPHhnmVT38F0vdFViDpAf/Notesapp/aidennotesicon.jpg">
+    <link rel="icon" type="image/jpeg" href="https://filedn.eu/lmLPHhnmVT38F0vdFViDpAf/Notesapp/aidennotesicon.jpg">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AidenNotes">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
         :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
@@ -126,13 +133,11 @@
     let currentEditingId = null;
     let currentFolderName = "Current Notes";
 
-    // --- REINFORCED COMMANDS ---
     function exec(cmd, val = null) {
         document.getElementById('note-body').focus();
         document.execCommand(cmd, false, val);
     }
 
-    // FIXED LINK LOGIC: Standard link structure with global tap listener
     window.addWebLink = () => {
         let url = prompt("Enter URL:", "https://");
         if (!url || url === "https://") return;
@@ -143,17 +148,14 @@
         }
     };
 
-    // --- GLOBAL LINK INTERCEPTOR FOR IOS ---
     document.addEventListener('click', function(e) {
         const link = e.target.closest('#note-body a');
         if (link) {
-            // Force open the link even if browser is suppressing it due to contenteditable
             window.open(link.href, '_blank');
             e.preventDefault();
         }
     }, true);
 
-    // --- UNIVERSAL RELIC ENGINE ---
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
 
     document.addEventListener('touchstart', (e) => {
@@ -214,7 +216,6 @@
         else if (action === 'del-col' && table.rows[0].cells.length > 1) { for(let i=0; i<table.rows.length; i++) table.rows[i].deleteCell(-1); }
     };
 
-    // --- SAVING & FOLDERS ---
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; renderModalFolders(); };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     window.createNewFolder = () => { const n = prompt("New Folder Name:"); if(n) { currentEditingId = null; pushData(n); closeModal(); } };
