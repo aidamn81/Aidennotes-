@@ -2,58 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>AidenNotes | Universal</title>
+    [span_0](start_span)<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">[span_0](end_span)
+    <title>AidenNotes | [span_1](start_span)Universal</title>[span_1](end_span)
     
     <link rel="apple-touch-icon" href="https://filedn.eu/lmLPHhnmVT38F0vdFViDpAf/Notesapp/aidennotesicon.jpg">
     <link rel="icon" type="image/jpeg" href="https://filedn.eu/lmLPHhnmVT38F0vdFViDpAf/Notesapp/aidennotesicon.jpg">
 
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
+    [span_2](start_span)<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">[span_2](end_span)
     <style>
-        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; [span_2](start_span)}
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }[span_2](end_span)
-        html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; [span_3](start_span)}
+        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; [span_3](start_span)}
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }[span_3](end_span)
+        html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; [span_4](start_span)}
         
-        .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }[span_3](end_span)
+        .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }[span_4](end_span)
         
         /* SIDEBAR */
-        #sidebar { width: 220px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; [span_4](start_span)}
-        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }[span_4](end_span)
-        .sidebar-item:hover { background: var(--crimson); [span_5](start_span)}
-        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: none; border-left: 2px solid var(--crimson); }[span_5](end_span)
+        #sidebar { width: 220px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; [span_5](start_span)}
+        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }[span_5](end_span)
+        .sidebar-item:hover { background: var(--crimson); [span_6](start_span)}
+        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: none; border-left: 2px solid var(--crimson); }[span_6](end_span)
 
         @media (max-width: 600px) {
-            .app-container { flex-direction: column; [span_6](start_span)}
-            #sidebar { width: 100%; height: auto; max-height: 200px; border-right: none; border-bottom: 2px solid var(--crimson); display: block; }[span_6](end_span)
-            .sidebar-item { display: inline-flex; width: auto; min-width: 45%; margin: 1%; [span_7](start_span)}
+            .app-container { flex-direction: column; [span_7](start_span)}
+            #sidebar { width: 100%; height: auto; max-height: 200px; border-right: none; border-bottom: 2px solid var(--crimson); display: block; }[span_7](end_span)
+            .sidebar-item { display: inline-flex; width: auto; min-width: 45%; margin: 1%; [span_8](start_span)}
         }
 
         /* EDITOR */
-        #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }[span_7](end_span)
-        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; [span_8](start_span)}
-        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }[span_8](end_span)
-        .sub-title-toolbar { display: flex; gap: 5px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; [span_9](start_span)}
-        .tool-btn, .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 7px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; user-select: none; }[span_9](end_span)
+        #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }[span_8](end_span)
+        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; [span_9](start_span)}
+        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }[span_9](end_span)
+        .sub-title-toolbar { display: flex; gap: 5px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; [span_10](start_span)}
+        .tool-btn, .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 7px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; user-select: none; }[span_10](end_span)
 
-        #note-body { min-height: 60vh; color: var(--parchment); font-size: 1rem; outline: none; line-height: 1.6; padding-bottom: 400px; [span_10](start_span)}
-        #note-body a { color: var(--crimson); text-decoration: underline; pointer-events: auto; }[span_10](end_span)
+        #note-body { min-height: 60vh; color: var(--parchment); font-size: 1rem; outline: none; line-height: 1.6; padding-bottom: 400px; [span_11](start_span)}
+        #note-body a { color: var(--crimson); text-decoration: underline; pointer-events: auto; }[span_11](end_span)
         
         /* RELIC OBJECTS */
-        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 50px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); [span_11](start_span)}
-        .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }[span_11](end_span)
-        .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); table-layout: fixed; [span_12](start_span)}
-        .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }[span_12](end_span)
+        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 50px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); [span_12](start_span)}
+        .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }[span_12](end_span)
+        .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); table-layout: fixed; [span_13](start_span)}
+        .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }[span_13](end_span)
 
-        .table-menu { position: absolute; top: -38px; left: -1px; display: flex; gap: 3px; background: var(--crimson); padding: 5px; border-radius: 4px 4px 0 0; z-index: 110; width: max-content; [span_13](start_span)}
-        .drag-handle { background: #fff; color: #000; padding: 2px 6px; font-weight: bold; font-size: 10px; border-radius: 2px; cursor: move; }[span_13](end_span)
-        .menu-btn { background: var(--oxblood); border: none; color: white; font-size: 8px; padding: 4px; cursor: pointer; font-family: 'Cinzel'; [span_14](start_span)}
+        .table-menu { position: absolute; top: -38px; left: -1px; display: flex; gap: 3px; background: var(--crimson); padding: 5px; border-radius: 4px 4px 0 0; z-index: 110; width: max-content; [span_14](start_span)}
+        .drag-handle { background: #fff; color: #000; padding: 2px 6px; font-weight: bold; font-size: 10px; border-radius: 2px; cursor: move; }[span_14](end_span)
+        .menu-btn { background: var(--oxblood); border: none; color: white; font-size: 8px; padding: 4px; cursor: pointer; font-family: 'Cinzel'; [span_15](start_span)}
 
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 35px; height: 35px; cursor: nwse-resize; z-index: 120; display: flex; align-items: flex-end; justify-content: flex-end; padding: 5px; color: var(--crimson); font-weight: bold; font-size: 20px; }[span_14](end_span)
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 35px; height: 35px; cursor: nwse-resize; z-index: 120; display: flex; align-items: flex-end; justify-content: flex-end; padding: 5px; color: var(--crimson); font-weight: bold; font-size: 20px; }[span_15](end_span)
 
         /* MODALS */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; [span_15](start_span)}
-        #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }[span_15](end_span)
-        #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; [span_16](start_span)}
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; [span_16](start_span)}
+        #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }[span_16](end_span)
+        #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; [span_17](start_span)}
     </style>
 </head>
 <body>
@@ -61,25 +61,25 @@
 <div id="login-screen">
     <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
         <h2 style="font-family:'Cinzel'; color:var(--crimson);">The Blood Seal</h2>
-        <input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email">[span_16](end_span)
-        [span_17](start_span)<input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password">[span_17](end_span)
-        [span_18](start_span)<button class="tool-btn" style="width:100%; background:var(--crimson); padding:15px;" onclick="handleLogin()">Unlock</button>[span_18](end_span)
+        <input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email">[span_17](end_span)
+        [span_18](start_span)<input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password">[span_18](end_span)
+        [span_19](start_span)<button class="tool-btn" style="width:100%; background:var(--crimson); padding:15px;" onclick="handleLogin()">Unlock</button>[span_19](end_span)
     </div>
 </div>
 
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div id="folder-modal">
     <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">Archives</h3>
-    [span_19](start_span)<button class="tool-btn" style="width:100%; margin-bottom:15px;" onmousedown="event.preventDefault()" onclick="createNewFolder()">📜 Create New Folder</button>[span_19](end_span)
+    [span_20](start_span)<button class="tool-btn" style="width:100%; margin-bottom:15px;" onmousedown="event.preventDefault()" onclick="createNewFolder()">📜 Create New Folder</button>[span_20](end_span)
     <div id="existing-folders-list"></div>
-    [span_20](start_span)<button class="tool-btn" style="width:100%; margin-top:15px;" onmousedown="event.preventDefault()" onclick="closeModal()">Close</button>[span_20](end_span)
+    [span_21](start_span)<button class="tool-btn" style="width:100%; margin-top:15px;" onmousedown="event.preventDefault()" onclick="closeModal()">Close</button>[span_21](end_span)
 </div>
 
 <div class="app-container" id="app">
     <aside id="sidebar">
-        [span_21](start_span)<div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center;" onclick="startNewNote()">✨ NEW NOTE</div>[span_21](end_span)
+        [span_22](start_span)<div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center;" onclick="startNewNote()">✨ NEW NOTE</div>[span_22](end_span)
         <div id="folder-list-sidebar"></div>
-        [span_22](start_span)<div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>[span_22](end_span)
+        [span_23](start_span)<div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>[span_23](end_span)
     </aside>
 
     <main id="main-editor">
@@ -88,20 +88,20 @@
             <div class="sub-title-toolbar">
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('italic')">I</button>
-                [span_23](start_span)<button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('underline')">U</button>[span_23](end_span)
+                [span_24](start_span)<button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('underline')">U</button>[span_24](end_span)
                 <select class="tool-select" onchange="exec('fontSize', this.value)">
                     <option value="3">Size</option><option value="2">XS</option><option value="3">S</option><option value="5">M</option><option value="7">XL</option>
                 </select>
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyLeft')">⫷</button>
-                [span_24](start_span)<button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyCenter')">|=|</button>[span_24](end_span)
+                [span_25](start_span)<button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyCenter')">|=|</button>[span_25](end_span)
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('justifyRight')">⫸</button>
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="addWebLink()">🔗 LINK</button>
-                [span_25](start_span)<input type="color" onchange="exec('foreColor', this.value)" style="width:20px; height:20px; border:none; background:none;">[span_25](end_span)
+                [span_26](start_span)<input type="color" onchange="exec('foreColor', this.value)" style="width:20px; height:20px; border:none; background:none;">[span_26](end_span)
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="document.getElementById('imgInput').click()">📷 IMG</button>
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="customTable()">📊 TAB</button>
                 <button class="tool-btn" style="background:var(--crimson);" onmousedown="event.preventDefault()" onclick="saveQuick()">SAVE</button>
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="openFolders()">DIR</button>
-                [span_26](start_span)<button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('undo')">↶</button>[span_26](end_span)
+                [span_27](start_span)<button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('undo')">↶</button>[span_27](end_span)
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('redo')">↷</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
@@ -117,35 +117,37 @@
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyCfLzNKz2vtqbCPFbatVYVzKryUoc9CI3w",
-        [span_27](start_span)authDomain: "aidennotes.firebaseapp.com",[span_27](end_span)
+        [span_28](start_span)authDomain: "aidennotes.firebaseapp.com",[span_28](end_span)
         databaseURL: "https://aidennotes-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "aidennotes",
         storageBucket: "aidennotes.firebasestorage.app",
         messagingSenderId: "375700296601",
         appId: "1:375700296601:web:890c92b813038d4cf0b908"
     };
-    [span_28](start_span)firebase.initializeApp(firebaseConfig);[span_28](end_span)
+    [span_29](start_span)firebase.initializeApp(firebaseConfig);[span_29](end_span)
     const db = firebase.database();
     const auth = firebase.auth();
     let currentEditingId = null;
-    [span_29](start_span)let currentFolderName = "Current Notes";[span_29](end_span)
+    [span_30](start_span)let currentFolderName = "Current Notes";[span_30](end_span)
 
+    // --- REINFORCED COMMANDS ---
     function exec(cmd, val = null) {
-        [span_30](start_span)document.getElementById('note-body').focus();[span_30](end_span)
-        [span_31](start_span)document.execCommand(cmd, false, val);[span_31](end_span)
+        [span_31](start_span)document.getElementById('note-body').focus();[span_31](end_span)
+        [span_32](start_span)document.execCommand(cmd, false, val);[span_32](end_span)
     }
 
     window.addWebLink = () => {
-        [span_32](start_span)const url = prompt("Enter URL:", "https://");[span_32](end_span)
+        [span_33](start_span)const url = prompt("Enter URL:", "https://");[span_33](end_span)
         if (!url) return;
-        [span_33](start_span)const displayName = prompt("Link Display Name:", "Click here");[span_33](end_span)
+        [span_34](start_span)const displayName = prompt("Link Display Name:", "Click here");[span_34](end_span)
         if (displayName) {
-            [span_34](start_span)const html = `<a href="${url}" target="_blank" rel="noopener noreferrer">${displayName}</a>`;[span_34](end_span)
-            exec('insertHTML', html);
+            [span_35](start_span)const html = `<a href="${url}" target="_blank" rel="noopener noreferrer">${displayName}</a>`;[span_35](end_span)
+            [span_36](start_span)exec('insertHTML', html);[span_36](end_span)
         }
     };
 
-    [span_35](start_span)let activeTarget = null, startX, startY, startW, startH, isResizing = false;[span_35](end_span)
+    // --- UNIVERSAL RELIC ENGINE ---
+    [span_37](start_span)let activeTarget = null, startX, startY, startW, startH, isResizing = false;[span_37](end_span)
     document.addEventListener('touchstart', (e) => {
         const container = e.target.closest('.relic-container');
         if (!container) return;
@@ -153,70 +155,75 @@
             isResizing = true; activeTarget = container;
             startX = e.touches[0].clientX; startY = e.touches[0].clientY;
             startW = container.offsetWidth; startH = container.offsetHeight;
-            [span_36](start_span)e.preventDefault();[span_36](end_span)
-        } else if (e.target.classList.contains('drag-handle') || e.target.tagName === 'IMG' || (e.target.closest('.relic-container') && e.target.tagName !== 'TD')) {
+            [span_38](start_span)e.preventDefault();[span_38](end_span)
+        [span_39](start_span)} else if (e.target.classList.contains('drag-handle') || e.target.tagName === 'IMG' || (e.target.closest('.relic-container') && e.target.tagName !== 'TD')) {[span_39](end_span)
             isResizing = false; activeTarget = container;
             startX = e.touches[0].clientX - container.offsetLeft;
             startY = e.touches[0].clientY - container.offsetTop;
         }
-    [span_37](start_span)}, {passive: false});[span_37](end_span)
+    [span_40](start_span)}, {passive: false});[span_40](end_span)
 
     document.addEventListener('touchmove', (e) => {
         if (!activeTarget) return;
-        const t = e.touches[0];
+        [span_41](start_span)const t = e.touches[0];[span_41](end_span)
         if (isResizing) {
             activeTarget.style.width = (startW + (t.clientX - startX)) + 'px';
             activeTarget.style.height = (startH + (t.clientY - startY)) + 'px';
         } else {
-            activeTarget.style.position = 'relative';
-            [span_38](start_span)activeTarget.style.left = (t.clientX - startX) + 'px';[span_38](end_span)
+            [span_42](start_span)activeTarget.style.position = 'relative';[span_42](end_span)
+            [span_43](start_span)activeTarget.style.left = (t.clientX - startX) + 'px';[span_43](end_span)
             activeTarget.style.top = (t.clientY - startY) + 'px';
         }
         e.preventDefault();
-    [span_39](start_span)}, {passive: false});[span_39](end_span)
+    [span_44](start_span)}, {passive: false});[span_44](end_span)
 
-    [span_40](start_span)document.addEventListener('touchend', () => { activeTarget = null; });[span_40](end_span)
+    [span_45](start_span)document.addEventListener('touchend', () => { activeTarget = null; });[span_45](end_span)
 
     window.insertImg = (e) => {
-        [span_41](start_span)const reader = new FileReader();[span_41](end_span)
+        [span_46](start_span)const reader = new FileReader();[span_46](end_span)
         reader.onload = (ev) => {
-            [span_42](start_span)const html = `<div class="relic-container" style="width:200px; height:auto;"><img src="${ev.target.result}"><div class="resize-handle">⌟</div></div><p><br></p>`;[span_42](end_span)
-            exec('insertHTML', html);
+            [span_47](start_span)const html = `<div class="relic-container" style="width:200px; height:auto;"><img src="${ev.target.result}"><div class="resize-handle">⌟</div></div><p><br></p>`;[span_47](end_span)
+            [span_48](start_span)exec('insertHTML', html);[span_48](end_span)
         };
         reader.readAsDataURL(e.target.files[0]);
     };
 
     window.customTable = () => {
-        [span_43](start_span)const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");[span_43](end_span)
+        [span_49](start_span)const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");[span_49](end_span)
         if(!r || !c) return;
-        let t = `<table class="relic-table">`;
+        [span_50](start_span)let t = `<table class="relic-table">`;[span_50](end_span)
         for(let i=0; i<r; i++) { 
-            [span_44](start_span)t += `<tr>`;[span_44](end_span)
-            for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; 
-            [span_45](start_span)t += `</tr>`;[span_45](end_span)
-        }
-        [span_46](start_span)t += `</table>`;[span_46](end_span)
-        [span_47](start_span)const html = `<div class="relic-container" style="width:250px; height:100px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" onclick="modifyTable(this, 'row')">+R</button><button class="menu-btn" onclick="modifyTable(this, 'del-row')">-R</button><button class="menu-btn" onclick="modifyTable(this, 'col')">+C</button><button class="menu-btn" onclick="modifyTable(this, 'del-col')">-C</button><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle">⌟</div></div><p><br></p>`;[span_47](end_span)
+            [span_51](start_span)t += `<tr>`;[span_51](end_span)
+            [span_52](start_span)for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`;[span_52](end_span)
+        [span_53](start_span)}
+        t += `</table>`;[span_53](end_span)
+        [span_54](start_span)const html = `<div class="relic-container" style="width:250px; height:100px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" onclick="modifyTable(this, 'row')">+R</button><button class="menu-btn" onclick="modifyTable(this, 'del-row')">-R</button><button class="menu-btn" onclick="modifyTable(this, 'col')">+C</button><button class="menu-btn" onclick="modifyTable(this, 'del-col')">-C</button><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle">⌟</div></div><p><br></p>`;[span_54](end_span)
         exec('insertHTML', html);
     };
 
     window.modifyTable = (btn, action) => {
-        [span_48](start_span)const table = btn.closest('.relic-container').querySelector('table');[span_48](end_span)
-        [span_49](start_span)if (action === 'row') { const r = table.insertRow(); for(let i=0; i<table.rows[0].cells.length; i++) r.insertCell().contentEditable = "true";[span_49](end_span) }
-        [span_50](start_span)else if (action === 'col') { for(let i=0; i<table.rows.length; i++) table.rows[i].insertCell().contentEditable = "true";[span_50](end_span) }
-        [span_51](start_span)else if (action === 'del-row' && table.rows.length > 1) table.deleteRow(-1);[span_51](end_span)
-        else if (action === 'del-col' && table.rows[0].cells.length > 1) { for(let i=0; i<table.rows.length; i++) table.rows[i].deleteCell(-1); [span_52](start_span)}
+        [span_55](start_span)const table = btn.closest('.relic-container').querySelector('table');[span_55](end_span)
+        [span_56](start_span)if (action === 'row') { const r = table.insertRow(); for(let i=0; i<table.rows[0].cells.length; i++) r.insertCell().contentEditable = "true";[span_56](end_span)
+        [span_57](start_span)}
+        else if (action === 'col') { for(let i=0; i<table.rows.length; i++) table.rows[i].insertCell().contentEditable = "true";[span_57](end_span)
+        [span_58](start_span)}
+        else if (action === 'del-row' && table.rows.length > 1) table.deleteRow(-1);[span_58](end_span)
+        else if (action === 'del-col' && table.rows[0].cells.length > 1) { for(let i=0; i<table.rows.length; i++) table.rows[i].deleteCell(-1); [span_59](start_span)}
     };
 
-    window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; renderModalFolders(); };[span_52](end_span)
-    window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; [span_53](start_span)};[span_53](end_span)
-    window.createNewFolder = () => { const n = prompt("New Folder Name:"); if(n) { currentEditingId = null; pushData(n); closeModal(); [span_54](start_span)} };[span_54](end_span)
-    [span_55](start_span)window.saveQuick = () => pushData(currentFolderName);[span_55](end_span)
+    // --- SAVING & FOLDERS ---
+    window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; renderModalFolders(); };[span_59](end_span)
+    window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; [span_60](start_span)};[span_60](end_span)
+    [span_61](start_span)window.createNewFolder = () => { const n = prompt("New Folder Name:");[span_61](end_span)
+        if(n) { currentEditingId = null; pushData(n); closeModal(); [span_62](start_span)} };[span_62](end_span)
+    [span_63](start_span)window.saveQuick = () => pushData(currentFolderName);[span_63](end_span)
 
     function pushData(fName) {
-        const data = { title: document.getElementById('note-title').value || [span_56](start_span)"Untitled", body: document.getElementById('note-body').innerHTML, folder: fName, timestamp: Date.now() };[span_56](end_span)
-        [span_57](start_span)if (currentEditingId) { db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Saved to " + fName));[span_57](end_span) }
-        [span_58](start_span)else { db.ref('notes').push(data).then(()=>location.reload());[span_58](end_span) }
+        const data = { title: document.getElementById('note-title').value || [span_64](start_span)"Untitled", body: document.getElementById('note-body').innerHTML, folder: fName, timestamp: Date.now() };[span_64](end_span)
+        [span_65](start_span)if (currentEditingId) { db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Saved to " + fName));[span_65](end_span)
+        }
+        [span_66](start_span)else { db.ref('notes').push(data).then(()=>location.reload());[span_66](end_span)
+        }
     }
 
     function renderModalFolders() {
@@ -225,16 +232,16 @@
             list.innerHTML = "";
             const data = s.val();
             if(data) {
-                [span_59](start_span)[...new Set(Object.values(data).map(n => n.folder))].forEach(f => {[span_59](end_span)
-                    const b = document.createElement('button');
+                [span_67](start_span)[...new Set(Object.values(data).map(n => n.folder))].forEach(f => {[span_67](end_span)
+                    [span_68](start_span)const b = document.createElement('button');[span_68](end_span)
                     b.className = "tool-btn"; b.style.width = "100%"; b.style.marginTop = "8px";
                     b.innerText = f; b.onmousedown = (e) => e.preventDefault();
-                    b.onclick = () => { pushData(f); closeModal(); [span_60](start_span)};[span_60](end_span)
+                    b.onclick = () => { pushData(f); closeModal(); [span_69](start_span)};[span_69](end_span)
                     list.appendChild(b);
                 });
             }
-        [span_61](start_span)});[span_61](end_span)
-    }
+        });
+    [span_70](start_span)}
 
     function initApp() {
         db.ref('notes').on('value', (snap) => {
@@ -242,35 +249,35 @@
             side.innerHTML = "";
             const data = snap.val();
             if (data) {
-                [span_62](start_span)const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();[span_62](end_span)
-                [...new Set(notes.map(n => n.folder))].forEach(f => {
+                const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();[span_70](end_span)
+                [span_71](start_span)[...new Set(notes.map(n => n.folder))].forEach(f => {[span_71](end_span)
                     const fId = f.replace(/\s+/g, '-');
                     const noteHtml = notes.filter(n => n.folder === f).map(n => `
-                        [span_63](start_span)<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">[span_63](end_span)
-                            <span onclick="loadNote('${n.id}')">📜 ${data[n.id].title}</span>
+                        <div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
+                            [span_72](start_span)<span onclick="loadNote('${n.id}')">📜 ${data[n.id].title}</span>[span_72](end_span)
                             <span onclick="deleteNote('${n.id}', '${data[n.id].title}')">🗑️</span>
-                        [span_64](start_span)</div>[span_64](end_span)
-                    `).join('');
-                    [span_65](start_span)side.innerHTML += `<div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1)">📁 ${f}</div><div id="${fId}" class="folder-content">${noteHtml}</div>`;[span_65](end_span)
-                });
+                        </div>
+                    [span_73](start_span)`).join('');[span_73](end_span)
+                    [span_74](start_span)side.innerHTML += `<div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1)">📁 ${f}</div><div id="${fId}" class="folder-content">${noteHtml}</div>`;[span_74](end_span)
+                [span_75](start_span)});[span_75](end_span)
             }
-        [span_66](start_span)});[span_66](end_span)
-    }
+        });
+    [span_76](start_span)}
 
     window.loadNote = (id) => {
         db.ref('notes/'+id).once('value', (s) => {
             const n = s.val(); currentEditingId = id; currentFolderName = n.folder;
             document.getElementById('note-title').value = n.title;
             document.getElementById('note-body').innerHTML = n.body;
-        [span_67](start_span)});[span_67](end_span)
-    };
+        });
+    };[span_76](end_span)
 
-    window.deleteNote = (id, title) => { if (confirm(`Delete "${title}"?`)) db.ref('notes/'+id).remove(); [span_68](start_span)};[span_68](end_span)
-    window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; [span_69](start_span)};[span_69](end_span)
-    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; [span_70](start_span)};[span_70](end_span)
-    [span_71](start_span)auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });[span_71](end_span)
-    [span_72](start_span)window.handleLogin = () => auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value);[span_72](end_span)
-    [span_73](start_span)window.handleLogout = () => auth.signOut();[span_73](end_span)
+    window.deleteNote = (id, title) => { if (confirm(`Delete "${title}"?`)) db.ref('notes/'+id).remove(); [span_77](start_span)};[span_77](end_span)
+    window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; [span_78](start_span)};[span_78](end_span)
+    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; [span_79](start_span)};[span_79](end_span)
+    [span_80](start_span)auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });[span_80](end_span)
+    [span_81](start_span)window.handleLogin = () => auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value);[span_81](end_span)
+    [span_82](start_span)window.handleLogout = () => auth.signOut();[span_82](end_span)
 </script>
 </body>
 </html>
