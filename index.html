@@ -187,11 +187,17 @@
         db.ref().on('value', (snap) => {
             const data = snap.val() || {};
             const notes = data.notes || {};
-            const folders = data.folders || {"Current Notes": {name: "Current Notes", parent: null}};
+            const folders = data.folders || {};
             
+            // Ensure "Current Notes" always exists as a default
+            if (!folders["Current Notes"]) {
+                folders["Current Notes"] = { name: "Current Notes", parent: null };
+            }
+
             // Render Sidebar
             const container = document.getElementById('folder-list-sidebar');
             container.innerHTML = "";
+            
             Object.keys(folders).forEach(fKey => {
                 const f = folders[fKey];
                 const safeId = fKey.replace(/\s+/g, '-');
@@ -207,10 +213,11 @@
                 
                 Object.keys(notes).forEach(nKey => {
                     const n = notes[nKey];
-                    if(n.folder === fKey) {
+                    // Link note if folder matches OR if it's a "lost" note and this is the default folder
+                    if(n.folder === fKey || (!n.folder && fKey === "Current Notes")) {
                         html += `
                             <div class="sidebar-item" style="font-size:0.65rem;">
-                                <span onclick="loadNote('${nKey}')">📜 ${n.title}</span>
+                                <span onclick="loadNote('${nKey}')">📜 ${n.title || "Untitled"}</span>
                                 <div class="actions">
                                     <span onclick="event.stopPropagation(); deleteNote('${nKey}', '${n.title}')">🗑️</span>
                                 </div>
@@ -221,7 +228,7 @@
                 container.innerHTML += html;
             });
 
-            // Render Modal
+            // Render Modal List
             const list = document.getElementById('existing-folders-list');
             list.innerHTML = "";
             Object.keys(folders).forEach(fKey => {
@@ -240,10 +247,13 @@
 
     window.loadNote = (id) => {
         db.ref('notes/'+id).once('value', s => {
-            const n = s.val(); currentEditingId = id; currentFolderName = n.folder;
-            document.getElementById('note-title').value = n.title;
-            document.getElementById('note-body').innerHTML = n.body;
-            document.getElementById('current-path-display').innerText = "Archives / " + n.folder;
+            const n = s.val(); 
+            if(!n) return;
+            currentEditingId = id; 
+            currentFolderName = n.folder || "Current Notes";
+            document.getElementById('note-title').value = n.title || "";
+            document.getElementById('note-body').innerHTML = n.body || "";
+            document.getElementById('current-path-display').innerText = "Archives / " + currentFolderName;
         });
     };
 
@@ -260,7 +270,10 @@
 
     window.createNewFolder = () => {
         const name = prompt("Folder Name:");
-        if(name) db.ref('folders/' + name).set({ name: name, parent: null });
+        if(name) {
+            // Push to Firebase folders node
+            db.ref('folders/' + name).set({ name: name, parent: null });
+        }
         closeModal();
     };
 
@@ -277,7 +290,11 @@
         }
     };
 
-    window.deleteFolder = (n) => { if(confirm(`Delete folder ${n}?`)) db.ref('folders/'+n).remove(); };
+    window.deleteFolder = (n) => { 
+        if(n === "Current Notes") { alert("Cannot delete the Prime Archive."); return; }
+        if(confirm(`Delete folder ${n}?`)) db.ref('folders/'+n).remove(); 
+    };
+
     window.deleteNote = (id, t) => { if(confirm(`Delete note ${t}?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
