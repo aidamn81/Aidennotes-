@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>AidenNotes | Universal</title>
+    <title>AidenNotes | Fortress</title>
     
     <link rel="apple-touch-icon" href="YOUR_GITHUB_IMAGE_URL_HERE">
     <link rel="icon" href="YOUR_GITHUB_IMAGE_URL_HERE">
@@ -17,59 +17,48 @@
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         
         /* SIDEBAR */
-        #sidebar { width: 220px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
+        #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: var(--crimson); }
-        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: none; border-left: 2px solid var(--crimson); }
+        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: block; border-left: 2px solid var(--crimson); }
 
         @media (max-width: 600px) {
             .app-container { flex-direction: column; } 
-            #sidebar { width: 100%; height: auto; max-height: 200px; border-right: none; border-bottom: 2px solid var(--crimson); display: block; }
+            #sidebar { width: 100%; height: auto; max-height: 250px; border-right: none; border-bottom: 2px solid var(--crimson); }
             .sidebar-item { display: inline-flex; width: auto; min-width: 45%; margin: 1%; }
         }
 
-        /* EDITOR */
+        /* EDITOR & TOOLBAR */
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
-        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
-        .sub-title-toolbar { display: flex; gap: 5px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; }
-        .tool-btn, .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 7px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; user-select: none; }
-
-        #note-body { min-height: 60vh; color: var(--parchment); font-size: 1rem; outline: none; line-height: 1.6; padding-bottom: 400px; }
-        #note-body a { color: var(--crimson); text-decoration: underline; }
+        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; margin-bottom: 10px; }
+        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         
-        /* LOADING SPINNER */
-        @keyframes spin { to { transform: rotate(360deg); } }
-        #spinner { display: none; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        .loading #spinner { display: inline-block; }
-        .loading #btn-text { opacity: 0.5; }
+        .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
+        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; }
 
-        /* RELICS */
-        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 50px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); }
-        .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }
-        .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); table-layout: fixed; }
-        .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
-        .table-menu { position: absolute; top: -38px; left: -1px; display: flex; gap: 3px; background: var(--crimson); padding: 5px; border-radius: 4px 4px 0 0; z-index: 110; width: max-content; }
-        .drag-handle { background: #fff; color: #000; padding: 2px 6px; font-weight: bold; font-size: 10px; cursor: move; }
-        .menu-btn { background: var(--oxblood); border: none; color: white; font-size: 8px; padding: 4px; cursor: pointer; }
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 35px; height: 35px; cursor: nwse-resize; z-index: 120; display: flex; align-items: flex-end; justify-content: flex-end; color: var(--crimson); font-weight: bold; }
-
+        #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; }
+        
         /* MODALS */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .destruct-btn { background: #000 !important; color: red !important; border: 1px solid red !important; margin-top: 20px !important; font-weight: bold; }
+
+        /* LOADING SPINNER */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #spinner { display: none; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .loading #spinner { display: inline-block; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
-        <h2 style="font-family:'Cinzel'; color:var(--crimson);">The Blood Seal</h2>
+    <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center; border-radius:10px;">
+        <h2 style="font-family:'Cinzel'; color:var(--crimson);">THE BLOOD SEAL</h2>
         <input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email">
         <input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password">
         <button id="login-btn" class="tool-btn" style="width:100%; background:var(--crimson); padding:15px; display:flex; align-items:center; justify-content:center; gap:10px;" onclick="handleLogin()">
-            <span id="btn-text">Unlock</span>
+            <span id="btn-text">UNLOCK ARCHIVES</span>
             <div id="spinner"></div>
         </button>
     </div>
@@ -77,35 +66,46 @@
 
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div id="folder-modal">
-    <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">Archives</h3>
-    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📜 New Main/Sub Folder</button>
-    <div id="existing-folders-list"></div>
-    <button class="tool-btn destruct-btn" style="width:100%;" onclick="selfDestruct()">☣️ SELF DESTRUCT CACHE</button>
-    <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">Close</button>
+    <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">ARCHIVES</h3>
+    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📜 CREATE PATH/SUBFOLDER</button>
+    <button class="tool-btn" style="width:100%; background:#000; color:red; border-color:red;" onclick="selfDestruct()">☣️ SELF DESTRUCT CACHE</button>
+    <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">CLOSE</button>
 </div>
 
 <div class="app-container" id="app">
     <aside id="sidebar">
-        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center;" onclick="startNewNote()">✨ NEW NOTE</div>
+        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.3);" onclick="startNewNote()">✨ NEW NOTE</div>
         <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
+        <div class="sidebar-item" style="color:var(--silver); margin-top:auto; border-top:1px solid var(--crimson);" onclick="handleLogout()">🚪 EXIT</div>
     </aside>
 
     <main id="main-editor">
         <div class="scroll-content">
-            <input type="text" id="note-title" placeholder="Untitled...">
+            <input type="text" id="note-title" placeholder="Untitled Fragment...">
+            
             <div class="sub-title-toolbar">
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('bold')">B</button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('italic')">I</button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="exec('underline')">U</button>
-                <button class="tool-btn" onclick="addWebLink()">🔗 LINK</button>
-                <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷 IMG</button>
-                <button class="tool-btn" onclick="customTable()">📊 TAB</button>
-                <button class="tool-btn" style="background:var(--crimson);" onclick="saveQuick()">SAVE</button>
+                <select class="tool-select" onchange="exec('formatBlock', this.value); this.selectedIndex=0;">
+                    <option value="">Style</option>
+                    <option value="H1">Heading 1</option>
+                    <option value="H2">Heading 2</option>
+                    <option value="P">Paragraph</option>
+                    <option value="BLOCKQUOTE">Quote</option>
+                </select>
+                <button class="tool-btn" onclick="exec('bold')">B</button>
+                <button class="tool-btn" onclick="exec('italic')">I</button>
+                <button class="tool-btn" onclick="exec('underline')">U</button>
+                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
+                <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
+                <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
+                <button class="tool-btn" onclick="addWebLink()">🔗</button>
+                <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
+                <button class="tool-btn" onclick="customTable()">📊</button>
+                <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
                 <button class="tool-btn" onclick="openFolders()">DIR</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
-            <div id="note-body" contenteditable="true"></div>
+
+            <div id="note-body" contenteditable="true" placeholder="Begin the ritual..."></div>
         </div>
     </main>
 </div>
@@ -129,7 +129,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
     let currentEditingId = null;
-    let currentFolderName = "Current Notes";
+    let currentFolderName = "All Notes";
 
     function exec(cmd, val = null) {
         document.getElementById('note-body').focus();
@@ -140,12 +140,10 @@
         const btn = document.getElementById('login-btn');
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
-        if (!email || !pass) return alert("Enter credentials.");
+        if (!email || !pass) return alert("Credentials required.");
         btn.classList.add('loading');
-        btn.disabled = true;
         auth.signInWithEmailAndPassword(email, pass).catch(e => {
             btn.classList.remove('loading');
-            btn.disabled = false;
             alert("⚠️ Seal Rejected: " + e.message);
         });
     };
@@ -159,89 +157,59 @@
     });
 
     window.handleLogout = () => auth.signOut().then(() => location.reload());
+    window.selfDestruct = () => { if(confirm("Wipe cache?")) { localStorage.clear(); sessionStorage.clear(); handleLogout(); } };
 
-    window.selfDestruct = () => {
-        if(confirm("This will wipe all local session data and log you out. Proceed?")) {
-            localStorage.clear();
-            sessionStorage.clear();
-            auth.signOut().then(() => {
-                alert("Cache Purged.");
-                location.reload();
-            });
-        }
+    window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
+    window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
+    
+    window.createNewFolder = () => { 
+        const n = prompt("Enter Path (e.g. Rituals/Blood):"); 
+        if(n) { currentFolderName = n; startNewNote(); closeModal(); } 
     };
 
-    // DRAG/RESIZE
-    let activeTarget = null, startX, startY, startW, startH, isResizing = false;
-    document.addEventListener('touchstart', (e) => {
-        const container = e.target.closest('.relic-container');
-        if (!container) return;
-        if (e.target.classList.contains('resize-handle')) {
-            isResizing = true; activeTarget = container;
-            startX = e.touches[0].clientX; startY = e.touches[0].clientY;
-            startW = container.offsetWidth; startH = container.offsetHeight;
-            e.preventDefault();
-        } else if (e.target.classList.contains('drag-handle') || e.target.tagName === 'IMG') {
-            isResizing = false; activeTarget = container;
-            startX = e.touches[0].clientX - container.offsetLeft;
-            startY = e.touches[0].clientY - container.offsetTop;
-        }
-    }, {passive: false});
-
-    document.addEventListener('touchmove', (e) => {
-        if (!activeTarget) return;
-        const t = e.touches[0];
-        if (isResizing) {
-            activeTarget.style.width = (startW + (t.clientX - startX)) + 'px';
-            activeTarget.style.height = (startH + (t.clientY - startY)) + 'px';
+    window.saveQuick = () => {
+        const data = { 
+            title: document.getElementById('note-title').value || "Untitled", 
+            body: document.getElementById('note-body').innerHTML, 
+            folder: currentFolderName, 
+            timestamp: Date.now() 
+        };
+        if (currentEditingId) {
+            db.ref('notes/' + currentEditingId).update(data).then(() => alert("Archived."));
         } else {
-            activeTarget.style.position = 'relative';
-            activeTarget.style.left = (t.clientX - startX) + 'px';
-            activeTarget.style.top = (t.clientY - startY) + 'px';
+            db.ref('notes').push(data).then(() => { alert("New Note Created."); });
         }
-        e.preventDefault();
-    }, {passive: false});
-
-    document.addEventListener('touchend', () => { activeTarget = null; });
-
-    // FOLDERS
-    window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; renderModalFolders(); };
-    window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
-    window.createNewFolder = () => { const n = prompt("Path (e.g. Work/Sub):", currentFolderName); if(n) { currentEditingId = null; pushData(n); closeModal(); } };
-    window.saveQuick = () => pushData(currentFolderName);
-
-    function pushData(fName) {
-        const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: fName, timestamp: Date.now() };
-        if (currentEditingId) { db.ref('notes/'+currentEditingId).update(data).then(()=>alert("Saved.")); }
-        else { db.ref('notes').push(data).then(()=>location.reload()); }
-    }
+    };
 
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar');
             side.innerHTML = "";
             const data = snap.val();
-            if (data) {
-                const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
-                const paths = [...new Set(notes.map(n => n.folder))].sort();
-                paths.forEach(fullPath => {
-                    const parts = fullPath.split('/');
-                    const isSub = parts.length > 1;
-                    const fId = fullPath.replace(/[^a-zA-Z0-9]/g, '-');
-                    const noteHtml = notes.filter(n => n.folder === fullPath).map(n => `
-                        <div class="sidebar-item" style="font-size:0.6rem; padding-left:${isSub ? '40' : '20'}px;">
-                            <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
-                            <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
-                        </div>
-                    `).join('');
-                    side.innerHTML += `
-                        <div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1); padding-left:${isSub ? '20' : '0'}px">
-                            ${isSub ? '↳ ' + parts[parts.length-1] : '📁 ' + fullPath}
-                        </div>
-                        <div id="${fId}" class="folder-content">${noteHtml}</div>
-                    `;
-                });
+            if (!data) {
+                side.innerHTML = `<div class="sidebar-item" style="color:var(--silver)">No fragments found.</div>`;
+                return;
             }
+            const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
+            const paths = [...new Set(notes.map(n => n.folder))].sort();
+            
+            paths.forEach(fullPath => {
+                const parts = fullPath.split('/');
+                const fId = "folder-" + fullPath.replace(/[^a-zA-Z0-9]/g, '-');
+                const noteHtml = notes.filter(n => n.folder === fullPath).map(n => `
+                    <div class="sidebar-item" style="font-size:0.6rem; padding-left:25px;">
+                        <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
+                        <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
+                    </div>
+                `).join('');
+                
+                side.innerHTML += `
+                    <div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.15); color:var(--crimson)">
+                        📁 ${fullPath}
+                    </div>
+                    <div id="${fId}" class="folder-content">${noteHtml}</div>
+                `;
+            });
         });
     }
 
@@ -253,24 +221,26 @@
         });
     };
 
-    window.deleteNote = (id, title) => { if (confirm(`Delete "${title}"?`)) db.ref('notes/'+id).remove(); };
-    window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
+    window.deleteNote = (id, title) => { if (confirm(`Burn "${title}"?`)) db.ref('notes/'+id).remove(); };
+    window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; };
     window.addWebLink = () => { const url = prompt("URL:", "https://"); if(url) exec('createLink', url); };
+    
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const html = `<div class="relic-container" style="width:200px; height:auto;"><img src="${ev.target.result}"><div class="resize-handle">⌟</div></div><p><br></p>`;
+            const html = `<div class="relic-container" style="width:200px;"><img src="${ev.target.result}"><div class="resize-handle">⌟</div></div><p><br></p>`;
             exec('insertHTML', html);
         };
         reader.readAsDataURL(e.target.files[0]);
     };
+
     window.customTable = () => {
         const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");
         let t = `<table class="relic-table">`;
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
         t += `</table>`;
-        const html = `<div class="relic-container" style="width:250px; height:100px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
+        const html = `<div class="relic-container" style="width:250px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
         exec('insertHTML', html);
     };
 </script>
