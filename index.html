@@ -14,15 +14,17 @@
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         
         /* SIDEBAR */
-        #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
+        #sidebar { width: 260px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: var(--crimson); }
         .folder-header { background: rgba(139,0,0,0.2); color: var(--crimson); font-weight: bold; border-left: 3px solid var(--crimson); }
         .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: block; }
+        .folder-actions span { margin-left: 8px; opacity: 0.6; transition: 0.3s; }
+        .folder-actions span:hover { opacity: 1; }
 
         @media (max-width: 600px) {
             .app-container { flex-direction: column; } 
-            #sidebar { width: 100%; height: auto; max-height: 250px; border-right: none; border-bottom: 2px solid var(--crimson); }
+            #sidebar { width: 100%; height: auto; max-height: 280px; border-right: none; border-bottom: 2px solid var(--crimson); }
             .sidebar-item { display: inline-flex; width: auto; min-width: 45%; margin: 1%; }
         }
 
@@ -80,7 +82,7 @@
 
     <main id="main-editor">
         <div class="scroll-content">
-            <div id="current-path-display">Path: Recent Notes</div>
+            <div id="current-path-display">Path: current notes</div>
             <input type="text" id="note-title" placeholder="Untitled Fragment...">
             <div class="sub-title-toolbar">
                 <select class="tool-select" onchange="exec('formatBlock', this.value); this.selectedIndex=0;">
@@ -127,7 +129,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
     let currentEditingId = null;
-    let currentFolderName = "Recent Notes";
+    let currentFolderName = "current notes"; // Updated default
 
     function exec(cmd, val = null) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
 
@@ -146,7 +148,7 @@
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     
     window.createNewFolder = () => { 
-        const n = prompt("Target Path (e.g. Work/Sub):"); 
+        const n = prompt("Target Path (e.g. Work/Projects):"); 
         if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } 
     };
 
@@ -154,7 +156,7 @@
         const data = { 
             title: document.getElementById('note-title').value || "Untitled", 
             body: document.getElementById('note-body').innerHTML, 
-            folder: currentFolderName || "Recent Notes", 
+            folder: currentFolderName || "current notes", 
             timestamp: Date.now() 
         };
         if (currentEditingId) {
@@ -166,6 +168,37 @@
         }
     };
 
+    // FOLDER MANAGEMENT LOGIC
+    window.renameFolder = (oldPath) => {
+        const newPath = prompt(`Rename ARCHIVE "${oldPath}" to:`, oldPath);
+        if (newPath && newPath !== oldPath) {
+            if (confirm(`Move all fragments from "${oldPath}" to "${newPath}"?`)) {
+                db.ref('notes').once('value', (snap) => {
+                    const updates = {};
+                    snap.forEach((child) => {
+                        if (child.val().folder === oldPath) {
+                            updates[`/notes/${child.key}/folder`] = newPath;
+                        }
+                    });
+                    db.ref().update(updates);
+                });
+            }
+        }
+    };
+
+    window.deleteFolder = (path) => {
+        if (path === "current notes") return alert("The Root Archive cannot be deleted.");
+        if (confirm(`PURGE ARCHIVE: "${path}" and all its contents? This is permanent.`)) {
+            db.ref('notes').once('value', (snap) => {
+                snap.forEach((child) => {
+                    if (child.val().folder === path) {
+                        db.ref(`notes/${child.key}`).remove();
+                    }
+                });
+            });
+        }
+    };
+
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar');
@@ -173,17 +206,23 @@
             const data = snap.val();
             if (!data) return;
             const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
-            const paths = [...new Set(notes.map(n => n.folder || "Recent Notes"))].sort();
+            const paths = [...new Set(notes.map(n => n.folder || "current notes"))].sort();
             
             paths.forEach(fullPath => {
                 const safeId = btoa(fullPath).replace(/=/g, '').replace(/\//g, '_').replace(/\+/g, '-');
-                const noteHtml = notes.filter(n => (n.folder || "Recent Notes") === fullPath).map(n => `
+                const noteHtml = notes.filter(n => (n.folder || "current notes") === fullPath).map(n => `
                     <div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
                         <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
                         <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
                     </div>`).join('');
                 side.innerHTML += `
-                    <div class="sidebar-item folder-header" onclick="toggleFolder('${safeId}')">📁 ${fullPath}</div>
+                    <div class="sidebar-item folder-header">
+                        <span onclick="toggleFolder('${safeId}')">📁 ${fullPath}</span>
+                        <div class="folder-actions">
+                            <span onclick="renameFolder('${fullPath}')">✏️</span>
+                            <span onclick="deleteFolder('${fullPath}')">🗑️</span>
+                        </div>
+                    </div>
                     <div id="${safeId}" class="folder-content">${noteHtml}</div>`;
             });
         });
@@ -193,7 +232,7 @@
         db.ref('notes/'+id).once('value', (s) => {
             const n = s.val(); 
             currentEditingId = id; 
-            currentFolderName = n.folder || "Recent Notes";
+            currentFolderName = n.folder || "current notes";
             document.getElementById('note-title').value = n.title;
             document.getElementById('note-body').innerHTML = n.body;
             document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
@@ -202,15 +241,16 @@
 
     window.deleteNote = (id, title) => { if (confirm(`Delete ${title}?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
+    
     window.startNewNote = () => { 
         currentEditingId = null; 
         document.getElementById('note-title').value = ""; 
         document.getElementById('note-body').innerHTML = ""; 
-        currentFolderName = "Recent Notes";
+        currentFolderName = "current notes";
         document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; 
     };
 
-    // DRAG & RESIZE LOGIC
+    // DRAG & RESIZE LOGIC (For images/tables)
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
     document.addEventListener('touchstart', (e) => {
         const container = e.target.closest('.relic-container');
@@ -257,7 +297,7 @@
         let t = `<table class="relic-table">`;
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
         t += `</table>`;
-        const html = `<div class="relic-container" style="width:250px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
+        const html = `<div class="relic-container" style="width:250px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" style="color:red; background:none; border:none;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
         exec('insertHTML', html);
     };
 </script>
