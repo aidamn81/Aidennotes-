@@ -21,7 +21,6 @@
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: var(--crimson); }
         .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); display: none; border-left: 2px solid var(--crimson); }
-        .sub-folder-header { padding: 8px 12px; font-size: 0.65rem; color: var(--silver); border-bottom: 1px solid rgba(139,0,0,0.2); cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
         @media (max-width: 600px) {
             .app-container { flex-direction: column; } 
@@ -39,6 +38,11 @@
         #note-body { min-height: 60vh; color: var(--parchment); font-size: 1rem; outline: none; line-height: 1.6; padding-bottom: 400px; }
         #note-body a { color: var(--crimson); text-decoration: underline; pointer-events: auto !important; }
         
+        /* SPINNER */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading #spinner { display: inline-block !important; }
+        #spinner { display: none; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+
         /* RELIC OBJECTS */
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 50px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); }
         .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }
@@ -64,7 +68,10 @@
         <h2 style="font-family:'Cinzel'; color:var(--crimson);">The Blood Seal</h2>
         <input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email">
         <input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password">
-        <button class="tool-btn" style="width:100%; background:var(--crimson); padding:15px;" onclick="handleLogin()">Unlock</button>
+        <button id="login-btn" class="tool-btn" style="width:100%; background:var(--crimson); padding:15px; display:flex; align-items:center; justify-content:center; gap:10px;" onclick="handleLogin()">
+            <span id="btn-text">Unlock</span>
+            <div id="spinner"></div>
+        </button>
     </div>
 </div>
 
@@ -151,6 +158,21 @@
         if (link) { window.open(link.href, '_blank'); e.preventDefault(); }
     }, true);
 
+    window.handleLogin = () => {
+        const btn = document.getElementById('login-btn');
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        if (!email || !pass) { alert("The ritual requires both email and password."); return; }
+        btn.classList.add('loading');
+        btn.disabled = true;
+        auth.signInWithEmailAndPassword(email, pass)
+            .catch((error) => {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                alert("⚠️ Seal Rejected: " + error.message);
+            });
+    };
+
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
     document.addEventListener('touchstart', (e) => {
         const container = e.target.closest('.relic-container');
@@ -212,13 +234,10 @@
 
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; renderModalFolders(); };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
-    
-    // UPDATED FOR SUBFOLDERS
     window.createNewFolder = () => { 
         const n = prompt("Enter Folder Path (e.g. 'Work' or 'Work/SubFolder'):", currentFolderName); 
         if(n) { currentEditingId = null; pushData(n); closeModal(); } 
     };
-
     window.saveQuick = () => pushData(currentFolderName);
 
     function pushData(fName) {
@@ -244,7 +263,6 @@
         });
     }
 
-    // UPDATED SIDEBAR LOGIC FOR HIERARCHY
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar');
@@ -253,26 +271,19 @@
             if (data) {
                 const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
                 const paths = [...new Set(notes.map(n => n.folder))];
-                
                 paths.sort().forEach(fullPath => {
                     const parts = fullPath.split('/');
                     const isSub = parts.length > 1;
                     const fId = fullPath.replace(/[^a-zA-Z0-9]/g, '-');
-                    
                     const noteHtml = notes.filter(n => n.folder === fullPath).map(n => `
                         <div class="sidebar-item" style="font-size:0.6rem; padding-left:${isSub ? '40' : '20'}px;">
                             <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
                             <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
                         </div>
                     `).join('');
-
                     const displayLabel = isSub ? `↳ ${parts[parts.length-1]}` : `📁 ${fullPath}`;
-                    const padding = isSub ? '20' : '0';
-
                     side.innerHTML += `
-                        <div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1); padding-left:${padding}px">
-                            ${displayLabel}
-                        </div>
+                        <div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1); padding-left:${isSub ? '20' : '0'}px">${displayLabel}</div>
                         <div id="${fId}" class="folder-content">${noteHtml}</div>
                     `;
                 });
@@ -292,7 +303,6 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; };
     auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
-    window.handleLogin = () => auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value);
     window.handleLogout = () => auth.signOut();
 </script>
 </body>
