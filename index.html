@@ -13,19 +13,12 @@
         
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         
-        /* SIDEBAR & NESTING */
+        /* SIDEBAR */
         #sidebar { width: 280px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .sidebar-item:hover { background: rgba(139,0,0,0.3); }
         .folder-header { background: rgba(139,0,0,0.15); color: var(--crimson); font-weight: bold; border-left: 2px solid var(--crimson); }
         .folder-content { padding-left: 15px; border-left: 1px solid rgba(139,0,0,0.2); display: block; }
-        .folder-actions span { margin-left: 5px; opacity: 0.5; font-size: 10px; cursor: pointer; }
-        .folder-actions span:hover { opacity: 1; color: white; }
-
-        @media (max-width: 600px) {
-            .app-container { flex-direction: column; } 
-            #sidebar { width: 100%; height: auto; max-height: 300px; border-right: none; border-bottom: 2px solid var(--crimson); }
-        }
 
         /* EDITOR */
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
@@ -36,25 +29,25 @@
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
-
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         
-        /* MODALS */
+        /* LOGIN/MODALS */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
 
-        /* RELICS (RESIZABLES) */
-        .relic-container { display: inline-block; position: relative; margin: 20px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 80px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); }
+        /* RELICS - TRANSPARENT FRAMES */
+        .relic-container { display: inline-block; position: relative; margin: 20px 0; border: 1px solid transparent; min-width: 80px; min-height: 50px; touch-action: none; background: transparent; }
+        .relic-container:hover { border: 1px solid rgba(139,0,0,0.3); } /* Subtle hint on hover */
         .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }
         .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); table-layout: fixed; }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
-        
-        .text-box-inner { width: 100%; height: 100%; padding: 10px; outline: none; color: var(--parchment); overflow: hidden; background: rgba(139,0,0,0.05); }
+        .text-box-inner { width: 100%; height: 100%; padding: 10px; outline: none; color: var(--parchment); overflow: hidden; background: transparent; border: 1px dashed rgba(139,0,0,0.2); }
 
-        .relic-menu { position: absolute; top: -30px; left: 0; display: flex; gap: 10px; background: var(--crimson); padding: 3px 10px; border-radius: 4px 4px 0 0; z-index: 110; align-items: center; }
+        /* RELIC CONTROLS */
+        .relic-menu { position: absolute; top: -30px; left: 0; display: flex; gap: 10px; background: var(--crimson); padding: 3px 10px; border-radius: 4px 4px 0 0; z-index: 150; align-items: center; pointer-events: auto; }
         .drag-handle { color: #fff; font-weight: bold; font-size: 10px; cursor: move; text-transform: uppercase; }
-        .delete-btn { color: #fff; font-size: 14px; cursor: pointer; border: none; background: none; padding: 0; }
+        .delete-btn-trigger { color: #fff; font-size: 14px; cursor: pointer; border: none; background: none; padding: 0; display: inline-block; }
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; display: flex; align-items: flex-end; justify-content: flex-end; color: var(--crimson); font-weight: bold; }
     </style>
 </head>
@@ -179,7 +172,6 @@
             const data = snap.val() || {}; 
             const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
             const tree = { name: "Root", sub: {}, notes: [] };
-            
             notes.forEach(n => {
                 let pathParts = (n.folder || "current notes").split('/');
                 let current = tree;
@@ -189,7 +181,6 @@
                 });
                 current.notes.push(n);
             });
-
             if(!tree.sub["current notes"]) tree.sub["current notes"] = { name: "current notes", sub: {}, notes: [], fullPath: "current notes" };
 
             function renderTree(node, container) {
@@ -200,7 +191,6 @@
                     folderDiv.innerHTML = `<span onclick="toggleFolder('${safeId}')">📁 ${subNode.name}</span>
                         <div class="folder-actions"><span onclick="renameFolder('${subNode.fullPath}')">✏️</span><span onclick="deleteFolder('${subNode.fullPath}')">🗑️</span></div>`;
                     container.appendChild(folderDiv);
-
                     const contentDiv = document.createElement('div');
                     contentDiv.id = safeId;
                     contentDiv.className = "folder-content";
@@ -215,32 +205,6 @@
             renderTree(tree, side);
         });
     }
-
-    window.renameFolder = (oldPath) => {
-        const newPath = prompt(`Rename Folder "${oldPath}" to:`, oldPath);
-        if (newPath && newPath !== oldPath && confirm(`Confirm Move?`)) {
-            db.ref('notes').once('value', (snap) => {
-                const updates = {};
-                snap.forEach((child) => {
-                    let folder = child.val().folder || "current notes";
-                    if (folder === oldPath || folder.startsWith(oldPath + '/')) updates[`/notes/${child.key}/folder`] = folder.replace(oldPath, newPath);
-                });
-                db.ref().update(updates);
-            });
-        }
-    };
-
-    window.deleteFolder = (path) => {
-        if (path === "current notes") return alert("Root Archive Protected.");
-        if (confirm(`PURGE Archive: "${path}"?`)) {
-            db.ref('notes').once('value', (snap) => {
-                snap.forEach((child) => {
-                    let folder = child.val().folder || "current notes";
-                    if (folder === path || folder.startsWith(path + '/')) db.ref(`notes/${child.key}`).remove();
-                });
-            });
-        }
-    };
 
     window.loadNote = (id) => {
         db.ref('notes/'+id).once('value', (s) => {
@@ -257,9 +221,20 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "current notes"; document.getElementById('current-path-display').innerText = "Path: current notes"; };
 
-    // DRAG & RESIZE & DELETE LOGIC
+    // FIX: GLOBAL CLICK HANDLER FOR DYNAMIC DELETE BUTTONS
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-btn-trigger')) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (confirm("Permanently purge this relic?")) {
+                const container = e.target.closest('.relic-container');
+                if (container) container.remove();
+            }
+        }
+    }, true); // Use capture phase to intercept before contenteditable
+
+    // DRAG & RESIZE
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
-    
     document.addEventListener('mousedown', startAction);
     document.addEventListener('mousemove', moveAction);
     document.addEventListener('mouseup', endAction);
@@ -271,7 +246,6 @@
         const container = e.target.closest('.relic-container');
         if (!container) return;
         const touch = e.type === 'touchstart' ? e.touches[0] : e;
-        
         if (e.target.classList.contains('resize-handle')) {
             isResizing = true; activeTarget = container;
             startX = touch.clientX; startY = touch.clientY;
@@ -284,7 +258,6 @@
             e.preventDefault();
         }
     }
-
     function moveAction(e) {
         if (!activeTarget) return;
         const touch = e.type === 'touchmove' ? e.touches[0] : e;
@@ -300,33 +273,26 @@
     }
     function endAction() { activeTarget = null; isResizing = false; }
 
-    // RELIC CREATION FUNCTIONS
-    window.removeRelic = (btn) => {
-        if(confirm("Permanently purge this relic?")) {
-            btn.closest('.relic-container').remove();
-        }
-    };
-
+    // RELIC CREATION
     window.addTextBox = () => {
-        const html = `<div class="relic-container" style="width:200px; height:120px;">
-            <div class="relic-menu" contenteditable="false">
+        const html = `<div class="relic-container" style="width:200px; height:120px;" contenteditable="false">
+            <div class="relic-menu">
                 <div class="drag-handle">DRAG</div>
-                <div class="delete-btn" onclick="removeRelic(this)">🗑️</div>
+                <div class="delete-btn-trigger">🗑️</div>
             </div>
             <div class="text-box-inner" contenteditable="true">Type inside...</div>
             <div class="resize-handle">⌟</div>
         </div><p><br></p>`;
         exec('insertHTML', html);
     };
-
     window.addWebLink = () => { const url = prompt("Link URL:", "https://"); if(url) exec('createLink', url); };
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const html = `<div class="relic-container" style="width:200px;">
-                <div class="relic-menu" contenteditable="false">
+            const html = `<div class="relic-container" style="width:200px;" contenteditable="false">
+                <div class="relic-menu">
                     <div class="drag-handle">DRAG</div>
-                    <div class="delete-btn" onclick="removeRelic(this)">🗑️</div>
+                    <div class="delete-btn-trigger">🗑️</div>
                 </div>
                 <img src="${ev.target.result}">
                 <div class="resize-handle">⌟</div>
@@ -335,16 +301,15 @@
         };
         reader.readAsDataURL(e.target.files[0]);
     };
-    
     window.customTable = () => {
         const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");
         let t = `<table class="relic-table">`;
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
         t += `</table>`;
-        const html = `<div class="relic-container" style="width:250px;">
-            <div class="relic-menu" contenteditable="false">
+        const html = `<div class="relic-container" style="width:250px;" contenteditable="false">
+            <div class="relic-menu">
                 <div class="drag-handle">DRAG</div>
-                <div class="delete-btn" onclick="removeRelic(this)">🗑️</div>
+                <div class="delete-btn-trigger">🗑️</div>
             </div>
             ${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
         exec('insertHTML', html);
