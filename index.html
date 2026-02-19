@@ -13,12 +13,14 @@
         
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         
-        /* SIDEBAR */
+        /* SIDEBAR & NESTED FOLDERS */
         #sidebar { width: 280px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .sidebar-item:hover { background: rgba(139,0,0,0.3); }
         .folder-header { background: rgba(139,0,0,0.15); color: var(--crimson); font-weight: bold; border-left: 2px solid var(--crimson); }
         .folder-content { padding-left: 15px; border-left: 1px solid rgba(139,0,0,0.2); display: block; }
+        .folder-actions span { margin-left: 5px; opacity: 0.5; font-size: 10px; cursor: pointer; }
+        .folder-actions span:hover { opacity: 1; color: white; }
 
         /* EDITOR */
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
@@ -31,21 +33,20 @@
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         
-        /* LOGIN/MODALS */
+        /* MODALS */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
 
-        /* RELICS - TRANSPARENT FRAMES */
+        /* RELICS */
         .relic-container { display: inline-block; position: relative; margin: 20px 0; border: 1px solid transparent; min-width: 80px; min-height: 50px; touch-action: none; background: transparent; }
-        .relic-container:hover { border: 1px solid rgba(139,0,0,0.3); } /* Subtle hint on hover */
+        .relic-container:hover { border: 1px solid rgba(139,0,0,0.3); }
         .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }
         .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); table-layout: fixed; }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
         .text-box-inner { width: 100%; height: 100%; padding: 10px; outline: none; color: var(--parchment); overflow: hidden; background: transparent; border: 1px dashed rgba(139,0,0,0.2); }
 
-        /* RELIC CONTROLS */
-        .relic-menu { position: absolute; top: -30px; left: 0; display: flex; gap: 10px; background: var(--crimson); padding: 3px 10px; border-radius: 4px 4px 0 0; z-index: 150; align-items: center; pointer-events: auto; }
+        .relic-menu { position: absolute; top: -30px; left: 0; display: flex; gap: 10px; background: var(--crimson); padding: 3px 10px; border-radius: 4px 4px 0 0; z-index: 150; align-items: center; }
         .drag-handle { color: #fff; font-weight: bold; font-size: 10px; cursor: move; text-transform: uppercase; }
         .delete-btn-trigger { color: #fff; font-size: 14px; cursor: pointer; border: none; background: none; padding: 0; display: inline-block; }
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; display: flex; align-items: flex-end; justify-content: flex-end; color: var(--crimson); font-weight: bold; }
@@ -165,6 +166,7 @@
         }
     };
 
+    // FOLDER ENGINE (NESTED)
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar');
@@ -172,6 +174,7 @@
             const data = snap.val() || {}; 
             const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
             const tree = { name: "Root", sub: {}, notes: [] };
+            
             notes.forEach(n => {
                 let pathParts = (n.folder || "current notes").split('/');
                 let current = tree;
@@ -181,6 +184,7 @@
                 });
                 current.notes.push(n);
             });
+
             if(!tree.sub["current notes"]) tree.sub["current notes"] = { name: "current notes", sub: {}, notes: [], fullPath: "current notes" };
 
             function renderTree(node, container) {
@@ -189,8 +193,12 @@
                     const folderDiv = document.createElement('div');
                     folderDiv.className = "sidebar-item folder-header";
                     folderDiv.innerHTML = `<span onclick="toggleFolder('${safeId}')">📁 ${subNode.name}</span>
-                        <div class="folder-actions"><span onclick="renameFolder('${subNode.fullPath}')">✏️</span><span onclick="deleteFolder('${subNode.fullPath}')">🗑️</span></div>`;
+                        <div class="folder-actions">
+                            <span onclick="renameFolder('${subNode.fullPath}')">✏️</span>
+                            <span onclick="deleteFolder('${subNode.fullPath}')">🗑️</span>
+                        </div>`;
                     container.appendChild(folderDiv);
+
                     const contentDiv = document.createElement('div');
                     contentDiv.id = safeId;
                     contentDiv.className = "folder-content";
@@ -205,6 +213,32 @@
             renderTree(tree, side);
         });
     }
+
+    window.renameFolder = (oldPath) => {
+        const newPath = prompt(`Rename Folder "${oldPath}" to:`, oldPath);
+        if (newPath && newPath !== oldPath && confirm(`Confirm Moving all content?`)) {
+            db.ref('notes').once('value', (snap) => {
+                const updates = {};
+                snap.forEach((child) => {
+                    let folder = child.val().folder || "current notes";
+                    if (folder === oldPath || folder.startsWith(oldPath + '/')) updates[`/notes/${child.key}/folder`] = folder.replace(oldPath, newPath);
+                });
+                db.ref().update(updates);
+            });
+        }
+    };
+
+    window.deleteFolder = (path) => {
+        if (path === "current notes") return alert("Root Archive Protected.");
+        if (confirm(`PURGE Archive and all contents: "${path}"?`)) {
+            db.ref('notes').once('value', (snap) => {
+                snap.forEach((child) => {
+                    let folder = child.val().folder || "current notes";
+                    if (folder === path || folder.startsWith(path + '/')) db.ref(`notes/${child.key}`).remove();
+                });
+            });
+        }
+    };
 
     window.loadNote = (id) => {
         db.ref('notes/'+id).once('value', (s) => {
@@ -221,26 +255,25 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "current notes"; document.getElementById('current-path-display').innerText = "Path: current notes"; };
 
-    // FIX: GLOBAL CLICK HANDLER FOR DYNAMIC DELETE BUTTONS
+    // GLOBAL CLICK FOR RELIC DELETE
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('delete-btn-trigger')) {
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
             if (confirm("Permanently purge this relic?")) {
                 const container = e.target.closest('.relic-container');
                 if (container) container.remove();
             }
         }
-    }, true); // Use capture phase to intercept before contenteditable
+    }, true);
 
     // DRAG & RESIZE
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
     document.addEventListener('mousedown', startAction);
     document.addEventListener('mousemove', moveAction);
-    document.addEventListener('mouseup', endAction);
+    document.addEventListener('mouseup', () => { activeTarget = null; isResizing = false; });
     document.addEventListener('touchstart', startAction, {passive: false});
     document.addEventListener('touchmove', moveAction, {passive: false});
-    document.addEventListener('touchend', endAction);
+    document.addEventListener('touchend', () => { activeTarget = null; isResizing = false; });
 
     function startAction(e) {
         const container = e.target.closest('.relic-container');
@@ -271,15 +304,11 @@
         }
         e.preventDefault();
     }
-    function endAction() { activeTarget = null; isResizing = false; }
 
     // RELIC CREATION
     window.addTextBox = () => {
         const html = `<div class="relic-container" style="width:200px; height:120px;" contenteditable="false">
-            <div class="relic-menu">
-                <div class="drag-handle">DRAG</div>
-                <div class="delete-btn-trigger">🗑️</div>
-            </div>
+            <div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>
             <div class="text-box-inner" contenteditable="true">Type inside...</div>
             <div class="resize-handle">⌟</div>
         </div><p><br></p>`;
@@ -290,12 +319,8 @@
         const reader = new FileReader();
         reader.onload = (ev) => {
             const html = `<div class="relic-container" style="width:200px;" contenteditable="false">
-                <div class="relic-menu">
-                    <div class="drag-handle">DRAG</div>
-                    <div class="delete-btn-trigger">🗑️</div>
-                </div>
-                <img src="${ev.target.result}">
-                <div class="resize-handle">⌟</div>
+                <div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>
+                <img src="${ev.target.result}"><div class="resize-handle">⌟</div>
             </div><p><br></p>`;
             exec('insertHTML', html);
         };
@@ -307,10 +332,7 @@
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
         t += `</table>`;
         const html = `<div class="relic-container" style="width:250px;" contenteditable="false">
-            <div class="relic-menu">
-                <div class="drag-handle">DRAG</div>
-                <div class="delete-btn-trigger">🗑️</div>
-            </div>
+            <div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>
             ${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
         exec('insertHTML', html);
     };
