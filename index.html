@@ -35,16 +35,15 @@
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
-        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; }
+        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; }
         
-        /* MODALS */
+        /* LOGIN / MODALS */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
 
-        /* LOADING SPINNER */
         @keyframes spin { to { transform: rotate(360deg); } }
         #spinner { display: none; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
         .loading #spinner { display: inline-block; }
@@ -53,12 +52,12 @@
 <body>
 
 <div id="login-screen">
-    <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center; border-radius:10px;">
+    <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
         <h2 style="font-family:'Cinzel'; color:var(--crimson);">THE BLOOD SEAL</h2>
         <input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email">
         <input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password">
         <button id="login-btn" class="tool-btn" style="width:100%; background:var(--crimson); padding:15px; display:flex; align-items:center; justify-content:center; gap:10px;" onclick="handleLogin()">
-            <span id="btn-text">UNLOCK ARCHIVES</span>
+            <span id="btn-text">UNLOCK</span>
             <div id="spinner"></div>
         </button>
     </div>
@@ -67,16 +66,16 @@
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div id="folder-modal">
     <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">ARCHIVES</h3>
-    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📜 CREATE PATH/SUBFOLDER</button>
-    <button class="tool-btn" style="width:100%; background:#000; color:red; border-color:red;" onclick="selfDestruct()">☣️ SELF DESTRUCT CACHE</button>
+    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📜 NEW FOLDER PATH</button>
+    <button class="tool-btn" style="width:100%; color:red; border-color:red;" onclick="selfDestruct()">☣️ SELF DESTRUCT CACHE</button>
     <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">CLOSE</button>
 </div>
 
 <div class="app-container" id="app">
     <aside id="sidebar">
-        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.3);" onclick="startNewNote()">✨ NEW NOTE</div>
+        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center;" onclick="startNewNote()">✨ NEW NOTE</div>
         <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto; border-top:1px solid var(--crimson);" onclick="handleLogout()">🚪 EXIT</div>
+        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
     </aside>
 
     <main id="main-editor">
@@ -89,11 +88,11 @@
                     <option value="H1">Heading 1</option>
                     <option value="H2">Heading 2</option>
                     <option value="P">Paragraph</option>
-                    <option value="BLOCKQUOTE">Quote</option>
                 </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onclick="exec('italic')">I</button>
                 <button class="tool-btn" onclick="exec('underline')">U</button>
+                <button class="tool-btn" onclick="exec('strikeThrough')">S</button>
                 <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
                 <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
                 <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
@@ -105,7 +104,7 @@
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
 
-            <div id="note-body" contenteditable="true" placeholder="Begin the ritual..."></div>
+            <div id="note-body" contenteditable="true" placeholder="Etch your thoughts..."></div>
         </div>
     </main>
 </div>
@@ -129,7 +128,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
     let currentEditingId = null;
-    let currentFolderName = "All Notes";
+    let currentFolderName = "Archives";
 
     function exec(cmd, val = null) {
         document.getElementById('note-body').focus();
@@ -138,33 +137,24 @@
 
     window.handleLogin = () => {
         const btn = document.getElementById('login-btn');
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
-        if (!email || !pass) return alert("Credentials required.");
         btn.classList.add('loading');
-        auth.signInWithEmailAndPassword(email, pass).catch(e => {
-            btn.classList.remove('loading');
-            alert("⚠️ Seal Rejected: " + e.message);
-        });
+        auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value)
+            .catch(e => { btn.classList.remove('loading'); alert("Denied: " + e.message); });
     };
 
     auth.onAuthStateChanged(u => {
-        if(u) {
-            document.getElementById('app').style.display='flex';
-            document.getElementById('login-screen').style.display='none';
-            initApp();
-        }
+        if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); }
     });
 
     window.handleLogout = () => auth.signOut().then(() => location.reload());
-    window.selfDestruct = () => { if(confirm("Wipe cache?")) { localStorage.clear(); sessionStorage.clear(); handleLogout(); } };
+    window.selfDestruct = () => { if(confirm("Wipe cache and exit?")) { localStorage.clear(); sessionStorage.clear(); handleLogout(); } };
 
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     
     window.createNewFolder = () => { 
-        const n = prompt("Enter Path (e.g. Rituals/Blood):"); 
-        if(n) { currentFolderName = n; startNewNote(); closeModal(); } 
+        const n = prompt("New Path (e.g. Rituals/Blood):"); 
+        if(n) { currentFolderName = n; startNewNote(); closeModal(); alert("Target Path: " + n); } 
     };
 
     window.saveQuick = () => {
@@ -175,9 +165,9 @@
             timestamp: Date.now() 
         };
         if (currentEditingId) {
-            db.ref('notes/' + currentEditingId).update(data).then(() => alert("Archived."));
+            db.ref('notes/' + currentEditingId).update(data).then(() => alert("Etched."));
         } else {
-            db.ref('notes').push(data).then(() => { alert("New Note Created."); });
+            db.ref('notes').push(data).then(() => { alert("Created in " + currentFolderName); });
         }
     };
 
@@ -186,28 +176,21 @@
             const side = document.getElementById('folder-list-sidebar');
             side.innerHTML = "";
             const data = snap.val();
-            if (!data) {
-                side.innerHTML = `<div class="sidebar-item" style="color:var(--silver)">No fragments found.</div>`;
-                return;
-            }
+            if (!data) return;
             const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
             const paths = [...new Set(notes.map(n => n.folder))].sort();
             
             paths.forEach(fullPath => {
-                const parts = fullPath.split('/');
-                const fId = "folder-" + fullPath.replace(/[^a-zA-Z0-9]/g, '-');
+                const fId = "f-" + fullPath.replace(/[^a-zA-Z0-9]/g, '-');
                 const noteHtml = notes.filter(n => n.folder === fullPath).map(n => `
-                    <div class="sidebar-item" style="font-size:0.6rem; padding-left:25px;">
+                    <div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
                         <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
                         <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
                     </div>
                 `).join('');
-                
                 side.innerHTML += `
-                    <div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.15); color:var(--crimson)">
-                        📁 ${fullPath}
-                    </div>
-                    <div id="${fId}" class="folder-content">${noteHtml}</div>
+                    <div class="sidebar-item" onclick="toggleFolder('${fId}')" style="background:rgba(139,0,0,0.1); color:var(--crimson)">📁 ${fullPath}</div>
+                    <div id="${fId}" class="folder-content" style="display:none;">${noteHtml}</div>
                 `;
             });
         });
@@ -225,23 +208,20 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; };
     window.addWebLink = () => { const url = prompt("URL:", "https://"); if(url) exec('createLink', url); };
-    
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const html = `<div class="relic-container" style="width:200px;"><img src="${ev.target.result}"><div class="resize-handle">⌟</div></div><p><br></p>`;
+            const html = `<div style="display:inline-block; border:1px solid var(--crimson); padding:5px;"><img src="${ev.target.result}" style="max-width:300px;"></div><p><br></p>`;
             exec('insertHTML', html);
         };
         reader.readAsDataURL(e.target.files[0]);
     };
-
     window.customTable = () => {
         const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");
-        let t = `<table class="relic-table">`;
-        for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
-        t += `</table>`;
-        const html = `<div class="relic-container" style="width:250px;"><div class="table-menu"><div class="drag-handle">DRAG</div><button class="menu-btn" style="color:red;" onclick="this.closest('.relic-container').remove()">🗑️</button></div>${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
-        exec('insertHTML', html);
+        let t = `<table style="width:100%; border-collapse:collapse; background:rgba(0,0,0,0.5);">`;
+        for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td style="border:1px solid var(--crimson); padding:8px;" contenteditable="true">...</td>`; t += `</tr>`; }
+        t += `</table><p><br></p>`;
+        exec('insertHTML', t);
     };
 </script>
 </body>
