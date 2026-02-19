@@ -33,23 +33,29 @@
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         
-        /* MODALS */
+        /* LOGIN/MODALS */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
 
-        /* RELICS */
+        /* RELICS (CONTEXTUAL BUTTONS) */
         .relic-container { display: inline-block; position: relative; margin: 20px 0; border: 1px solid transparent; min-width: 80px; min-height: 50px; touch-action: none; background: transparent; }
-        .relic-container:hover { border: 1px solid rgba(139,0,0,0.3); }
         .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }
         .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); table-layout: fixed; }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
         .text-box-inner { width: 100%; height: 100%; padding: 10px; outline: none; color: var(--parchment); overflow: hidden; background: transparent; border: 1px dashed rgba(139,0,0,0.2); }
 
-        .relic-menu { position: absolute; top: -30px; left: 0; display: flex; gap: 10px; background: var(--crimson); padding: 3px 10px; border-radius: 4px 4px 0 0; z-index: 150; align-items: center; }
+        /* Hide controls by default */
+        .relic-menu, .resize-handle { display: none; position: absolute; z-index: 150; }
+        .relic-menu { top: -30px; left: 0; gap: 10px; background: var(--crimson); padding: 3px 10px; border-radius: 4px 4px 0 0; align-items: center; }
+        
+        /* Show controls when relic-container is active/focused */
+        .relic-container:focus-within .relic-menu, 
+        .relic-container:focus-within .resize-handle { display: flex; }
+
         .drag-handle { color: #fff; font-weight: bold; font-size: 10px; cursor: move; text-transform: uppercase; }
-        .delete-btn-trigger { color: #fff; font-size: 14px; cursor: pointer; border: none; background: none; padding: 0; display: inline-block; }
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; display: flex; align-items: flex-end; justify-content: flex-end; color: var(--crimson); font-weight: bold; }
+        .delete-btn-trigger { color: #fff; font-size: 14px; cursor: pointer; border: none; background: none; padding: 0; }
+        .resize-handle { bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; align-items: flex-end; justify-content: flex-end; color: var(--crimson); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -166,7 +172,6 @@
         }
     };
 
-    // FOLDER ENGINE (NESTED)
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar');
@@ -198,7 +203,6 @@
                             <span onclick="deleteFolder('${subNode.fullPath}')">🗑️</span>
                         </div>`;
                     container.appendChild(folderDiv);
-
                     const contentDiv = document.createElement('div');
                     contentDiv.id = safeId;
                     contentDiv.className = "folder-content";
@@ -266,7 +270,7 @@
         }
     }, true);
 
-    // DRAG & RESIZE
+    // DRAG & RESIZE Logic
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
     document.addEventListener('mousedown', startAction);
     document.addEventListener('mousemove', moveAction);
@@ -307,7 +311,7 @@
 
     // RELIC CREATION
     window.addTextBox = () => {
-        const html = `<div class="relic-container" style="width:200px; height:120px;" contenteditable="false">
+        const html = `<div class="relic-container" tabindex="0" style="width:200px; height:120px;" contenteditable="false">
             <div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>
             <div class="text-box-inner" contenteditable="true">Type inside...</div>
             <div class="resize-handle">⌟</div>
@@ -318,7 +322,7 @@
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const html = `<div class="relic-container" style="width:200px;" contenteditable="false">
+            const html = `<div class="relic-container" tabindex="0" style="width:200px;" contenteditable="false">
                 <div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>
                 <img src="${ev.target.result}"><div class="resize-handle">⌟</div>
             </div><p><br></p>`;
@@ -331,7 +335,7 @@
         let t = `<table class="relic-table">`;
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
         t += `</table>`;
-        const html = `<div class="relic-container" style="width:250px;" contenteditable="false">
+        const html = `<div class="relic-container" tabindex="0" style="width:250px;" contenteditable="false">
             <div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>
             ${t}<div class="resize-handle">⌟</div></div><p><br></p>`;
         exec('insertHTML', html);
