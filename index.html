@@ -57,6 +57,9 @@
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
+        .modal-folder-list { max-height: 200px; overflow-y: auto; margin: 15px 0; border: 1px solid rgba(139,0,0,0.3); }
+        .modal-folder-item { padding: 10px; border-bottom: 1px solid rgba(139,0,0,0.2); cursor: pointer; font-family: 'Cinzel'; font-size: 0.8rem; }
+        .modal-folder-item:hover { background: rgba(139,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -73,6 +76,7 @@
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div id="folder-modal">
     <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">PATHFINDER</h3>
+    <div id="modal-folder-picker" class="modal-folder-list"></div>
     <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📂 CREATE NEW FOLDER</button>
     <button class="tool-btn" style="width:100%; color:red; border-color:red;" onclick="selfDestruct()">☣️ SELF DESTRUCT</button>
     <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">CLOSE</button>
@@ -143,12 +147,40 @@
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Access Denied")); };
     auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
     window.handleLogout = () => auth.signOut().then(() => location.reload());
-    window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
+    
+    window.openFolders = () => { 
+        updateModalFolderList();
+        document.getElementById('folder-modal').style.display='block'; 
+        document.getElementById('overlay').style.display='block'; 
+    };
+
+    function updateModalFolderList() {
+        const picker = document.getElementById('modal-folder-picker');
+        picker.innerHTML = `<div class="modal-folder-item" onclick="selectFolder('Recent notes')">📁 Recent notes</div>`;
+        db.ref('folders').once('value', snap => {
+            const folders = snap.val() || {};
+            Object.keys(folders).sort().forEach(f => {
+                if(f !== "Recent notes") picker.innerHTML += `<div class="modal-folder-item" onclick="selectFolder('${f}')">📁 ${f}</div>`;
+            });
+        });
+    }
+
+    window.selectFolder = (name) => {
+        currentFolderName = name;
+        document.getElementById('current-path-display').innerText = "Path: " + name;
+        saveNoteData();
+        closeModal();
+    };
+
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     
     window.createNewFolder = () => { 
         const n = prompt("New Folder Name:"); 
-        if(n) { db.ref('folders/' + n).set({name: n, created: Date.now()}); closeModal(); } 
+        if(n) { 
+            db.ref('folders/' + n).set({name: n, created: Date.now()}).then(() => {
+                selectFolder(n);
+            });
+        } 
     };
 
     function saveNoteData() {
@@ -158,18 +190,13 @@
     }
 
     function initApp() {
-        // Combined Listener for Folders and Notes
         db.ref().on('value', (snap) => {
             const sidebar = document.getElementById('folder-list-sidebar');
             sidebar.innerHTML = "";
             const val = snap.val() || {};
             const notes = val.notes || {};
             const folders = val.folders || {};
-
-            // Always render Recent Notes first
             renderFolderUI("Recent notes", notes, sidebar, true);
-
-            // Render Custom Folders
             Object.keys(folders).sort().forEach(fName => {
                 if(fName !== "Recent notes") renderFolderUI(fName, notes, sidebar, false);
             });
@@ -180,31 +207,14 @@
         const safeId = btoa(fName).replace(/=/g, '');
         const folderDiv = document.createElement('div');
         folderDiv.className = "sidebar-item folder-header";
-        
-        let actions = isPermanent ? "" : `
-            <div class="folder-actions">
-                <span onclick="renameFolder('${fName}')">✏️</span>
-                <span onclick="deleteFolder('${fName}')">🗑️</span>
-            </div>`;
-
+        let actions = isPermanent ? "" : `<div class="folder-actions"><span onclick="renameFolder('${fName}')">✏️</span><span onclick="deleteFolder('${fName}')">🗑️</span></div>`;
         folderDiv.innerHTML = `<span onclick="toggleFolder('${safeId}')">📁 ${fName}</span> ${actions}`;
         container.appendChild(folderDiv);
-
         const contentDiv = document.createElement('div');
-        contentDiv.id = safeId;
-        contentDiv.className = "folder-content";
-        
-        const folderNotes = Object.keys(allNotes)
-            .map(id => ({id, ...allNotes[id]}))
-            .filter(n => n.folder === fName)
-            .sort((a,b) => b.timestamp - a.timestamp);
-
+        contentDiv.id = safeId; contentDiv.className = "folder-content";
+        const folderNotes = Object.keys(allNotes).map(id => ({id, ...allNotes[id]})).filter(n => n.folder === fName).sort((a,b) => b.timestamp - a.timestamp);
         folderNotes.forEach(note => {
-            contentDiv.innerHTML += `
-                <div class="sidebar-item" style="font-size:0.6rem;">
-                    <span onclick="loadNote('${note.id}')">📜 ${note.title}</span>
-                    <span onclick="deleteNote('${note.id}', '${note.title}')">🗑️</span>
-                </div>`;
+            contentDiv.innerHTML += `<div class="sidebar-item" style="font-size:0.6rem;"><span onclick="loadNote('${note.id}')">📜 ${note.title}</span><span onclick="deleteNote('${note.id}', '${note.title}')">🗑️</span></div>`;
         });
         container.appendChild(contentDiv);
     }
@@ -214,9 +224,7 @@
         if (newName && newName !== oldName) {
             db.ref('notes').once('value', s => {
                 const notes = s.val() || {};
-                Object.keys(notes).forEach(id => {
-                    if (notes[id].folder === oldName) db.ref(`notes/${id}/folder`).set(newName);
-                });
+                Object.keys(notes).forEach(id => { if (notes[id].folder === oldName) db.ref(`notes/${id}/folder`).set(newName); });
                 db.ref(`folders/${newName}`).set({name: newName, created: Date.now()});
                 db.ref(`folders/${oldName}`).remove();
             });
@@ -227,9 +235,7 @@
         if (confirm(`Delete folder "${name}" and ALL notes inside?`)) {
             db.ref('notes').once('value', s => {
                 const notes = s.val() || {};
-                Object.keys(notes).forEach(id => {
-                    if (notes[id].folder === name) db.ref(`notes/${id}`).remove();
-                });
+                Object.keys(notes).forEach(id => { if (notes[id].folder === name) db.ref(`notes/${id}`).remove(); });
                 db.ref(`folders/${name}`).remove();
             });
         }
@@ -237,27 +243,21 @@
 
     window.loadNote = (id) => { 
         db.ref('notes/'+id).once('value', (s) => { 
-            const n = s.val(); 
-            currentEditingId = id; 
-            currentFolderName = n.folder; 
-            document.getElementById('note-title').value = n.title; 
-            document.getElementById('note-body').innerHTML = n.body; 
+            const n = s.val(); currentEditingId = id; currentFolderName = n.folder; 
+            document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; 
             document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; 
         }); 
     };
 
     window.startNewNote = () => { 
-        currentEditingId = null; 
-        document.getElementById('note-title').value = ""; 
-        document.getElementById('note-body').innerHTML = ""; 
-        currentFolderName = "Recent notes"; 
-        document.getElementById('current-path-display').innerText = "Path: Recent notes"; 
+        currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; 
+        currentFolderName = "Recent notes"; document.getElementById('current-path-display').innerText = "Path: Recent notes"; 
     };
 
     window.deleteNote = (id, title) => { if (confirm(`Delete relic?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
 
-    // --- PASTE & RELIC LOGIC (STAYS THE SAME) ---
+    // --- PASTE & RELIC LOGIC ---
     document.addEventListener('paste', function(e) {
         const selection = window.getSelection(); if (!selection.rangeCount) return;
         let target = selection.anchorNode; if (target.nodeType === 3) target = target.parentNode;
