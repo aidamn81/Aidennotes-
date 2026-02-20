@@ -12,7 +12,6 @@
         
         html, body { height: 100%; margin: 0; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; overflow: hidden; }
         
-        /* LAYOUT */
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         #sidebar { width: 280px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); min-width: 0; }
@@ -24,7 +23,6 @@
             #main-editor { height: 65vh; }
         }
 
-        /* TOOLBAR */
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
@@ -33,14 +31,12 @@
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
         #note-body { min-height: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; cursor: text; }
         
-        /* FOLDERS */
         .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .folder-header { background: rgba(139,0,0,0.15); color: var(--crimson); font-weight: bold; border-left: 2px solid var(--crimson); }
         .folder-content { padding-left: 10px; border-left: 1px solid rgba(139,0,0,0.2); }
         .folder-actions { display: flex; gap: 10px; }
 
-        /* RELICS */
-        .relic-container { display: inline-block; position: relative; margin: 10px; border: 1px solid transparent; min-width: 30px; min-height: 30px; vertical-align: top; outline: none; user-select: none; }
+        .relic-container { display: inline-block; position: relative; margin: 10px; border: 1px solid transparent; min-width: 30px; min-height: 30px; vertical-align: top; outline: none; user-select: none; -webkit-user-select: none; }
         .relic-container:focus, .relic-container:focus-within { border: 1px solid var(--crimson); }
         .relic-menu, .resize-handle { position: absolute; opacity: 0; pointer-events: none; z-index: 200; background: var(--crimson); color: white; transition: opacity 0.2s; }
         .relic-container:focus .relic-menu, .relic-container:focus-within .relic-menu,
@@ -229,7 +225,28 @@
     window.deleteNote = (id, title) => { if (confirm(`Delete relic?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
 
-    // --- LINK LOGIC RESTORED ---
+    // --- FULL RELIC SYSTEMS ---
+    const relicWrapper = (innerHTML, initialStyle = "") => `<div class="relic-container" tabindex="0" contenteditable="false" style="${initialStyle}"><div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>${innerHTML}<div class="resize-handle">⌟</div></div>`;
+    
+    window.addTextBox = () => exec('insertHTML', relicWrapper(`<div class="text-box-inner" contenteditable="true">Write...</div>`, "width:200px; height:100px;"));
+    
+    window.insertImg = (e) => { 
+        const reader = new FileReader(); 
+        reader.onload = (ev) => exec('insertHTML', relicWrapper(`<img class="relic-image" src="${ev.target.result}">`, "width:4cm; height:4cm;")); 
+        reader.readAsDataURL(e.target.files[0]); 
+    };
+    
+    window.customTable = () => { 
+        const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); 
+        let t = `<table class="relic-table">`; 
+        for(let i=0; i<r; i++) { 
+            t += `<tr>`; 
+            for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; 
+            t += `</tr>`; 
+        } 
+        exec('insertHTML', relicWrapper(t + `</table>`, "width:250px;")); 
+    };
+
     window.addWebLink = () => { 
         const t = prompt("Link Title:"), u = prompt("URL:", "https://"); 
         if(t && u) exec('insertHTML', `<a href="${u}" target="_blank" class="editor-link">${t}</a>`); 
@@ -250,7 +267,6 @@
         }
     }, true);
 
-    // --- PASTE & RELIC LOGIC ---
     document.addEventListener('paste', function(e) {
         const selection = window.getSelection(); if (!selection.rangeCount) return;
         let target = selection.anchorNode; if (target.nodeType === 3) target = target.parentNode;
@@ -279,11 +295,6 @@
 
     document.addEventListener('touchend', () => activeRelic = null);
     document.addEventListener('mouseup', () => activeRelic = null);
-
-    const relicWrapper = (innerHTML, initialStyle = "") => `<div class="relic-container" tabindex="0" contenteditable="false" style="${initialStyle}"><div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>${innerHTML}<div class="resize-handle">⌟</div></div>`;
-    window.addTextBox = () => exec('insertHTML', relicWrapper(`<div class="text-box-inner" contenteditable="true">Write...</div>`, "width:200px; height:100px;"));
-    window.insertImg = (e) => { const reader = new FileReader(); reader.onload = (ev) => exec('insertHTML', relicWrapper(`<img class="relic-image" src="${ev.target.result}">`, "width:4cm; height:4cm;")); reader.readAsDataURL(e.target.files[0]); };
-    window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } exec('insertHTML', relicWrapper(t + `</table>`, "width:250px;")); };
 </script>
 </body>
 </html>
