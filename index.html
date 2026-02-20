@@ -2,37 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>AidenNotes | Fortress</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
         :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; }
         
-        .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
+        /* Layout adjustments for iPad/iPhone responsiveness */
+        html, body { height: 100%; margin: 0; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; }
         
-        /* SIDEBAR & NESTED FOLDERS */
-        #sidebar { width: 280px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
-        .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .sidebar-item:hover { background: rgba(139,0,0,0.3); }
-        .folder-header { background: rgba(139,0,0,0.15); color: var(--crimson); font-weight: bold; border-left: 2px solid var(--crimson); }
-        .folder-content { padding-left: 15px; border-left: 1px solid rgba(139,0,0,0.2); display: block; }
-        .folder-actions span { margin-left: 5px; opacity: 0.5; font-size: 10px; cursor: pointer; }
-        .folder-actions span:hover { opacity: 1; color: white; }
+        .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; overflow: hidden; }
+        
+        /* SIDEBAR - Responsive Width */
+        #sidebar { 
+            width: 250px; 
+            max-width: 35%; 
+            background-color: var(--oxblood); 
+            border-right: 1px solid var(--crimson); 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            overflow-y: auto; 
+            z-index: 100; 
+        }
 
-        /* EDITOR */
-        #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
+        /* EDITOR - Flexible for different screen sizes */
+        #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; min-width: 0; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
+        
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; margin-bottom: 5px; }
         #current-path-display { font-size: 0.6rem; color: var(--silver); font-family: 'Cinzel'; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
         
+        /* Toolbar wrapping for narrow iPhone screens */
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
+        
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         
+        /* FOLDER STYLES */
+        .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
+        .folder-header { background: rgba(139,0,0,0.15); color: var(--crimson); font-weight: bold; border-left: 2px solid var(--crimson); }
+        .folder-content { padding-left: 10px; border-left: 1px solid rgba(139,0,0,0.2); display: block; }
+        .folder-actions span { margin-left: 5px; opacity: 0.5; font-size: 10px; cursor: pointer; }
+
         /* LINKS */
         #note-body a { color: var(--crimson); text-decoration: underline; cursor: pointer; }
 
@@ -54,6 +69,13 @@
         .drag-handle { color: #fff; font-weight: bold; font-size: 10px; cursor: move; text-transform: uppercase; }
         .delete-btn-trigger { color: #fff; font-size: 14px; cursor: pointer; border: none; background: none; padding: 0; }
         .resize-handle { bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; align-items: flex-end; justify-content: flex-end; color: var(--crimson); font-weight: bold; }
+
+        /* Media Query for small screens (iPhone) */
+        @media (max-width: 600px) {
+            #sidebar { width: 150px; }
+            #note-title { font-size: 1.2rem; }
+            .tool-btn { padding: 4px 6px; font-size: 0.6rem; }
+        }
     </style>
 </head>
 <body>
@@ -211,6 +233,32 @@
         });
     }
 
+    window.renameFolder = (oldPath) => {
+        const newPath = prompt(`Rename Folder "${oldPath}" to:`, oldPath);
+        if (newPath && newPath !== oldPath && confirm(`Confirm Moving all content?`)) {
+            db.ref('notes').once('value', (snap) => {
+                const updates = {};
+                snap.forEach((child) => {
+                    let folder = child.val().folder || "current notes";
+                    if (folder === oldPath || folder.startsWith(oldPath + '/')) updates[`/notes/${child.key}/folder`] = folder.replace(oldPath, newPath);
+                });
+                db.ref().update(updates);
+            });
+        }
+    };
+
+    window.deleteFolder = (path) => {
+        if (path === "current notes") return alert("Root Archive Protected.");
+        if (confirm(`PURGE Archive and all contents: "${path}"?`)) {
+            db.ref('notes').once('value', (snap) => {
+                snap.forEach((child) => {
+                    let folder = child.val().folder || "current notes";
+                    if (folder === path || folder.startsWith(path + '/')) db.ref(`notes/${child.key}`).remove();
+                });
+            });
+        }
+    };
+
     window.loadNote = (id) => {
         db.ref('notes/'+id).once('value', (s) => {
             const n = s.val(); 
@@ -228,7 +276,6 @@
 
     // GLOBAL CLICK HANDLER (RELICS & LINKS)
     document.addEventListener('click', function(e) {
-        // Relic Deletion
         if (e.target.classList.contains('delete-btn-trigger')) {
             e.preventDefault(); e.stopPropagation();
             if (confirm("Permanently purge this relic?")) {
@@ -238,7 +285,6 @@
             return;
         }
 
-        // Link Interaction
         const link = e.target.closest('#note-body a');
         if (link) {
             e.preventDefault(); e.stopPropagation();
