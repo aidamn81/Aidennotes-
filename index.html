@@ -31,7 +31,7 @@
         .color-picker { width: 30px; height: 25px; padding: 0; border: 1px solid var(--crimson); background: var(--ink); cursor: pointer; }
         
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
-        #note-body { min-height: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
+        #note-body { min-height: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; cursor: text; }
         
         /* FOLDERS */
         .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
@@ -40,7 +40,7 @@
         .folder-actions { display: flex; gap: 10px; }
 
         /* RELICS */
-        .relic-container { display: inline-block; position: relative; margin: 10px; border: 1px solid transparent; min-width: 30px; min-height: 30px; vertical-align: top; outline: none; }
+        .relic-container { display: inline-block; position: relative; margin: 10px; border: 1px solid transparent; min-width: 30px; min-height: 30px; vertical-align: top; outline: none; user-select: none; }
         .relic-container:focus, .relic-container:focus-within { border: 1px solid var(--crimson); }
         .relic-menu, .resize-handle { position: absolute; opacity: 0; pointer-events: none; z-index: 200; background: var(--crimson); color: white; transition: opacity 0.2s; }
         .relic-container:focus .relic-menu, .relic-container:focus-within .relic-menu,
@@ -49,17 +49,16 @@
         .resize-handle { bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .drag-handle { cursor: move; padding: 2px 5px; border: 1px solid rgba(255,255,255,0.3); }
 
-        .relic-image { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: auto; cursor: default; }
+        .relic-image { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: auto; }
         .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); }
-        .relic-table td { border: 1px solid var(--crimson); padding: 5px; color: var(--parchment); -webkit-user-select: text; user-select: text; }
-        .text-box-inner { width: 100%; height: 100%; padding: 10px; color: var(--parchment); outline: none; -webkit-user-select: text; user-select: text; }
+        .relic-table td { border: 1px solid var(--crimson); padding: 5px; color: var(--parchment); user-select: text; -webkit-user-select: text; }
+        .text-box-inner { width: 100%; height: 100%; padding: 10px; color: var(--parchment); outline: none; user-select: text; -webkit-user-select: text; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
         .modal-folder-list { max-height: 200px; overflow-y: auto; margin: 15px 0; border: 1px solid rgba(139,0,0,0.3); }
         .modal-folder-item { padding: 10px; border-bottom: 1px solid rgba(139,0,0,0.2); cursor: pointer; font-family: 'Cinzel'; font-size: 0.8rem; }
-        .modal-folder-item:hover { background: rgba(139,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -90,10 +89,10 @@
     </aside>
 
     <main id="main-editor">
-        <div class="scroll-content">
+        <div class="scroll-content" onclick="document.getElementById('note-body').focus()">
             <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: Recent notes</div>
             <input type="text" id="note-title" placeholder="Untitled Fragment...">
-            <div class="sub-title-toolbar">
+            <div class="sub-title-toolbar" onclick="event.stopPropagation()">
                 <button class="tool-btn" onclick="exec('undo')">↩</button>
                 <button class="tool-btn" onclick="exec('redo')">↪</button>
                 <select class="tool-select" onchange="exec('fontSize', this.value); this.selectedIndex=0;">
@@ -148,39 +147,23 @@
     auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
     window.handleLogout = () => auth.signOut().then(() => location.reload());
     
-    window.openFolders = () => { 
-        updateModalFolderList();
-        document.getElementById('folder-modal').style.display='block'; 
-        document.getElementById('overlay').style.display='block'; 
-    };
+    window.openFolders = () => { updateModalFolderList(); document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
 
     function updateModalFolderList() {
         const picker = document.getElementById('modal-folder-picker');
         picker.innerHTML = `<div class="modal-folder-item" onclick="selectFolder('Recent notes')">📁 Recent notes</div>`;
         db.ref('folders').once('value', snap => {
             const folders = snap.val() || {};
-            Object.keys(folders).sort().forEach(f => {
-                if(f !== "Recent notes") picker.innerHTML += `<div class="modal-folder-item" onclick="selectFolder('${f}')">📁 ${f}</div>`;
-            });
+            Object.keys(folders).sort().forEach(f => { if(f !== "Recent notes") picker.innerHTML += `<div class="modal-folder-item" onclick="selectFolder('${f}')">📁 ${f}</div>`; });
         });
     }
 
-    window.selectFolder = (name) => {
-        currentFolderName = name;
-        document.getElementById('current-path-display').innerText = "Path: " + name;
-        saveNoteData();
-        closeModal();
-    };
-
+    window.selectFolder = (name) => { currentFolderName = name; document.getElementById('current-path-display').innerText = "Path: " + name; saveNoteData(); closeModal(); };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     
     window.createNewFolder = () => { 
         const n = prompt("New Folder Name:"); 
-        if(n) { 
-            db.ref('folders/' + n).set({name: n, created: Date.now()}).then(() => {
-                selectFolder(n);
-            });
-        } 
+        if(n) db.ref('folders/' + n).set({name: n, created: Date.now()}).then(() => selectFolder(n));
     };
 
     function saveNoteData() {
@@ -191,27 +174,20 @@
 
     function initApp() {
         db.ref().on('value', (snap) => {
-            const sidebar = document.getElementById('folder-list-sidebar');
-            sidebar.innerHTML = "";
-            const val = snap.val() || {};
-            const notes = val.notes || {};
-            const folders = val.folders || {};
+            const sidebar = document.getElementById('folder-list-sidebar'); sidebar.innerHTML = "";
+            const val = snap.val() || {}; const notes = val.notes || {}; const folders = val.folders || {};
             renderFolderUI("Recent notes", notes, sidebar, true);
-            Object.keys(folders).sort().forEach(fName => {
-                if(fName !== "Recent notes") renderFolderUI(fName, notes, sidebar, false);
-            });
+            Object.keys(folders).sort().forEach(fName => { if(fName !== "Recent notes") renderFolderUI(fName, notes, sidebar, false); });
         });
     }
 
     function renderFolderUI(fName, allNotes, container, isPermanent) {
         const safeId = btoa(fName).replace(/=/g, '');
-        const folderDiv = document.createElement('div');
-        folderDiv.className = "sidebar-item folder-header";
+        const folderDiv = document.createElement('div'); folderDiv.className = "sidebar-item folder-header";
         let actions = isPermanent ? "" : `<div class="folder-actions"><span onclick="renameFolder('${fName}')">✏️</span><span onclick="deleteFolder('${fName}')">🗑️</span></div>`;
         folderDiv.innerHTML = `<span onclick="toggleFolder('${safeId}')">📁 ${fName}</span> ${actions}`;
         container.appendChild(folderDiv);
-        const contentDiv = document.createElement('div');
-        contentDiv.id = safeId; contentDiv.className = "folder-content";
+        const contentDiv = document.createElement('div'); contentDiv.id = safeId; contentDiv.className = "folder-content";
         const folderNotes = Object.keys(allNotes).map(id => ({id, ...allNotes[id]})).filter(n => n.folder === fName).sort((a,b) => b.timestamp - a.timestamp);
         folderNotes.forEach(note => {
             contentDiv.innerHTML += `<div class="sidebar-item" style="font-size:0.6rem;"><span onclick="loadNote('${note.id}')">📜 ${note.title}</span><span onclick="deleteNote('${note.id}', '${note.title}')">🗑️</span></div>`;
@@ -249,13 +225,30 @@
         }); 
     };
 
-    window.startNewNote = () => { 
-        currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; 
-        currentFolderName = "Recent notes"; document.getElementById('current-path-display').innerText = "Path: Recent notes"; 
-    };
-
+    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent notes"; document.getElementById('current-path-display').innerText = "Path: Recent notes"; };
     window.deleteNote = (id, title) => { if (confirm(`Delete relic?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
+
+    // --- LINK LOGIC RESTORED ---
+    window.addWebLink = () => { 
+        const t = prompt("Link Title:"), u = prompt("URL:", "https://"); 
+        if(t && u) exec('insertHTML', `<a href="${u}" target="_blank" class="editor-link">${t}</a>`); 
+    };
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('#note-body a');
+        if (link) { 
+            e.preventDefault(); 
+            const action = prompt(`1: Visit | 2: Edit | 3: Delete`, "1"); 
+            if (action === "1") window.open(link.href, '_blank'); 
+            else if (action === "2") { 
+                const nt = prompt("Title:", link.innerText), nu = prompt("URL:", link.href); 
+                if (nt) link.innerText = nt; if (nu) link.href = nu; 
+            } else if (action === "3") { 
+                if (confirm("Delete link?")) link.outerHTML = link.innerHTML; 
+            } 
+        }
+    }, true);
 
     // --- PASTE & RELIC LOGIC ---
     document.addEventListener('paste', function(e) {
@@ -291,7 +284,6 @@
     window.addTextBox = () => exec('insertHTML', relicWrapper(`<div class="text-box-inner" contenteditable="true">Write...</div>`, "width:200px; height:100px;"));
     window.insertImg = (e) => { const reader = new FileReader(); reader.onload = (ev) => exec('insertHTML', relicWrapper(`<img class="relic-image" src="${ev.target.result}">`, "width:4cm; height:4cm;")); reader.readAsDataURL(e.target.files[0]); };
     window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } exec('insertHTML', relicWrapper(t + `</table>`, "width:250px;")); };
-    window.addWebLink = () => { const t = prompt("Link Title:"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank">${t}</a>`); };
 </script>
 </body>
 </html>
