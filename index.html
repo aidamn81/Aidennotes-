@@ -39,17 +39,18 @@
         /* TOOLBAR */
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
+        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
         .color-picker { width: 30px; height: 25px; padding: 0; border: 1px solid var(--crimson); background: var(--ink); cursor: pointer; }
         
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
-        #note-body { min-height: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 200px; position: relative; }
+        #note-body { min-height: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         
         /* FOLDERS */
         .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .folder-header { background: rgba(139,0,0,0.15); color: var(--crimson); font-weight: bold; border-left: 2px solid var(--crimson); }
         .folder-content { padding-left: 10px; border-left: 1px solid rgba(139,0,0,0.2); }
 
-        /* RELICS & LINKS */
+        /* RELICS */
         #note-body a { color: var(--crimson); text-decoration: underline; cursor: pointer; }
         .relic-container { display: inline-block; position: relative; margin: 20px 0; border: 1px solid transparent; min-width: 80px; min-height: 50px; touch-action: none; background: transparent; }
         .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }
@@ -63,6 +64,7 @@
         .drag-handle { color: #fff; font-weight: bold; font-size: 10px; cursor: move; }
         .resize-handle { bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; color: var(--crimson); font-weight: bold; align-items: flex-end; justify-content: flex-end; }
 
+        /* MODALS */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
@@ -82,7 +84,7 @@
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div id="folder-modal">
     <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">PATHFINDER</h3>
-    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📂 SET PATH</button>
+    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📂 SET PATH / CREATE SUBFOLDER</button>
     <button class="tool-btn" style="width:100%; color:red; border-color:red;" onclick="selfDestruct()">☣️ SELF DESTRUCT</button>
     <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">CLOSE</button>
 </div>
@@ -99,18 +101,25 @@
             <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: current notes</div>
             <input type="text" id="note-title" placeholder="Untitled Fragment...">
             <div class="sub-title-toolbar">
+                <select class="tool-select" onchange="exec('fontSize', this.value); this.selectedIndex=0;">
+                    <option value="">Size</option>
+                    <option value="3">Small</option>
+                    <option value="5">Medium</option>
+                    <option value="7">Large</option>
+                </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onclick="exec('italic')">I</button>
+                <button class="tool-btn" onclick="exec('underline')">U</button>
                 <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
                 <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
                 <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
-                <input type="color" class="color-picker" oninput="exec('foreColor', this.value)" title="Font Color">
+                <input type="color" class="color-picker" oninput="exec('foreColor', this.value)" title="Text Color">
                 <button class="tool-btn" onclick="addWebLink()">🔗</button>
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
                 <button class="tool-btn" onclick="customTable()">📊</button>
                 <button class="tool-btn" onclick="addTextBox()">📄 TXT</button>
-                <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
-                <button class="tool-btn" onclick="openFolders()">DIR</button>
+                <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveToRecent()">SAVE</button>
+                <button class="tool-btn" onclick="openFolders()">SAVE TO...</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
             <div id="note-body" contenteditable="true"></div>
@@ -155,25 +164,27 @@
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     
     window.createNewFolder = () => { 
-        const n = prompt("Path:", currentFolderName); 
-        if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } 
+        const n = prompt("Enter main or subfolder path (e.g. Work/Design):", currentFolderName); 
+        if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; saveNoteData(); closeModal(); } 
     };
 
-    window.saveQuick = () => {
+    window.saveToRecent = () => { currentFolderName = "current notes"; saveNoteData(); };
+
+    function saveNoteData() {
         const data = { 
-            title: document.getElementById('note-title').value || "Untitled", 
+            title: document.getElementById('note-title').value || "Untitled Fragment", 
             body: document.getElementById('note-body').innerHTML, 
             folder: currentFolderName || "current notes", 
             timestamp: Date.now() 
         };
         if (currentEditingId) {
-            db.ref('notes/' + currentEditingId).set(data).then(() => alert("Saved"));
+            db.ref('notes/' + currentEditingId).set(data).then(() => alert("Saved to " + data.folder));
         } else {
             const newRef = db.ref('notes').push();
             currentEditingId = newRef.key;
-            newRef.set(data).then(() => alert("Saved"));
+            newRef.set(data).then(() => alert("Etched in " + data.folder));
         }
-    };
+    }
 
     function initApp() {
         db.ref('notes').on('value', (snap) => {
@@ -195,7 +206,7 @@
             function renderTree(node, container) {
                 Object.values(node.sub).sort((a,b) => a.name.localeCompare(b.name)).forEach(subNode => {
                     const safeId = btoa(subNode.fullPath).replace(/=/g, '').replace(/\//g, '_');
-                    container.innerHTML += `<div class="sidebar-item folder-header"><span onclick="toggleFolder('${safeId}')">📁 ${subNode.name}</span><div class="folder-actions"><span onclick="renameFolder('${subNode.fullPath}')">✏️</span><span onclick="deleteFolder('${subNode.fullPath}')">🗑️</span></div></div>`;
+                    container.innerHTML += `<div class="sidebar-item folder-header"><span onclick="toggleFolder('${safeId}')">📁 ${subNode.name}</span></div>`;
                     const contentDiv = document.createElement('div');
                     contentDiv.id = safeId; contentDiv.className = "folder-content";
                     renderTree(subNode, contentDiv);
@@ -208,32 +219,6 @@
             renderTree(tree, side);
         });
     }
-
-    window.renameFolder = (oldPath) => {
-        const newPath = prompt(`Rename to:`, oldPath);
-        if (newPath && newPath !== oldPath && confirm(`Move all?`)) {
-            db.ref('notes').once('value', (snap) => {
-                const updates = {};
-                snap.forEach((child) => {
-                    let folder = child.val().folder || "current notes";
-                    if (folder === oldPath || folder.startsWith(oldPath + '/')) updates[`/notes/${child.key}/folder`] = folder.replace(oldPath, newPath);
-                });
-                db.ref().update(updates);
-            });
-        }
-    };
-
-    window.deleteFolder = (path) => {
-        if (path === "current notes") return;
-        if (confirm(`Purge folder?`)) {
-            db.ref('notes').once('value', (snap) => {
-                snap.forEach((child) => {
-                    let folder = child.val().folder || "current notes";
-                    if (folder === path || folder.startsWith(path + '/')) db.ref(`notes/${child.key}`).remove();
-                });
-            });
-        }
-    };
 
     window.loadNote = (id) => {
         db.ref('notes/'+id).once('value', (s) => {
@@ -258,12 +243,12 @@
         const link = e.target.closest('#note-body a');
         if (link) {
             e.preventDefault();
-            const action = prompt(`1: Visit | 2: Edit | 3: Delete`, "1");
+            const action = prompt(`1: Visit Browser | 2: Edit | 3: Delete`, "1");
             if (action === "1") window.open(link.href, '_blank');
             else if (action === "2") {
-                const nt = prompt("Title:", link.innerText), nu = prompt("URL:", link.href);
+                const nt = prompt("New Title:", link.innerText), nu = prompt("New URL:", link.href);
                 if (nt) link.innerText = nt; if (nu) link.href = nu;
-            } else if (action === "3") { if (confirm("Delete link?")) link.outerHTML = link.innerHTML; }
+            } else if (action === "3") { if (confirm("Delete this link?")) link.outerHTML = link.innerHTML; }
         }
     }, true);
 
@@ -303,7 +288,7 @@
 
     window.addTextBox = () => exec('insertHTML', `<div class="relic-container" tabindex="0" style="width:200px; height:100px;" contenteditable="false"><div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div><div class="text-box-inner" contenteditable="true">Text...</div><div class="resize-handle">⌟</div></div><br>`);
     window.addWebLink = () => { 
-        const t = prompt("Title:"), u = prompt("URL:", "https://");
+        const t = prompt("Link Title:"), u = prompt("URL:", "https://");
         if(t && u) exec('insertHTML', `<a href="${u}" target="_blank">${t}</a>`);
     };
     window.insertImg = (e) => {
