@@ -50,7 +50,6 @@
         }
         .relic-container:focus, .relic-container:focus-within { border: 1px solid var(--crimson); }
 
-        /* Control Visibility Logic */
         .relic-menu, .resize-handle { 
             position: absolute; 
             opacity: 0; 
@@ -69,8 +68,8 @@
         .resize-handle { bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .drag-handle { cursor: move; padding: 2px 5px; border: 1px solid rgba(255,255,255,0.3); }
 
-        /* 2x2cm Image Restriction */
-        .relic-image { width: 2cm; height: 2cm; object-fit: cover; cursor: zoom-in; display: block; }
+        /* 4x4cm Image Setup */
+        .relic-image { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; display: block; }
         
         .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); }
         .relic-table td { border: 1px solid var(--crimson); padding: 5px; color: var(--parchment); }
@@ -270,7 +269,6 @@
         } else if (t.classList.contains('delete-btn-trigger')) {
             if (confirm("Delete this relic?")) container.remove();
         } else if (t.classList.contains('relic-image')) {
-            // Tapping image opens in new tab
             window.open(t.src, '_blank');
         }
     }
@@ -295,31 +293,32 @@
     document.addEventListener('touchend', () => activeRelic = null);
     document.addEventListener('mouseup', () => activeRelic = null);
 
-    const relicWrapper = (innerHTML) => {
-        return `<div class="relic-container" tabindex="0" contenteditable="false">
+    const relicWrapper = (innerHTML, initialStyle = "") => {
+        return `<div class="relic-container" tabindex="0" contenteditable="false" style="${initialStyle}">
             <div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>
             ${innerHTML}
             <div class="resize-handle">⌟</div>
         </div>`;
     };
 
-    window.addTextBox = () => exec('insertHTML', relicWrapper(`<div class="text-box-inner" contenteditable="true">Write...</div>`));
+    window.addTextBox = () => exec('insertHTML', relicWrapper(`<div class="text-box-inner" contenteditable="true">Write...</div>`, "width:200px; height:100px;"));
+    
+    window.insertImg = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => exec('insertHTML', relicWrapper(`<img class="relic-image" src="${ev.target.result}">`, "width:4cm; height:4cm;"));
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
     window.addWebLink = () => { 
         const t = prompt("Link Title:"), u = prompt("URL:", "https://");
         if(t && u) exec('insertHTML', `<a href="${u}" target="_blank">${t}</a>`);
-    };
-
-    window.insertImg = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => exec('insertHTML', relicWrapper(`<img class="relic-image" src="${ev.target.result}">`));
-        reader.readAsDataURL(e.target.files[0]);
     };
 
     window.customTable = () => {
         const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");
         let t = `<table class="relic-table">`;
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
-        exec('insertHTML', relicWrapper(t + `</table>`));
+        exec('insertHTML', relicWrapper(t + `</table>`, "width:250px;"));
     };
 
     document.addEventListener('click', (e) => {
