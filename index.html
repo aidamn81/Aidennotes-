@@ -50,27 +50,11 @@
         .resize-handle { bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .drag-handle { cursor: move; padding: 2px 5px; border: 1px solid rgba(255,255,255,0.3); }
 
-        .relic-image { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; display: block; }
+        .relic-image { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
         .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); }
         
-        /* Table Cell Fix: Ensure they accept focus and paste */
-        .relic-table td { 
-            border: 1px solid var(--crimson); 
-            padding: 5px; 
-            color: var(--parchment); 
-            -webkit-user-select: text; 
-            user-select: text;
-        }
-
-        .text-box-inner { 
-            width: 100%; 
-            height: 100%; 
-            padding: 10px; 
-            color: var(--parchment); 
-            outline: none; 
-            -webkit-user-select: text; 
-            user-select: text;
-        }
+        .relic-table td { border: 1px solid var(--crimson); padding: 5px; color: var(--parchment); -webkit-user-select: text; user-select: text; }
+        .text-box-inner { width: 100%; height: 100%; padding: 10px; color: var(--parchment); outline: none; -webkit-user-select: text; user-select: text; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
@@ -154,73 +138,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-    let currentEditingId = null;
-    let currentFolderName = "current notes"; 
+    let currentEditingId = null, currentFolderName = "current notes"; 
 
     function exec(cmd, val = null) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
 
-    window.handleLogin = () => {
-        auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Access Denied"));
-    };
-
-    auth.onAuthStateChanged(u => {
-        if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); }
-    });
-
+    window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Access Denied")); };
+    auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
     window.handleLogout = () => auth.signOut().then(() => location.reload());
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     
-    window.createNewFolder = () => { 
-        const n = prompt("Path:", currentFolderName); 
-        if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; saveNoteData(); closeModal(); } 
-    };
-
+    window.createNewFolder = () => { const n = prompt("Path:", currentFolderName); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; saveNoteData(); closeModal(); } };
     window.saveToRecent = () => { currentFolderName = "current notes"; saveNoteData(); };
 
     function saveNoteData() {
-        const data = { 
-            title: document.getElementById('note-title').value || "Untitled Fragment", 
-            body: document.getElementById('note-body').innerHTML, 
-            folder: currentFolderName || "current notes", 
-            timestamp: Date.now() 
-        };
-        if (currentEditingId) {
-            db.ref('notes/' + currentEditingId).set(data).then(() => alert("Saved"));
-        } else {
-            const newRef = db.ref('notes').push();
-            currentEditingId = newRef.key;
-            newRef.set(data).then(() => alert("Saved"));
-        }
+        const data = { title: document.getElementById('note-title').value || "Untitled Fragment", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "current notes", timestamp: Date.now() };
+        if (currentEditingId) db.ref('notes/' + currentEditingId).set(data).then(() => alert("Saved"));
+        else { const newRef = db.ref('notes').push(); currentEditingId = newRef.key; newRef.set(data).then(() => alert("Saved")); }
     }
 
     function initApp() {
         db.ref('notes').on('value', (snap) => {
-            const side = document.getElementById('folder-list-sidebar');
+            const side = document.getElementById('folder-list-sidebar'), data = snap.val() || {};
             side.innerHTML = "";
-            const data = snap.val() || {}; 
-            const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
-            const tree = { name: "Root", sub: {}, notes: [] };
+            const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse(), tree = { name: "Root", sub: {}, notes: [] };
             notes.forEach(n => {
-                let pathParts = (n.folder || "current notes").split('/');
-                let current = tree;
-                pathParts.forEach(part => {
-                    if(!current.sub[part]) current.sub[part] = { name: part, sub: {}, notes: [], fullPath: (current.fullPath ? current.fullPath + '/' : '') + part };
-                    current = current.sub[part];
-                });
+                let pathParts = (n.folder || "current notes").split('/'), current = tree;
+                pathParts.forEach(part => { if(!current.sub[part]) current.sub[part] = { name: part, sub: {}, notes: [], fullPath: (current.fullPath ? current.fullPath + '/' : '') + part }; current = current.sub[part]; });
                 current.notes.push(n);
             });
-
             function renderTree(node, container) {
                 Object.values(node.sub).sort((a,b) => a.name.localeCompare(b.name)).forEach(subNode => {
                     const safeId = btoa(subNode.fullPath).replace(/=/g, '').replace(/\//g, '_');
                     container.innerHTML += `<div class="sidebar-item folder-header"><span onclick="toggleFolder('${safeId}')">📁 ${subNode.name}</span></div>`;
-                    const contentDiv = document.createElement('div');
-                    contentDiv.id = safeId; contentDiv.className = "folder-content";
+                    const contentDiv = document.createElement('div'); contentDiv.id = safeId; contentDiv.className = "folder-content";
                     renderTree(subNode, contentDiv);
-                    subNode.notes.forEach(note => {
-                        contentDiv.innerHTML += `<div class="sidebar-item" style="font-size:0.6rem;"><span onclick="loadNote('${note.id}')">📜 ${note.title}</span><span onclick="deleteNote('${note.id}', '${note.title}')">🗑️</span></div>`;
-                    });
+                    subNode.notes.forEach(note => { contentDiv.innerHTML += `<div class="sidebar-item" style="font-size:0.6rem;"><span onclick="loadNote('${note.id}')">📜 ${note.title}</span><span onclick="deleteNote('${note.id}', '${note.title}')">🗑️</span></div>`; });
                     container.appendChild(contentDiv);
                 });
             }
@@ -228,130 +181,52 @@
         });
     }
 
-    window.loadNote = (id) => {
-        db.ref('notes/'+id).once('value', (s) => {
-            const n = s.val(); 
-            currentEditingId = id; 
-            currentFolderName = n.folder || "current notes";
-            document.getElementById('note-title').value = n.title;
-            document.getElementById('note-body').innerHTML = n.body;
-            document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
-        });
-    };
-
+    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "current notes"; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; }); };
     window.deleteNote = (id, title) => { if (confirm(`Delete relic?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "current notes"; document.getElementById('current-path-display').innerText = "Path: current notes"; };
 
-    // --- AGGRESSIVE PASTE ENGINE ---
+    // --- AGGRESSIVE PASTE ---
     document.addEventListener('paste', function(e) {
-        // Find if we are inside an editable relic part
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return;
-        
-        let target = selection.anchorNode;
-        if (target.nodeType === 3) target = target.parentNode; // Get parent if text node
-
+        const selection = window.getSelection(); if (!selection.rangeCount) return;
+        let target = selection.anchorNode; if (target.nodeType === 3) target = target.parentNode;
         const editableCell = target.closest('td[contenteditable="true"], .text-box-inner[contenteditable="true"]');
-        
-        if (editableCell) {
-            e.preventDefault();
-            const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-            
-            // Force the insert at current cursor position
-            const range = selection.getRangeAt(0);
-            range.deleteContents();
-            range.insertNode(document.createTextNode(text));
-            
-            // Move cursor to end of pasted text
-            selection.collapseToEnd();
-        }
+        if (editableCell) { e.preventDefault(); const text = (e.clipboardData || window.clipboardData).getData('text/plain'); const range = selection.getRangeAt(0); range.deleteContents(); range.insertNode(document.createTextNode(text)); selection.collapseToEnd(); }
     });
 
     // --- RELIC ENGINE ---
     let activeRelic = null, mode = null, sX, sY, sW, sH, sL, sT;
-
     document.addEventListener('touchstart', handleStart, {passive: false});
     document.addEventListener('mousedown', handleStart);
 
     function handleStart(e) {
-        const t = e.target;
-        const container = t.closest('.relic-container');
-        if (!container) return;
+        const t = e.target, container = t.closest('.relic-container'); if (!container) return;
         const touch = e.type.includes('touch') ? e.touches[0] : e;
-        
-        if (t.classList.contains('resize-handle')) {
-            e.preventDefault(); activeRelic = container; mode = 'resize';
-            sX = touch.clientX; sY = touch.clientY;
-            sW = container.offsetWidth; sH = container.offsetHeight;
-        } else if (t.classList.contains('drag-handle')) {
-            e.preventDefault(); activeRelic = container; mode = 'drag';
-            sX = touch.clientX; sY = touch.clientY;
-            sL = container.offsetLeft; sT = container.offsetTop;
-        } else if (t.classList.contains('delete-btn-trigger')) {
-            if (confirm("Delete relic?")) container.remove();
-        } else if (t.classList.contains('relic-image')) {
-            window.open(t.src, '_blank');
-        }
+        if (t.classList.contains('resize-handle')) { e.preventDefault(); activeRelic = container; mode = 'resize'; sX = touch.clientX; sY = touch.clientY; sW = container.offsetWidth; sH = container.offsetHeight; }
+        else if (t.classList.contains('drag-handle')) { e.preventDefault(); activeRelic = container; mode = 'drag'; sX = touch.clientX; sY = touch.clientY; sL = container.offsetLeft; sT = container.offsetTop; }
+        else if (t.classList.contains('delete-btn-trigger')) { if (confirm("Delete relic?")) container.remove(); }
     }
 
-    document.addEventListener('touchmove', handleMove, {passive: false});
-    document.addEventListener('mousemove', handleMove);
-
-    function handleMove(e) {
-        if (!activeRelic) return;
-        e.preventDefault();
+    document.addEventListener('touchmove', function(e) {
+        if (!activeRelic) return; e.preventDefault();
         const touch = e.type.includes('touch') ? e.touches[0] : e;
-        if (mode === 'resize') {
-            activeRelic.style.width = (sW + (touch.clientX - sX)) + 'px';
-            activeRelic.style.height = (sH + (touch.clientY - sY)) + 'px';
-        } else if (mode === 'drag') {
-            activeRelic.style.position = 'absolute';
-            activeRelic.style.left = (sL + (touch.clientX - sX)) + 'px';
-            activeRelic.style.top = (sT + (touch.clientY - sY)) + 'px';
-        }
-    }
+        if (mode === 'resize') { activeRelic.style.width = (sW + (touch.clientX - sX)) + 'px'; activeRelic.style.height = (sH + (touch.clientY - sY)) + 'px'; }
+        else if (mode === 'drag') { activeRelic.style.position = 'absolute'; activeRelic.style.left = (sL + (touch.clientX - sX)) + 'px'; activeRelic.style.top = (sT + (touch.clientY - sY)) + 'px'; }
+    }, {passive: false});
 
     document.addEventListener('touchend', () => activeRelic = null);
     document.addEventListener('mouseup', () => activeRelic = null);
 
-    const relicWrapper = (innerHTML, initialStyle = "") => {
-        return `<div class="relic-container" tabindex="0" contenteditable="false" style="${initialStyle}">
-            <div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>
-            ${innerHTML}
-            <div class="resize-handle">⌟</div>
-        </div>`;
-    };
+    const relicWrapper = (innerHTML, initialStyle = "") => `<div class="relic-container" tabindex="0" contenteditable="false" style="${initialStyle}"><div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>${innerHTML}<div class="resize-handle">⌟</div></div>`;
 
     window.addTextBox = () => exec('insertHTML', relicWrapper(`<div class="text-box-inner" contenteditable="true">Write...</div>`, "width:200px; height:100px;"));
-    window.insertImg = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => exec('insertHTML', relicWrapper(`<img class="relic-image" src="${ev.target.result}">`, "width:4cm; height:4cm;"));
-        reader.readAsDataURL(e.target.files[0]);
-    };
-    window.customTable = () => {
-        const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");
-        let t = `<table class="relic-table">`;
-        for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
-        exec('insertHTML', relicWrapper(t + `</table>`, "width:250px;"));
-    };
-
-    window.addWebLink = () => { 
-        const t = prompt("Link Title:"), u = prompt("URL:", "https://");
-        if(t && u) exec('insertHTML', `<a href="${u}" target="_blank">${t}</a>`);
-    };
+    window.insertImg = (e) => { const reader = new FileReader(); reader.onload = (ev) => exec('insertHTML', relicWrapper(`<img class="relic-image" src="${ev.target.result}">`, "width:4cm; height:4cm;")); reader.readAsDataURL(e.target.files[0]); };
+    window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } exec('insertHTML', relicWrapper(t + `</table>`, "width:250px;")); };
+    window.addWebLink = () => { const t = prompt("Link Title:"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank">${t}</a>`); };
 
     document.addEventListener('click', (e) => {
         const link = e.target.closest('#note-body a');
-        if (link) {
-            e.preventDefault();
-            const action = prompt(`1: Visit | 2: Edit | 3: Delete`, "1");
-            if (action === "1") window.open(link.href, '_blank');
-            else if (action === "2") {
-                const nt = prompt("Title:", link.innerText), nu = prompt("URL:", link.href);
-                if (nt) link.innerText = nt; if (nu) link.href = nu;
-            } else if (action === "3") { if (confirm("Delete link?")) link.outerHTML = link.innerHTML; }
-        }
+        if (link) { e.preventDefault(); const action = prompt(`1: Visit | 2: Edit | 3: Delete`, "1"); if (action === "1") window.open(link.href, '_blank'); else if (action === "2") { const nt = prompt("Title:", link.innerText), nu = prompt("URL:", link.href); if (nt) link.innerText = nt; if (nu) link.href = nu; } else if (action === "3") { if (confirm("Delete link?")) link.outerHTML = link.innerHTML; } }
     }, true);
 </script>
 </body>
