@@ -2,228 +2,290 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>AidenNotes | Fortress</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inventory</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
-    <style>
-        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        html, body { height: 100%; margin: 0; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; overflow: hidden; }
-        
-        /* LAYOUT */
-        .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
-        #sidebar { width: 280px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
-        #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); min-width: 0; }
-        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
+    <link rel="apple-touch-icon" href="https://filedn.eu/lmLPHhnmVT38F0vdFViDpAf/Inventory%20App/inventory.png">
+    <link rel="icon" type="image/png" href="https://filedn.eu/lmLPHhnmVT38F0vdFViDpAf/Inventory%20App/inventory.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-        @media (max-width: 768px) {
-            .app-container { flex-direction: column; }
-            #sidebar { width: 100%; height: 35vh; border-right: none; border-bottom: 2px solid var(--crimson); }
-            #main-editor { height: 65vh; }
+    <style>
+        :root { --primary: #007AFF; --danger: #FF3B30; --card-bg: #1c1c1e; --text: #ffffff; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: -apple-system, sans-serif; background: #000; color: var(--text); height: 100vh; }
+        
+        #login-screen {
+            position: fixed; inset: 0; background: #000; z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+        }
+        
+        header { 
+            padding: 15px; display: flex; justify-content: space-between; align-items: center; 
+            background: #000; position: sticky; top: 0; z-index: 100;
         }
 
-        /* TOOLBAR */
-        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
-        .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
-        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
-        .color-picker { width: 30px; height: 25px; padding: 0; border: 1px solid var(--crimson); background: var(--ink); cursor: pointer; }
+        .container { padding: 15px; margin-top: 38px; padding-bottom: 100px; }
+
+        .card {
+            background: var(--card-bg); border-radius: 15px; margin-bottom: 15px;
+            display: flex; align-items: center; overflow: hidden; border: 1px solid #333; height: 100px;
+        }
+
+        .card-img { width: 100px; height: 100px; background-size: cover; background-position: center; flex-shrink: 0; background-color: #2c2c2e; }
+        .card-content { flex: 1; height: 100%; display: flex; flex-direction: column; padding: 10px 15px; justify-content: center; overflow: hidden; }
+        .card-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .preview-list { font-size: 11px; color: #888; display: flex; flex-wrap: wrap; gap: 5px; max-height: 40px; overflow: hidden; }
+        .preview-item { background: #2c2c2e; padding: 2px 6px; border-radius: 4px; }
+
+        .card-controls {
+            display: flex; flex-direction: column; justify-content: space-around;
+            align-items: center; padding: 5px; border-left: 1px solid #333;
+            height: 100%; width: 50px; background: #121212;
+        }
+
+        .ctrl-btn { background: none; border: none; color: #007AFF; font-size: 16px; padding: 5px; cursor: pointer; }
+        .ctrl-gear { color: #666; font-size: 18px; }
+
+        .hidden { display: none !important; }
+        .btn-mini { border: none; background: var(--primary); color: white; border-radius: 8px; padding: 10px 15px; cursor: pointer; font-weight: bold; }
+        .btn-danger { background: var(--danger); }
         
-        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
-        #note-body { min-height: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
+        .modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index: 1000; }
+        .modal-bg.active { display: flex; }
+        .modal { background: #2c2c2e; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
         
-        /* RELICS */
-        .relic-container { display: inline-block; position: relative; margin: 10px; border: 1px solid transparent; min-width: 30px; min-height: 30px; vertical-align: top; outline: none; }
-        .relic-container:focus, .relic-container:focus-within { border: 1px solid var(--crimson); }
-
-        .relic-menu, .resize-handle { position: absolute; opacity: 0; pointer-events: none; z-index: 200; background: var(--crimson); color: white; transition: opacity 0.2s; }
-        .relic-container:focus .relic-menu, .relic-container:focus-within .relic-menu,
-        .relic-container:focus .resize-handle, .relic-container:focus-within .resize-handle { opacity: 1; pointer-events: auto; }
-
-        .relic-menu { top: -32px; left: 0; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 10px; font-family: 'Cinzel'; white-space: nowrap; }
-        .resize-handle { bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .drag-handle { cursor: move; padding: 2px 5px; border: 1px solid rgba(255,255,255,0.3); }
-
-        /* Fixed Image Logic */
-        .relic-image { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: auto; cursor: default; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #444; border-radius: 10px; background: #1c1c1e; color: white; font-size: 16px; }
         
-        .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); }
-        .relic-table td { border: 1px solid var(--crimson); padding: 5px; color: var(--parchment); -webkit-user-select: text; user-select: text; }
-        .text-box-inner { width: 100%; height: 100%; padding: 10px; color: var(--parchment); outline: none; -webkit-user-select: text; user-select: text; }
-
-        #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
-        #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; border: none; font-size: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 99; }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
-        <h2 style="font-family:'Cinzel'; color:var(--crimson);">THE BLOOD SEAL</h2>
-        <input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email">
-        <input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password">
-        <button id="login-btn" class="tool-btn" style="width:100%; background:var(--crimson); padding:15px;" onclick="handleLogin()">UNLOCK</button>
+    <h2 style="margin-bottom: 20px;">Inventory Access</h2>
+    <input type="email" id="auth-email" placeholder="Email">
+    <input type="password" id="auth-pass" placeholder="Password">
+    <button class="btn-mini" style="width: 100%;" onclick="handleLogin()">Login</button>
+    <p id="auth-error" style="color: var(--danger); font-size: 14px; margin-top: 15px; text-align: center;"></p>
+</div>
+
+<div id="app-body" class="hidden">
+    <header>
+        <button id="back-btn" class="btn-mini hidden" style="background:#333" onclick="goBack()">← Back</button>
+        <h2 id="title" style="margin:0;">Inventory</h2>
+        <button class="btn-mini" style="background:none; color:#666; font-size:10px;" onclick="handleLogout()">Logout</button>
+    </header>
+
+    <div class="container" id="app-content"></div>
+
+    <button class="fab" id="main-fab" onclick="showFabOptions()">+</button>
+
+    <div id="edit-modal" class="modal-bg">
+        <div class="modal">
+            <h3 id="edit-header">Edit Entry</h3>
+            <input id="edit-name" placeholder="Name">
+            <input id="edit-img" placeholder="Image URL">
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn-mini" style="flex:1" onclick="applyEdit()">Save</button>
+                <button id="del-btn" class="btn-mini btn-danger" onclick="confirmDelete()">Delete</button>
+            </div>
+            <button class="btn-mini" style="width:100%; margin-top:10px; background:#444" onclick="closeModals()">Cancel</button>
+        </div>
     </div>
 </div>
 
-<div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
-<div id="folder-modal">
-    <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">PATHFINDER</h3>
-    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📂 SET PATH / CREATE SUBFOLDER</button>
-    <button class="tool-btn" style="width:100%; color:red; border-color:red;" onclick="selfDestruct()">☣️ SELF DESTRUCT</button>
-    <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">CLOSE</button>
-</div>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-<div class="app-container" id="app">
-    <aside id="sidebar">
-        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.25);" onclick="startNewNote()">✨ NEW FRAGMENT</div>
-        <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
-    </aside>
-
-    <main id="main-editor">
-        <div class="scroll-content">
-            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: current notes</div>
-            <input type="text" id="note-title" placeholder="Untitled Fragment...">
-            <div class="sub-title-toolbar">
-                <button class="tool-btn" onclick="exec('undo')">↩</button>
-                <button class="tool-btn" onclick="exec('redo')">↪</button>
-                <select class="tool-select" onchange="exec('fontSize', this.value); this.selectedIndex=0;">
-                    <option value="">Size</option>
-                    <option value="3">Small</option>
-                    <option value="5">Medium</option>
-                    <option value="7">Large</option>
-                </select>
-                <button class="tool-btn" onclick="exec('bold')">B</button>
-                <button class="tool-btn" onclick="exec('italic')">I</button>
-                <button class="tool-btn" onclick="exec('underline')">U</button>
-                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
-                <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
-                <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
-                <input type="color" class="color-picker" oninput="exec('foreColor', this.value)" title="Text Color">
-                <button class="tool-btn" onclick="addWebLink()">🔗</button>
-                <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
-                <button class="tool-btn" onclick="customTable()">📊</button>
-                <button class="tool-btn" onclick="addTextBox()">📄 TXT</button>
-                <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveToRecent()">SAVE</button>
-                <button class="tool-btn" onclick="openFolders()">SAVE TO...</button>
-                <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
-            </div>
-            <div id="note-body" contenteditable="true"></div>
-        </div>
-    </main>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
-<script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDEodYl9Lv2uTUv2UKSFVipKMyU5mqFmkA",
-      authDomain: "aidennotes-fee01.firebaseapp.com",
-      databaseURL: "https://aidennotes-fee01-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "aidennotes-fee01",
-      storageBucket: "aidennotes-fee01.firebasestorage.app",
-      messagingSenderId: "858517974563",
-      appId: "1:858517974563:web:c97dc8eae300e0581a8b96"
+        apiKey: "YOUR_NEW_API_KEY", 
+        authDomain: "inventory-8a01f.firebaseapp.com",
+        databaseURL: "https://inventory-8a01f-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "inventory-8a01f",
+        storageBucket: "inventory-8a01f.firebasestorage.app",
+        messagingSenderId: "759088447580",
+        appId: "1:759088447580:web:5859088803734d62c2e699"
     };
-    
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
-    let currentEditingId = null, currentFolderName = "current notes"; 
 
-    function exec(cmd, val = null) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
+    const AUTHORIZED_UID = "WmMCIqgKBfO3tSGHb0nSa5qBpOc2";
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+    const invRef = ref(db, 'inventory/');
 
-    window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Access Denied")); };
-    auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
-    window.handleLogout = () => auth.signOut().then(() => location.reload());
-    window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
-    window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
-    
-    window.createNewFolder = () => { const n = prompt("Path:", currentFolderName); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; saveNoteData(); closeModal(); } };
-    window.saveToRecent = () => { currentFolderName = "current notes"; saveNoteData(); };
+    let state = { folders: [] };
+    let currentFolderId = null;
+    let editingTarget = { type: null, idx: null };
 
-    function saveNoteData() {
-        const data = { title: document.getElementById('note-title').value || "Untitled Fragment", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "current notes", timestamp: Date.now() };
-        if (currentEditingId) db.ref('notes/' + currentEditingId).set(data).then(() => alert("Saved"));
-        else { const newRef = db.ref('notes').push(); currentEditingId = newRef.key; newRef.set(data).then(() => alert("Saved")); }
-    }
+    onAuthStateChanged(auth, (user) => {
+        if (user && user.uid === AUTHORIZED_UID) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-body').classList.remove('hidden');
+            startApp();
+        } else {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('app-body').classList.add('hidden');
+        }
+    });
 
-    function initApp() {
-        db.ref('notes').on('value', (snap) => {
-            const side = document.getElementById('folder-list-sidebar'), data = snap.val() || {};
-            side.innerHTML = "";
-            const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse(), tree = { name: "Root", sub: {}, notes: [] };
-            notes.forEach(n => {
-                let pathParts = (n.folder || "current notes").split('/'), current = tree;
-                pathParts.forEach(part => { if(!current.sub[part]) current.sub[part] = { name: part, sub: {}, notes: [], fullPath: (current.fullPath ? current.fullPath + '/' : '') + part }; current = current.sub[part]; });
-                current.notes.push(n);
-            });
-            function renderTree(node, container) {
-                Object.values(node.sub).sort((a,b) => a.name.localeCompare(b.name)).forEach(subNode => {
-                    const safeId = btoa(subNode.fullPath).replace(/=/g, '').replace(/\//g, '_');
-                    container.innerHTML += `<div class="sidebar-item folder-header"><span onclick="toggleFolder('${safeId}')">📁 ${subNode.name}</span></div>`;
-                    const contentDiv = document.createElement('div'); contentDiv.id = safeId; contentDiv.className = "folder-content";
-                    renderTree(subNode, contentDiv);
-                    subNode.notes.forEach(note => { contentDiv.innerHTML += `<div class="sidebar-item" style="font-size:0.6rem;"><span onclick="loadNote('${note.id}')">📜 ${note.title}</span><span onclick="deleteNote('${note.id}', '${note.title}')">🗑️</span></div>`; });
-                    container.appendChild(contentDiv);
-                });
-            }
-            renderTree(tree, side);
+    window.handleLogin = () => {
+        const email = document.getElementById('auth-email').value;
+        const pass = document.getElementById('auth-pass').value;
+        signInWithEmailAndPassword(auth, email, pass).catch(() => {
+            document.getElementById('auth-error').innerText = "Incorrect details.";
+        });
+    };
+
+    window.handleLogout = () => signOut(auth);
+
+    function startApp() {
+        onValue(invRef, (snap) => {
+            state = snap.val() || { folders: [] };
+            ensureRecentFolder();
+            render();
         });
     }
 
-    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "current notes"; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; }); };
-    window.deleteNote = (id, title) => { if (confirm(`Delete relic?`)) db.ref('notes/'+id).remove(); };
-    window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'none') ? 'block' : 'none'; };
-    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "current notes"; document.getElementById('current-path-display').innerText = "Path: current notes"; };
-
-    // --- PASTE ---
-    document.addEventListener('paste', function(e) {
-        const selection = window.getSelection(); if (!selection.rangeCount) return;
-        let target = selection.anchorNode; if (target.nodeType === 3) target = target.parentNode;
-        const editableCell = target.closest('td[contenteditable="true"], .text-box-inner[contenteditable="true"]');
-        if (editableCell) { e.preventDefault(); const text = (e.clipboardData || window.clipboardData).getData('text/plain'); const range = selection.getRangeAt(0); range.deleteContents(); range.insertNode(document.createTextNode(text)); selection.collapseToEnd(); }
-    });
-
-    // --- RELIC ENGINE ---
-    let activeRelic = null, mode = null, sX, sY, sW, sH, sL, sT;
-    document.addEventListener('touchstart', handleStart, {passive: false});
-    document.addEventListener('mousedown', handleStart);
-
-    function handleStart(e) {
-        const t = e.target, container = t.closest('.relic-container'); if (!container) return;
-        const touch = e.type.includes('touch') ? e.touches[0] : e;
-        if (t.classList.contains('resize-handle')) { e.preventDefault(); activeRelic = container; mode = 'resize'; sX = touch.clientX; sY = touch.clientY; sW = container.offsetWidth; sH = container.offsetHeight; }
-        else if (t.classList.contains('drag-handle')) { e.preventDefault(); activeRelic = container; mode = 'drag'; sX = touch.clientX; sY = touch.clientY; sL = container.offsetLeft; sT = container.offsetTop; }
-        else if (t.classList.contains('delete-btn-trigger')) { if (confirm("Delete relic?")) container.remove(); }
+    function ensureRecentFolder() {
+        const hasRecent = state.folders.some(f => f.id === 'recent_notes');
+        if (!hasRecent) {
+            state.folders.unshift({ id: 'recent_notes', name: 'Recent notes', img: '', items: [], permanent: true });
+            sync();
+        }
     }
 
-    document.addEventListener('touchmove', function(e) {
-        if (!activeRelic) return; e.preventDefault();
-        const touch = e.type.includes('touch') ? e.touches[0] : e;
-        if (mode === 'resize') { activeRelic.style.width = (sW + (touch.clientX - sX)) + 'px'; activeRelic.style.height = (sH + (touch.clientY - sY)) + 'px'; }
-        else if (mode === 'drag') { activeRelic.style.position = 'absolute'; activeRelic.style.left = (sL + (touch.clientX - sX)) + 'px'; activeRelic.style.top = (sT + (touch.clientY - sY)) + 'px'; }
-    }, {passive: false});
+    function sync() { set(invRef, state); }
 
-    document.addEventListener('touchend', () => activeRelic = null);
-    document.addEventListener('mouseup', () => activeRelic = null);
+    window.render = () => {
+        const content = document.getElementById('app-content');
+        const backBtn = document.getElementById('back-btn');
+        content.innerHTML = '';
 
-    const relicWrapper = (innerHTML, initialStyle = "") => `<div class="relic-container" tabindex="0" contenteditable="false" style="${initialStyle}"><div class="relic-menu"><div class="drag-handle">DRAG</div><div class="delete-btn-trigger">🗑️</div></div>${innerHTML}<div class="resize-handle">⌟</div></div>`;
+        if (currentFolderId === null) {
+            backBtn.classList.add('hidden');
+            document.getElementById('title').innerText = "Inventory";
+            state.folders.forEach((f, idx) => {
+                const itemsList = (f.items || []).slice(0, 4).map(i => `<span class="preview-item">${i.name}</span>`).join('');
+                content.innerHTML += `
+                <div class="card">
+                    <div class="card-img" style="background-image:url('${f.img}')" onclick="openFolder('${f.id}')"></div>
+                    <div class="card-content" onclick="openFolder('${f.id}')">
+                        <div class="card-name">${f.name}</div>
+                        <div class="preview-list">${itemsList || 'Empty'}</div>
+                    </div>
+                    <div class="card-controls">
+                        <button class="ctrl-btn" onclick="move('f', ${idx}, -1)">▲</button>
+                        <button class="ctrl-btn ctrl-gear" onclick="openEditModal('f', ${idx})">⚙️</button>
+                        <button class="ctrl-btn" onclick="move('f', ${idx}, 1)">▼</button>
+                    </div>
+                </div>`;
+            });
+        } else {
+            backBtn.classList.remove('hidden');
+            const folder = state.folders.find(f => f.id === currentFolderId);
+            document.getElementById('title').innerText = folder.name;
+            content.innerHTML = `<button class="btn-mini" style="width:100%; margin-bottom:20px;" onclick="openAddModal('new_i')">+ Add New Item</button>`;
+            (folder.items || []).forEach((item, idx) => {
+                content.innerHTML += `
+                <div class="card">
+                    <div class="card-img" style="background-image:url('${item.img}')"></div>
+                    <div class="card-content">
+                        <div class="card-name">${item.name}</div>
+                    </div>
+                    <div class="card-controls">
+                        <button class="ctrl-btn" onclick="move('i', ${idx}, -1)">▲</button>
+                        <button class="ctrl-btn ctrl-gear" onclick="openEditModal('i', ${idx})">⚙️</button>
+                        <button class="ctrl-btn" onclick="move('i', ${idx}, 1)">▼</button>
+                    </div>
+                </div>`;
+            });
+        }
+    };
 
-    window.addTextBox = () => exec('insertHTML', relicWrapper(`<div class="text-box-inner" contenteditable="true">Write...</div>`, "width:200px; height:100px;"));
-    window.insertImg = (e) => { const reader = new FileReader(); reader.onload = (ev) => exec('insertHTML', relicWrapper(`<img class="relic-image" src="${ev.target.result}">`, "width:4cm; height:4cm;")); reader.readAsDataURL(e.target.files[0]); };
-    window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } exec('insertHTML', relicWrapper(t + `</table>`, "width:250px;")); };
-    window.addWebLink = () => { const t = prompt("Link Title:"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank">${t}</a>`); };
+    window.move = (type, idx, dir) => {
+        let list = (type === 'f') ? state.folders : state.folders.find(f => f.id === currentFolderId).items;
+        let newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= list.length) return;
+        [list[idx], list[newIdx]] = [list[newIdx], list[idx]];
+        sync();
+    };
 
-    document.addEventListener('click', (e) => {
-        const link = e.target.closest('#note-body a');
-        if (link) { e.preventDefault(); const action = prompt(`1: Visit | 2: Edit | 3: Delete`, "1"); if (action === "1") window.open(link.href, '_blank'); else if (action === "2") { const nt = prompt("Title:", link.innerText), nu = prompt("URL:", link.href); if (nt) link.innerText = nt; if (nu) link.href = nu; } else if (action === "3") { if (confirm("Delete link?")) link.outerHTML = link.innerHTML; } }
-    }, true);
+    window.showFabOptions = () => {
+        if (currentFolderId === null) {
+            const opt = confirm("Tap OK for New Location, Cancel for New Item (saves to Recent)");
+            if (opt) openAddModal('new_f'); else openAddModal('new_i');
+        } else {
+            openAddModal('new_i');
+        }
+    }
+
+    window.openAddModal = (type) => {
+        editingTarget = { type };
+        document.getElementById('edit-header').innerText = (type === 'new_f') ? "New Location" : "New Item";
+        document.getElementById('edit-name').value = '';
+        document.getElementById('edit-img').value = '';
+        document.getElementById('del-btn').classList.add('hidden');
+        document.getElementById('edit-modal').classList.add('active');
+    };
+
+    window.openEditModal = (type, idx) => {
+        editingTarget = { type, idx };
+        const data = (type === 'f') ? state.folders[idx] : state.folders.find(f => f.id === currentFolderId).items[idx];
+        document.getElementById('edit-name').value = data.name;
+        document.getElementById('edit-img').value = data.img || '';
+        document.getElementById('edit-header').innerText = "Edit Details";
+        
+        // Don't allow deleting the permanent Recent folder
+        if (type === 'f' && state.folders[idx].permanent) {
+            document.getElementById('del-btn').classList.add('hidden');
+        } else {
+            document.getElementById('del-btn').classList.remove('hidden');
+        }
+        
+        document.getElementById('edit-modal').classList.add('active');
+    };
+
+    window.applyEdit = () => {
+        const name = document.getElementById('edit-name').value;
+        const img = document.getElementById('edit-img').value;
+        if(!name) return;
+
+        if (editingTarget.type === 'new_f') {
+            state.folders.push({ id: Date.now().toString(), name, img, items: [] });
+        } else if (editingTarget.type === 'new_i') {
+            // If on dashboard, save to Recent. If inside a folder, save to that folder.
+            const targetId = currentFolderId || 'recent_notes';
+            const f = state.folders.find(f => f.id === targetId);
+            if (!f.items) f.items = [];
+            f.items.push({ id: Date.now().toString(), name, img });
+        } else if (editingTarget.type === 'f') {
+            state.folders[editingTarget.idx].name = name;
+            state.folders[editingTarget.idx].img = img;
+        } else if (editingTarget.type === 'i') {
+            const f = state.folders.find(f => f.id === currentFolderId);
+            f.items[editingTarget.idx].name = name;
+            f.items[editingTarget.idx].img = img;
+        }
+        sync(); closeModals();
+    };
+
+    window.confirmDelete = () => {
+        if (!confirm("Are you sure you want to delete this permanently?")) return;
+        if (editingTarget.type === 'f') {
+            state.folders.splice(editingTarget.idx, 1);
+        } else {
+            state.folders.find(f => f.id === currentFolderId).items.splice(editingTarget.idx, 1);
+        }
+        sync(); closeModals();
+    };
+
+    window.openFolder = (id) => { currentFolderId = id; render(); };
+    window.goBack = () => { currentFolderId = null; render(); };
+    window.closeModals = () => document.getElementById('edit-modal').classList.remove('active');
 </script>
 </body>
 </html>
