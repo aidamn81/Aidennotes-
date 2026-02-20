@@ -4,53 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>AidenNotes | Fortress</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
         :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
         html, body { height: 100%; margin: 0; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; overflow: hidden; }
-        
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         #sidebar { width: 280px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); min-width: 0; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
-
-        @media (max-width: 768px) {
-            .app-container { flex-direction: column; }
-            #sidebar { width: 100%; height: 35vh; border-right: none; border-bottom: 2px solid var(--crimson); }
-            #main-editor { height: 65vh; }
-        }
-
+        @media (max-width: 768px) { .app-container { flex-direction: column; } #sidebar { width: 100%; height: 35vh; } #main-editor { height: 65vh; } }
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
         .color-picker { width: 30px; height: 25px; padding: 0; border: 1px solid var(--crimson); background: var(--ink); cursor: pointer; }
-        
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
-        #note-body { min-height: 500px; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; cursor: text; }
-        
+        #note-body { min-height: 80vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; cursor: text; }
         .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .folder-header { background: rgba(139,0,0,0.15); color: var(--crimson); font-weight: bold; border-left: 2px solid var(--crimson); }
         .folder-content { padding-left: 10px; border-left: 1px solid rgba(139,0,0,0.2); }
-
-        /* RELICS */
+        .folder-actions { display: flex; gap: 10px; }
         .relic-container { display: inline-block; position: relative; margin: 10px; border: 1px solid transparent; min-width: 30px; min-height: 30px; vertical-align: top; outline: none; }
-        .relic-container:focus, .relic-container:focus-within { border: 1px solid var(--crimson); }
+        .relic-container:focus-within { border: 1px solid var(--crimson); }
         .relic-menu, .resize-handle { position: absolute; opacity: 0; pointer-events: none; z-index: 200; background: var(--crimson); color: white; transition: opacity 0.2s; }
-        .relic-container:focus .relic-menu, .relic-container:focus-within .relic-menu,
-        .relic-container:focus .resize-handle, .relic-container:focus-within .resize-handle { opacity: 1; pointer-events: auto; }
-        .relic-menu { top: -32px; left: 0; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 10px; font-family: 'Cinzel'; white-space: nowrap; }
+        .relic-container:focus-within .relic-menu, .relic-container:focus-within .resize-handle { opacity: 1; pointer-events: auto; }
+        .relic-menu { top: -32px; left: 0; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 10px; font-size: 10px; font-family: 'Cinzel'; }
         .resize-handle { bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; display: flex; align-items: center; justify-content: center; font-weight: bold; }
         .drag-handle { cursor: move; padding: 2px 5px; border: 1px solid rgba(255,255,255,0.3); }
-
-        .relic-image { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: auto; }
+        .relic-image { width: 100%; height: 100%; object-fit: cover; display: block; }
         .relic-table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); }
         .relic-table td { border: 1px solid var(--crimson); padding: 5px; color: var(--parchment); }
         .text-box-inner { width: 100%; height: 100%; padding: 10px; color: var(--parchment); outline: none; }
-
-        /* MODALS */
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
@@ -59,145 +43,66 @@
     </style>
 </head>
 <body>
-
-<div id="login-screen">
-    <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
-        <h2 style="font-family:'Cinzel'; color:var(--crimson);">THE BLOOD SEAL</h2>
-        <input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email">
-        <input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password">
-        <button id="login-btn" class="tool-btn" style="width:100%; background:var(--crimson); padding:15px;" onclick="handleLogin()">UNLOCK</button>
-    </div>
-</div>
-
+<div id="login-screen"><div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;"><h2 style="font-family:'Cinzel'; color:var(--crimson);">THE BLOOD SEAL</h2><input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email"><input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password"><button class="tool-btn" style="width:100%; background:var(--crimson); padding:15px;" onclick="handleLogin()">UNLOCK</button></div></div>
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
-<div id="folder-modal">
-    <h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">PATHFINDER</h3>
-    <div id="modal-folder-picker" class="modal-folder-list"></div>
-    <button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📂 CREATE NEW FOLDER</button>
-    <button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">CLOSE</button>
-</div>
-
+<div id="folder-modal"><h3 style="font-family:'Cinzel'; color:var(--crimson); text-align:center;">PATHFINDER</h3><div id="modal-folder-picker" class="modal-folder-list"></div><button class="tool-btn" style="width:100%; margin-bottom:15px;" onclick="createNewFolder()">📂 CREATE NEW FOLDER</button><button class="tool-btn" style="width:100%; color:red; border-color:red;" onclick="selfDestruct()">☣️ SELF DESTRUCT</button><button class="tool-btn" style="width:100%; margin-top:15px;" onclick="closeModal()">CLOSE</button></div>
 <div class="app-container" id="app">
-    <aside id="sidebar">
-        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center;" onclick="startNewNote()">✨ NEW FRAGMENT</div>
-        <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
-    </aside>
-
+    <aside id="sidebar"><div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.25);" onclick="startNewNote()">✨ NEW FRAGMENT</div><div id="folder-list-sidebar"></div><div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div></aside>
     <main id="main-editor">
         <div class="scroll-content">
             <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: Recent notes</div>
             <input type="text" id="note-title" placeholder="Untitled Fragment...">
             <div class="sub-title-toolbar">
-                <button class="tool-btn" onclick="exec('undo')">↩</button>
-                <button class="tool-btn" onclick="exec('redo')">↪</button>
-                <button class="tool-btn" onclick="exec('bold')">B</button>
-                <button class="tool-btn" onclick="exec('italic')">I</button>
-                <input type="color" class="color-picker" oninput="exec('foreColor', this.value)">
-                <button class="tool-btn" onclick="addWebLink()">🔗</button>
-                <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
-                <button class="tool-btn" onclick="customTable()">📊</button>
-                <button class="tool-btn" onclick="addTextBox()">📄 TXT</button>
-                <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveNoteData()">SAVE</button>
-                <button class="tool-btn" onclick="openFolders()">FOLDERS</button>
+                <button class="tool-btn" onclick="exec('undo')">↩</button><button class="tool-btn" onclick="exec('redo')">↪</button>
+                <select class="tool-select" onchange="exec('fontSize', this.value); this.selectedIndex=0;"><option value="">Size</option><option value="3">Small</option><option value="5">Medium</option><option value="7">Large</option></select>
+                <button class="tool-btn" onclick="exec('bold')">B</button><button class="tool-btn" onclick="exec('italic')">I</button><button class="tool-btn" onclick="exec('underline')">U</button>
+                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button><button class="tool-btn" onclick="exec('justifyCenter')">⬆</button><button class="tool-btn" onclick="exec('justifyRight')">➡</button>
+                <input type="color" class="color-picker" oninput="exec('foreColor', this.value)"><button class="tool-btn" onclick="addWebLink()">🔗</button>
+                <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button><button class="tool-btn" onclick="customTable()">📊</button><button class="tool-btn" onclick="addTextBox()">📄 TXT</button>
+                <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveNoteData()">SAVE</button><button class="tool-btn" onclick="openFolders()">FOLDERS</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
             <div id="note-body" contenteditable="true"></div>
         </div>
     </main>
 </div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script><script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDEodYl9Lv2uTUv2UKSFVipKMyU5mqFmkA",
-      authDomain: "aidennotes-fee01.firebaseapp.com",
-      databaseURL: "https://aidennotes-fee01-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "aidennotes-fee01",
-      storageBucket: "aidennotes-fee01.firebasestorage.app",
-      messagingSenderId: "858517974563",
-      appId: "1:858517974563:web:c97dc8eae300e0581a8b96"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database(), auth = firebase.auth();
+    const firebaseConfig = { apiKey: "AIzaSyDEodYl9Lv2uTUv2UKSFVipKMyU5mqFmkA", authDomain: "aidennotes-fee01.firebaseapp.com", databaseURL: "https://aidennotes-fee01-default-rtdb.europe-west1.firebasedatabase.app", projectId: "aidennotes-fee01", storageBucket: "aidennotes-fee01.firebasestorage.app", messagingSenderId: "858517974563", appId: "1:858517974563:web:c97dc8eae300e0581a8b96" };
+    firebase.initializeApp(firebaseConfig); const db = firebase.database(); const auth = firebase.auth();
     let currentEditingId = null, currentFolderName = "Recent notes";
-
     function exec(cmd, val = null) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
-
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
     auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
     window.handleLogout = () => auth.signOut().then(() => location.reload());
-
-    // --- FOLDER LOGIC ---
     window.openFolders = () => { updateModalFolderList(); document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     window.selectFolder = (n) => { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; saveNoteData(); closeModal(); };
-    window.createNewFolder = () => { const n = prompt("Name:"); if(n) db.ref('folders/'+n).set({name:n}).then(()=>selectFolder(n)); };
-
-    function updateModalFolderList() {
-        const p = document.getElementById('modal-folder-picker');
-        p.innerHTML = `<div class="modal-folder-item" onclick="selectFolder('Recent notes')">📁 Recent notes</div>`;
-        db.ref('folders').once('value', s => { Object.keys(s.val()||{}).forEach(f => { if(f!=="Recent notes") p.innerHTML += `<div class="modal-folder-item" onclick="selectFolder('${f}')">📁 ${f}</div>`; }); });
-    }
-
-    function saveNoteData() {
-        const d = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now() };
-        if(currentEditingId) db.ref('notes/'+currentEditingId).set(d).then(()=>alert("Saved"));
-        else { const ref = db.ref('notes').push(); currentEditingId = ref.key; ref.set(d).then(()=>alert("Saved")); }
-    }
-
-    function initApp() {
-        db.ref().on('value', s => {
-            const sidebar = document.getElementById('folder-list-sidebar'); sidebar.innerHTML = "";
-            const val = s.val()||{}; const notes = val.notes||{}; const folders = val.folders||{};
-            [ "Recent notes", ...Object.keys(folders) ].forEach(f => {
-                if(f === "Recent notes" || folders[f]) renderFolderUI(f, notes, sidebar);
-            });
-        });
-    }
-
-    function renderFolderUI(f, all, container) {
-        const id = btoa(f).replace(/=/g,'');
-        const div = document.createElement('div'); div.className = "sidebar-item folder-header";
-        div.innerHTML = `<span onclick="toggleF('${id}')">📁 ${f}</span>`;
-        container.appendChild(div);
-        const cDiv = document.createElement('div'); cDiv.id = id; cDiv.className = "folder-content";
-        Object.keys(all).forEach(nid => { if(all[nid].folder === f) cDiv.innerHTML += `<div class="sidebar-item" onclick="loadNote('${nid}')">📜 ${all[nid].title}</div>`; });
-        container.appendChild(cDiv);
-    }
-
-    window.toggleF = (id) => { const e = document.getElementById(id); e.style.display = e.style.display === 'none' ? 'block' : 'none'; };
+    window.createNewFolder = () => { const n = prompt("New Folder:"); if(n) db.ref('folders/'+n).set({name:n}).then(()=>selectFolder(n)); };
+    function updateModalFolderList() { const p = document.getElementById('modal-folder-picker'); p.innerHTML = `<div class="modal-folder-item" onclick="selectFolder('Recent notes')">📁 Recent notes</div>`; db.ref('folders').once('value', s => { Object.keys(s.val()||{}).forEach(f => { if(f!=="Recent notes") p.innerHTML += `<div class="modal-folder-item" onclick="selectFolder('${f}')">📁 ${f}</div>`; }); }); }
+    function saveNoteData() { const d = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now() }; if(currentEditingId) db.ref('notes/'+currentEditingId).set(d).then(()=>alert("Saved")); else { const r = db.ref('notes').push(); currentEditingId = r.key; r.set(d).then(()=>alert("Saved")); } }
+    function initApp() { db.ref().on('value', s => { const sidebar = document.getElementById('folder-list-sidebar'); sidebar.innerHTML = ""; const val = s.val()||{}; const notes = val.notes||{}; const folders = val.folders||{}; renderFolderUI("Recent notes", notes, sidebar, true); Object.keys(folders).sort().forEach(f => { if(f!=="Recent notes") renderFolderUI(f, notes, sidebar, false); }); }); }
+    function renderFolderUI(f, notes, container, isPerm) { const id = btoa(f).replace(/=/g,''); const div = document.createElement('div'); div.className = "sidebar-item folder-header"; let acts = isPerm ? "" : `<div class="folder-actions"><span onclick="renameFolder('${f}')">✏️</span><span onclick="deleteFolder('${f}')">🗑️</span></div>`; div.innerHTML = `<span onclick="toggleF('${id}')">📁 ${f}</span> ${acts}`; container.appendChild(div); const cDiv = document.createElement('div'); cDiv.id = id; cDiv.className = "folder-content"; Object.keys(notes).forEach(nid => { if(notes[nid].folder === f) cDiv.innerHTML += `<div class="sidebar-item" style="font-size:0.6rem;"><span onclick="loadNote('${nid}')">📜 ${notes[nid].title}</span><span onclick="deleteNote('${nid}')">🗑️</span></div>`; }); container.appendChild(cDiv); }
+    window.renameFolder = (o) => { const n = prompt("Rename:", o); if(n && n!==o) { db.ref('notes').once('value', s => { Object.keys(s.val()||{}).forEach(id => { if(s.val()[id].folder === o) db.ref(`notes/${id}/folder`).set(n); }); db.ref('folders/'+n).set({name:n}); db.ref('folders/'+o).remove(); }); } };
+    window.deleteFolder = (n) => { if(confirm("Delete folder and notes?")) { db.ref('notes').once('value', s => { Object.keys(s.val()||{}).forEach(id => { if(s.val()[id].folder === n) db.ref('notes/'+id).remove(); }); db.ref('folders/'+n).remove(); }); } };
     window.loadNote = (id) => { db.ref('notes/'+id).once('value', s => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + n.folder; }); };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent notes"; };
-
-    // --- RELIC LOGIC (FIXED TO ALLOW TYPING) ---
+    window.deleteNote = (id) => { if(confirm("Delete?")) db.ref('notes/'+id).remove(); };
+    window.toggleF = (id) => { const e = document.getElementById(id); e.style.display = e.style.display === 'none' ? 'block' : 'none'; };
+    window.addWebLink = () => { const t = prompt("Title:"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank">${t}</a>`); };
+    document.addEventListener('click', e => { const a = e.target.closest('#note-body a'); if(a) { e.preventDefault(); const opt = prompt("1: Visit | 2: Edit | 3: Delete", "1"); if(opt==="1") window.open(a.href, '_blank'); else if(opt==="2") { a.innerText = prompt("Title:", a.innerText); a.href = prompt("URL:", a.href); } else if(opt==="3") a.outerHTML = a.innerHTML; } });
     let activeR = null, mode = null, sX, sY, sW, sH, sL, sT;
-
-    function handleStart(e) {
-        const t = e.target, cont = t.closest('.relic-container');
-        if (!cont) return;
-        const touch = e.type.includes('touch') ? e.touches[0] : e;
-        if (t.classList.contains('resize-handle')) { e.preventDefault(); activeR = cont; mode = 'resize'; sX = touch.clientX; sY = touch.clientY; sW = cont.offsetWidth; sH = cont.offsetHeight; }
-        else if (t.classList.contains('drag-handle')) { e.preventDefault(); activeR = cont; mode = 'drag'; sX = touch.clientX; sY = touch.clientY; sL = cont.offsetLeft; sT = cont.offsetTop; }
-        // If they click inside the table or text box, let them type normally.
-    }
-
-    document.addEventListener('mousemove', e => {
-        if(!activeR) return;
-        if(mode === 'resize') { activeR.style.width = (sW + (e.clientX - sX)) + 'px'; activeR.style.height = (sH + (e.clientY - sY)) + 'px'; }
-        if(mode === 'drag') { activeR.style.position = 'absolute'; activeR.style.left = (sL + (e.clientX - sX)) + 'px'; activeR.style.top = (sT + (e.clientY - sY)) + 'px'; }
-    });
-    document.addEventListener('mouseup', () => activeR = null);
-    document.addEventListener('mousedown', handleStart);
-
     const wrap = (h, s = "") => `<div class="relic-container" tabindex="0" contenteditable="false" style="${s}"><div class="relic-menu"><div class="drag-handle">DRAG</div><div onclick="this.closest('.relic-container').remove()">🗑️</div></div>${h}<div class="resize-handle">⌟</div></div>`;
     window.addTextBox = () => exec('insertHTML', wrap(`<div class="text-box-inner" contenteditable="true">Write...</div>`, "width:200px; height:100px;"));
     window.insertImg = (e) => { const r = new FileReader(); r.onload = (ev) => exec('insertHTML', wrap(`<img class="relic-image" src="${ev.target.result}">`, "width:4cm; height:4cm;")); r.readAsDataURL(e.target.files[0]); };
-    window.customTable = () => { let t = `<table class="relic-table"><tr><td contenteditable="true">...</td><td contenteditable="true">...</td></tr></table>`; exec('insertHTML', wrap(t, "width:200px;")); };
-    window.addWebLink = () => { const u = prompt("URL:"); if(u) exec('insertHTML', `<a href="${u}" target="_blank">${u}</a>`); };
+    window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } exec('insertHTML', wrap(t + `</table>`, "width:250px;")); };
+    document.addEventListener('mousedown', e => {
+        const t = e.target, cont = t.closest('.relic-container'); if(!cont) return;
+        if(t.classList.contains('resize-handle')) { e.preventDefault(); activeR = cont; mode = 'resize'; sX = e.clientX; sY = e.clientY; sW = cont.offsetWidth; sH = cont.offsetHeight; }
+        else if(t.classList.contains('drag-handle')) { e.preventDefault(); activeR = cont; mode = 'drag'; sX = e.clientX; sY = e.clientY; sL = cont.offsetLeft; sT = cont.offsetTop; }
+    });
+    document.addEventListener('mousemove', e => { if(!activeR) return; if(mode === 'resize') { activeR.style.width = (sW + (e.clientX - sX)) + 'px'; activeR.style.height = (sH + (e.clientY - sY)) + 'px'; } if(mode === 'drag') { activeR.style.position = 'absolute'; activeR.style.left = (sL + (e.clientX - sX)) + 'px'; activeR.style.top = (sT + (e.clientY - sY)) + 'px'; } });
+    document.addEventListener('mouseup', () => activeR = null);
 </script>
 </body>
 </html>
