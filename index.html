@@ -144,17 +144,23 @@
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
-            const data = snap.val(); if (!data) return;
-            const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
-            const paths = [...new Set(notes.map(n => n.folder || "Recent Notes"))].sort();
+            const data = snap.val();
+            const notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
+            
+            // Permanent "Recent Notes" folder logic
+            const folderSet = new Set(["Recent Notes"]);
+            notes.forEach(n => { if(n.folder) folderSet.add(n.folder); });
+            const paths = Array.from(folderSet).sort();
+
             paths.forEach(fullPath => {
-                const safeId = "folder_" + btoa(unescape(encodeURIComponent(fullPath))).replace(/=/g, '').replace(/\+/g, '').replace(/\//g, '');
+                const safeId = "f_" + btoa(unescape(encodeURIComponent(fullPath))).replace(/[^a-z0-9]/gi, '');
                 side.innerHTML += `<div class="sidebar-item folder-header" onclick="toggleFolder('${safeId}')">📁 ${fullPath}</div>
                 <div id="${safeId}" class="folder-content" style="display:none;">
                     ${notes.filter(n => (n.folder || "Recent Notes") === fullPath).map(n => `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
                         <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
                         <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
                     </div>`).join('')}
+                    ${notes.filter(n => (n.folder || "Recent Notes") === fullPath).length === 0 ? '<div class="sidebar-item" style="font-size:0.5rem; color:grey; padding-left:20px;">No contents...</div>' : ''}
                 </div>`;
             });
         });
@@ -179,7 +185,6 @@
         const target = e.target;
         const container = target.closest('.relic-container');
         if (!container) return;
-
         if (target.classList.contains('del-relic')) return;
 
         const rect = container.getBoundingClientRect();
@@ -252,7 +257,6 @@
                 <div class="resize-handle">⌟</div>
             </div><p><br></p>`);
     };
-
 </script>
 </body>
 </html>
