@@ -46,6 +46,10 @@
         .relic-textbox { width: 100%; min-height: 100%; background: rgba(245, 230, 211, 0.05); color: var(--parchment); padding: 10px; border: none; outline: none; }
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; color: var(--crimson); font-weight: bold; display: flex; align-items: flex-end; justify-content: flex-end; padding: 2px; pointer-events: auto; }
 
+        /* TABLE CONTROLS */
+        .table-controls { position: absolute; top: -50px; left: 0; display: none; gap: 2px; background: var(--oxblood); border: 1px solid var(--crimson); padding: 2px; border-radius: 4px; z-index: 100; }
+        .table-controls button { background: var(--crimson); color: white; border: none; font-size: 8px; padding: 4px; cursor: pointer; font-family: 'Cinzel'; }
+
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
@@ -117,9 +121,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-    let currentEditingId = null;
-    let currentFolderName = "Recent Notes";
-    const snapGrid = 20;
+    let currentEditingId = null, currentFolderName = "Recent Notes", snapGrid = 20, holdTimer, activeTable = null;
 
     function exec(cmd, val = null) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
 
@@ -130,14 +132,11 @@
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     
-    window.createNewFolder = () => { 
-        const n = prompt("Target Path (e.g. Grimoires/Spells):"); 
-        if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } 
-    };
+    window.createNewFolder = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } };
 
     window.saveQuick = () => {
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
-        if (currentEditingId) { db.ref('notes/' + currentEditingId).set(data).then(() => alert("Saved.")); }
+        if (currentEditingId) db.ref('notes/' + currentEditingId).set(data).then(() => alert("Saved."));
         else { const newRef = db.ref('notes').push(); currentEditingId = newRef.key; newRef.set(data); }
     };
 
@@ -146,7 +145,6 @@
             const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
             const data = snap.val();
             const notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
-            
             const tree = { "Recent Notes": { _notes: [], _sub: {} } };
             notes.forEach(note => {
                 const parts = (note.folder || "Recent Notes").split('/');
@@ -157,20 +155,13 @@
                     current = current[part]._sub;
                 });
             });
-
             function renderLevel(obj, container, depth = 0) {
                 Object.keys(obj).sort().forEach(key => {
                     const safeId = "f_" + btoa(unescape(encodeURIComponent(key + depth))).replace(/[^a-z0-9]/gi, '');
-                    container.insertAdjacentHTML('beforeend', `
-                        <div class="sidebar-item folder-header" style="padding-left: ${12 + (depth * 15)}px" onclick="toggleFolder('${safeId}')">📁 ${key}</div>
-                        <div id="${safeId}" class="folder-content" style="display:none; border-left: 1px solid rgba(139,0,0,0.3); margin-left: ${15 + (depth * 10)}px;">
-                            <div id="${safeId}_sub"></div>
-                        </div>`);
+                    container.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12 + (depth * 15)}px" onclick="toggleFolder('${safeId}')">📁 ${key}</div><div id="${safeId}" class="folder-content" style="display:none;"><div id="${safeId}_sub"></div></div>`);
                     const subContainer = document.getElementById(safeId + "_sub");
                     renderLevel(obj[key]._sub, subContainer, depth + 1);
-                    obj[key]._notes.forEach(n => {
-                        subContainer.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;"><span onclick="loadNote('${n.id}')">📜 ${n.title}</span><span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span></div>`);
-                    });
+                    obj[key]._notes.forEach(n => { subContainer.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;"><span onclick="loadNote('${n.id}')">📜 ${n.title}</span><span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span></div>`); });
                 });
             }
             renderLevel(tree, side);
@@ -182,17 +173,41 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent Notes"; document.getElementById('current-path-display').innerText = "Path: Recent Notes"; };
 
-    window.nukeRelic = (btn, e) => { if(e) e.stopPropagation(); const c = btn.closest('.relic-container'); if (c && confirm("Purge this content?")) c.remove(); };
+    window.nukeRelic = (btn, e) => { if(e) e.stopPropagation(); const c = btn.closest('.relic-container'); if (c && confirm("Purge this element?")) c.remove(); };
+
+    // TABLE MODIFICATION LOGIC
+    window.modTable = (type) => {
+        if (!activeTable) return;
+        if (type === 'row') {
+            let row = activeTable.insertRow(-1);
+            for (let i = 0; i < activeTable.rows[0].cells.length; i++) row.insertCell(0).contentEditable = "true";
+        } else if (type === 'col') {
+            for (let i = 0; i < activeTable.rows.length; i++) activeTable.rows[i].insertCell(-1).contentEditable = "true";
+        } else if (type === 'delrow' && activeTable.rows.length > 1) {
+            activeTable.deleteRow(-1);
+        } else if (type === 'delcol' && activeTable.rows[0].cells.length > 1) {
+            for (let i = 0; i < activeTable.rows.length; i++) activeTable.rows[i].deleteCell(-1);
+        }
+    };
 
     let activeTarget = null, touchStartX, touchStartY, initialLeft, initialTop, initialWidth, initialHeight, isResizing = false;
-    let holdTimer;
 
     document.addEventListener('touchstart', (e) => {
-        const target = e.target; const container = target.closest('.relic-container'); if (!container || target.classList.contains('del-relic')) return;
+        const target = e.target; const container = target.closest('.relic-container');
         
-        // Start long-press timer
+        // Handle Table Controls Visibility
+        const ctrl = container ? container.querySelector('.table-controls') : null;
+        document.querySelectorAll('.table-controls').forEach(c => c.style.display = 'none');
+        if (target.tagName === 'TD') {
+            activeTable = target.closest('table');
+            if (ctrl) ctrl.style.display = 'flex';
+        }
+
+        if (!container || target.classList.contains('del-relic') || target.tagName === 'BUTTON') return;
+        
         holdTimer = setTimeout(() => {
-            if (confirm("Delete this element?")) container.remove();
+            const type = container.querySelector('img') ? "Image" : (container.querySelector('table') ? "Table" : "Textbox");
+            if (confirm(`Delete this ${type}?`)) container.remove();
         }, 1000);
 
         const rect = container.getBoundingClientRect();
@@ -204,8 +219,8 @@
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
-        clearTimeout(holdTimer); // Cancel delete if finger moves
-        if (!activeTarget) return; const t = e.touches[0]; const dx = t.clientX - touchStartX; const dy = t.clientY - touchStartY;
+        clearTimeout(holdTimer);
+        if (!activeTarget) return; const t = e.touches[0], dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
         if (isResizing) {
             activeTarget.style.width = Math.max(80, Math.round((initialWidth + dx) / snapGrid) * snapGrid) + 'px';
             activeTarget.style.height = Math.max(40, Math.round((initialHeight + dy) / snapGrid) * snapGrid) + 'px';
@@ -218,37 +233,18 @@
     }, {passive: false});
 
     document.addEventListener('touchend', () => { clearTimeout(holdTimer); activeTarget = null; });
-    document.getElementById('note-body').addEventListener('click', (e) => { if (e.target.tagName === 'A') { e.preventDefault(); window.open(e.target.href, '_blank'); } });
 
-    window.addCustomLink = () => { const t = prompt("Title:", "Click Here"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank" contenteditable="false">${t}</a>&nbsp;`); };
-    
     window.insertImg = (e) => { 
-        const r = new FileReader(); 
-        r.onload = (ev) => exec('insertHTML', `
-            <div class="relic-container" style="width:250px; height:200px;">
-                <div class="relic-header">
-                    <div class="drag-handle">DRAG</div>
-                    <button class="del-relic" onclick="nukeRelic(this, event)">X</button>
-                </div>
-                <div class="relic-content" style="width:100%; height:100%; overflow:hidden;">
-                    <img src="${ev.target.result}" style="width:100%; height:100%; object-fit:fill; pointer-events:none;">
-                </div>
-                <div class="resize-handle">⌟</div>
-            </div><p><br></p>`); 
-        r.readAsDataURL(e.target.files[0]); 
+        const r = new FileReader(); r.onload = (ev) => exec('insertHTML', `<div class="relic-container" style="width:250px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content" style="overflow:hidden;"><img src="${ev.target.result}" style="width:100%; height:100%; object-fit:fill;"></div><div class="resize-handle">⌟</div></div><p><br></p>`); r.readAsDataURL(e.target.files[0]); 
     };
 
     window.customTable = () => { 
         const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); 
-        let t = `<table class="relic-table">`; 
-        for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } 
-        t += `</table>`; 
-        exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); 
+        let t = `<table class="relic-table">`; for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } t += `</table>`; 
+        exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:80px;"><div class="table-controls"><button onclick="modTable('row')">+R</button><button onclick="modTable('delrow')">-R</button><button onclick="modTable('col')">+C</button><button onclick="modTable('delcol')">-C</button></div><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); 
     };
 
-    window.addTextBox = () => { 
-        exec('insertHTML', `<div class="relic-container" style="width:250px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><div class="relic-textbox" contenteditable="true">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`); 
-    };
+    window.addTextBox = () => { exec('insertHTML', `<div class="relic-container" style="width:250px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><div class="relic-textbox" contenteditable="true">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`); };
 </script>
 </body>
 </html>
