@@ -39,13 +39,13 @@
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; }
 
-        /* RELICS */
+        /* UNIFIED RELIC SYSTEM */
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 80px; min-height: 80px; touch-action: none; background: rgba(0,0,0,0.3); }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; gap: 2px; width: calc(100% + 2px); height: 25px; }
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px 8px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; text-align: center; }
         .del-relic { background: #333; color: red; border: none; font-size: 10px; cursor: pointer; padding: 0 8px; border-radius: 0 3px 0 0; }
         
-        .relic-content { width: 100%; height: 100%; overflow: hidden; }
+        .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; }
         .relic-container img { width: 100%; height: 100%; display: block; pointer-events: none; }
         .relic-table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
@@ -181,7 +181,6 @@
             if (!data) return;
             const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
             const paths = [...new Set(notes.map(n => n.folder || "Recent Notes"))].sort();
-            
             paths.forEach(fullPath => {
                 const safeId = btoa(fullPath).replace(/=/g, '').replace(/\//g, '_').replace(/\+/g, '-');
                 const noteHtml = notes.filter(n => (n.folder || "Recent Notes") === fullPath).map(n => `
@@ -213,7 +212,7 @@
         document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; 
     };
 
-    // DRAG & RESIZE ENGINE (SNAP)
+    // UNIFIED DRAG & RESIZE ENGINE (SNAP 20PX)
     let activeTarget = null, startX, startY, startW, startH, isResizing = false;
     document.addEventListener('touchstart', (e) => {
         const container = e.target.closest('.relic-container');
@@ -251,12 +250,9 @@
 
     document.addEventListener('touchend', () => { activeTarget = null; });
 
-    // LINK LOGIC: Tap to open browser
+    // LINK CLICKS
     document.getElementById('note-body').addEventListener('click', (e) => {
-        if (e.target.tagName === 'A') {
-            e.preventDefault();
-            window.open(e.target.href, '_blank');
-        }
+        if (e.target.tagName === 'A') { e.preventDefault(); window.open(e.target.href, '_blank'); }
     });
 
     window.addCustomLink = () => {
