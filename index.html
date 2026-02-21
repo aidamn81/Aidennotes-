@@ -138,7 +138,7 @@
         const t = prompt("Title:", "Link"), u = prompt("URL:", "https://"); 
         if(t && u) {
             const url = u.startsWith('http') ? u : 'https://' + u;
-            exec('insertHTML', `<a href="${url}" ondblclick="window.open('${url}', '_blank'); return false;" contenteditable="false">${t}</a>&nbsp;`); 
+            exec('insertHTML', `<a href="${url}" onclick="window.open('${url}', '_blank'); return false;" contenteditable="false">${t}</a>&nbsp;`); 
         }
     };
 
@@ -207,7 +207,14 @@
         const target = e.target; 
         const container = target.closest('.relic-container');
         
-        // Toggle relic UI
+        // Handle Link interactions (Tap/Longpress)
+        if (target.tagName === 'A') {
+            holdTimer = setTimeout(() => {
+                window.open(target.href, '_blank');
+            }, 500); // Long press
+            return;
+        }
+
         document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
         if (container) container.classList.add('active-relic');
 
