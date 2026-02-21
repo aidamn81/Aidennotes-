@@ -39,19 +39,21 @@
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 300px; position: relative; }
         #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; }
 
-        /* RELIC CONTAINERS (Images, Tables, Textboxes) */
-        .relic-container { display: inline-block; position: relative; margin: 20px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 80px; min-height: 80px; touch-action: none; background: rgba(0,0,0,0.2); }
-        .relic-container img { display: block; width: 100%; height: 100%; pointer-events: none; }
+        /* RELIC CONTAINERS (Unified for Img, Table, Box) */
+        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 80px; min-height: 80px; touch-action: none; background: rgba(0,0,0,0.3); }
+        .relic-header { position: absolute; top: -25px; left: -1px; display: flex; gap: 2px; width: calc(100% + 2px); height: 25px; }
+        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px 8px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; text-align: center; }
+        .del-relic { background: #333; color: red; border: none; font-size: 10px; cursor: pointer; padding: 0 8px; border-radius: 0 3px 0 0; }
         
-        .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.6); table-layout: fixed; }
+        .relic-content { width: 100%; height: 100%; overflow: hidden; }
+        .relic-container img { width: 100%; height: 100%; display: block; pointer-events: none; }
+        
+        .relic-table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
         
         .relic-textbox { width: 100%; height: 100%; background: rgba(245, 230, 211, 0.05); color: var(--parchment); padding: 10px; border: none; outline: none; overflow-y: auto; }
 
-        .relic-header { position: absolute; top: -25px; left: -1px; display: flex; gap: 2px; width: 100%; }
-        .drag-handle { background: var(--crimson); color: white; padding: 2px 8px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; }
-        .del-relic { background: #333; color: red; border: none; font-size: 9px; cursor: pointer; padding: 2px 5px; }
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; color: var(--crimson); font-weight: bold; display: flex; align-items: flex-end; justify-content: flex-end; }
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; color: var(--crimson); font-weight: bold; display: flex; align-items: flex-end; justify-content: flex-end; padding: 2px; }
 
         /* MODALS */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
@@ -266,7 +268,7 @@
         reader.onload = (ev) => {
             const html = `<div class="relic-container" style="width:200px; height:200px;">
                 <div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div>
-                <img src="${ev.target.result}">
+                <div class="relic-content"><img src="${ev.target.result}"></div>
                 <div class="resize-handle">⌟</div>
             </div><p><br></p>`;
             exec('insertHTML', html);
@@ -282,7 +284,7 @@
         t += `</table>`;
         const html = `<div class="relic-container" style="width:250px; height:150px;">
             <div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div>
-            ${t}
+            <div class="relic-content">${t}</div>
             <div class="resize-handle">⌟</div>
         </div><p><br></p>`;
         exec('insertHTML', html);
@@ -292,7 +294,7 @@
     window.addTextBox = () => {
         const html = `<div class="relic-container" style="width:200px; height:100px;">
             <div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div>
-            <div class="relic-textbox" contenteditable="true">Type fragment here...</div>
+            <div class="relic-content"><div class="relic-textbox" contenteditable="true">Type fragment here...</div></div>
             <div class="resize-handle">⌟</div>
         </div><p><br></p>`;
         exec('insertHTML', html);
