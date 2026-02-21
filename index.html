@@ -116,7 +116,7 @@
     const firebaseConfig = { apiKey: "AIzaSyDEodYl9Lv2uTUv2UKSFVipKMyU5mqFmkA", authDomain: "aidennotes-fee01.firebaseapp.com", databaseURL: "https://aidennotes-fee01-default-rtdb.europe-west1.firebasedatabase.app", projectId: "aidennotes-fee01", storageBucket: "aidennotes-fee01.firebasestorage.app", messagingSenderId: "858517974563", appId: "1:858517974563:web:c97dc8eae300e0581a8b96" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
-    let currentEditingId = null, currentFolderName = "Recent Notes", snapGrid = 20, holdTimer, activeTable = null;
+    let currentEditingId = null, currentFolderName = "Recent Notes", snapGrid = 20, holdTimer;
 
     function exec(cmd, val = null) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
 
@@ -169,17 +169,19 @@
         if (c && confirm(`Purge this ${type}?`)) c.remove(); 
     };
 
-    window.modTable = (e, type) => {
-        if(e) { e.preventDefault(); e.stopPropagation(); }
-        if (!activeTable) return;
+    // ABSOLUTE TABLE MODS - Looking for nearest table in relic
+    window.modTable = (btn, type) => {
+        const relic = btn.closest('.relic-container');
+        const tbl = relic.querySelector('table');
+        if (!tbl) return;
         if (type === 'row') {
-            let r = activeTable.insertRow(-1);
-            for (let i = 0; i < activeTable.rows[0].cells.length; i++) r.insertCell(0).contentEditable = "true";
+            let r = tbl.insertRow(-1);
+            for (let i = 0; i < tbl.rows[0].cells.length; i++) r.insertCell(0).contentEditable = "true";
         } else if (type === 'col') {
-            for (let i = 0; i < activeTable.rows.length; i++) activeTable.rows[i].insertCell(-1).contentEditable = "true";
-        } else if (type === 'delrow' && activeTable.rows.length > 1) activeTable.deleteRow(-1);
-        else if (type === 'delcol' && activeTable.rows[0].cells.length > 1) {
-            for (let i = 0; i < activeTable.rows.length; i++) activeTable.rows[i].deleteCell(-1);
+            for (let i = 0; i < tbl.rows.length; i++) tbl.rows[i].insertCell(-1).contentEditable = "true";
+        } else if (type === 'delrow' && tbl.rows.length > 1) tbl.deleteRow(-1);
+        else if (type === 'delcol' && tbl.rows[0].cells.length > 1) {
+            for (let i = 0; i < tbl.rows.length; i++) tbl.rows[i].deleteCell(-1);
         }
     };
 
@@ -190,7 +192,6 @@
         const container = target.closest('.relic-container');
         
         if (target.tagName === 'TD') {
-            activeTable = target.closest('table');
             document.querySelectorAll('.table-controls').forEach(c => c.style.display = 'none');
             const ctrl = container.querySelector('.table-controls');
             if (ctrl) ctrl.style.display = 'flex';
@@ -238,7 +239,7 @@
     window.customTable = () => { 
         const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); 
         let t = `<table class="relic-table">`; for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } t += `</table>`; 
-        exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:80px;"><div class="table-controls"><button onclick="modTable(event, 'row')">+R</button><button onclick="modTable(event, 'delrow')">-R</button><button onclick="modTable(event, 'col')">+C</button><button onclick="modTable(event, 'delcol')">-C</button></div><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); 
+        exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:80px;"><div class="table-controls"><button onclick="modTable(this, 'row')">+R</button><button onclick="modTable(this, 'delrow')">-R</button><button onclick="modTable(this, 'col')">+C</button><button onclick="modTable(this, 'delcol')">-C</button></div><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); 
     };
 
     window.addTextBox = () => { exec('insertHTML', `<div class="relic-container" style="width:250px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><div class="relic-textbox" contenteditable="true">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`); };
