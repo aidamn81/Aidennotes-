@@ -33,7 +33,7 @@
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.3); left: 0; top: 0; }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; pointer-events: auto; }
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; text-align: center; }
-        .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; border-radius: 0 3px 0 0; z-index: 20; position: relative; }
+        .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; border-radius: 0 3px 0 0; z-index: 200; position: relative; pointer-events: auto !important; }
         
         .relic-content { width: 100%; height: 100%; position: relative; z-index: 1; }
         .relic-container img { width: 100%; height: 100%; display: block; pointer-events: none; object-fit: fill; }
@@ -42,8 +42,8 @@
         .relic-textbox { width: 100%; min-height: 100%; background: rgba(245, 230, 211, 0.05); color: var(--parchment); padding: 10px; border: none; outline: none; }
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; color: var(--crimson); font-weight: bold; display: flex; align-items: flex-end; justify-content: flex-end; padding: 2px; pointer-events: auto; }
 
-        .table-controls { position: absolute; top: -55px; left: 0; display: none; gap: 4px; background: var(--oxblood); border: 1px solid var(--crimson); padding: 5px; border-radius: 4px; z-index: 150; pointer-events: auto; }
-        .table-controls button { background: var(--crimson); color: white; border: none; font-size: 10px; padding: 5px 8px; cursor: pointer; font-family: 'Cinzel'; border-radius: 2px; }
+        .table-controls { position: absolute; top: -55px; left: 0; display: none; gap: 4px; background: var(--oxblood); border: 1px solid var(--crimson); padding: 5px; border-radius: 4px; z-index: 200; pointer-events: auto !important; }
+        .table-controls button { background: var(--crimson); color: white; border: none; font-size: 10px; padding: 5px 8px; cursor: pointer; font-family: 'Cinzel'; border-radius: 2px; pointer-events: auto !important; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
@@ -155,11 +155,18 @@
     window.deleteNote = (id, title) => { if (confirm(`Delete ${title}?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent Notes"; document.getElementById('current-path-display').innerText = "Path: Recent Notes"; };
-    window.nukeRelic = (btn, e) => { if(e) e.stopPropagation(); const c = btn.closest('.relic-container'); if (c && confirm("Purge this element?")) c.remove(); };
+    
+    // DELETE FUNCTION
+    window.nukeRelic = (btn, e) => { 
+        if(e) { e.preventDefault(); e.stopPropagation(); }
+        const c = btn.closest('.relic-container'); 
+        const type = c.querySelector('img') ? "Image" : (c.querySelector('table') ? "Table" : "Textbox");
+        if (c && confirm(`Purge this ${type}?`)) c.remove(); 
+    };
 
-    // UPDATED TABLE MODS
+    // FIXED TABLE MODS
     window.modTable = (e, type) => {
-        if(e) e.stopPropagation();
+        if(e) { e.preventDefault(); e.stopPropagation(); }
         if (!activeTable) return;
         if (type === 'row') {
             let r = activeTable.insertRow(-1);
@@ -178,7 +185,7 @@
         const target = e.target; 
         const container = target.closest('.relic-container');
         
-        // Context Menu Management
+        // Handle Table Controls
         if (target.tagName === 'TD') {
             activeTable = target.closest('table');
             document.querySelectorAll('.table-controls').forEach(c => c.style.display = 'none');
@@ -188,12 +195,15 @@
             document.querySelectorAll('.table-controls').forEach(c => c.style.display = 'none');
         }
 
-        if (!container || target.classList.contains('del-relic') || target.tagName === 'BUTTON') return;
+        // Ignore drag/hold for buttons
+        if (target.tagName === 'BUTTON' || target.closest('button')) return;
+
+        if (!container) return;
         
         holdTimer = setTimeout(() => {
             const type = container.querySelector('img') ? "Image" : (container.querySelector('table') ? "Table" : "Textbox");
             if (confirm(`Delete this ${type}?`)) container.remove();
-        }, 1000);
+        }, 1200);
 
         const rect = container.getBoundingClientRect();
         if (target.classList.contains('resize-handle')) {
