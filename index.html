@@ -39,7 +39,7 @@
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; text-align: center; }
         .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; border-radius: 0 3px 0 0; z-index: 20; position: relative; }
         
-        .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; z-index: /* keep content lower */}
+        .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; z-index: 1; }
         .relic-container img { width: 100%; height: 100%; display: block; pointer-events: none; }
         .relic-table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
@@ -148,7 +148,7 @@
             const notes = Object.keys(data).map(k => ({id:k, ...data[k]})).reverse();
             const paths = [...new Set(notes.map(n => n.folder || "Recent Notes"))].sort();
             paths.forEach(fullPath => {
-                const safeId = btoa(fullPath).replace(/=/g, '').replace(/\+/g, '').replace(/\//g, '');
+                const safeId = "folder_" + btoa(unescape(encodeURIComponent(fullPath))).replace(/=/g, '').replace(/\+/g, '').replace(/\//g, '');
                 side.innerHTML += `<div class="sidebar-item folder-header" onclick="toggleFolder('${safeId}')">📁 ${fullPath}</div>
                 <div id="${safeId}" class="folder-content" style="display:none;">
                     ${notes.filter(n => (n.folder || "Recent Notes") === fullPath).map(n => `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
@@ -162,11 +162,12 @@
 
     window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; }); };
     window.deleteNote = (id, title) => { if (confirm(`Delete ${title}?`)) db.ref('notes/'+id).remove(); };
-    window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
+    window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent Notes"; document.getElementById('current-path-display').innerText = "Path: Recent Notes"; };
 
     // DELETE RELIC FUNCTION
-    window.nukeRelic = (btn) => {
+    window.nukeRelic = (btn, e) => {
+        if(e) e.stopPropagation();
         const container = btn.closest('.relic-container');
         if (container) container.remove();
     };
@@ -179,7 +180,7 @@
         const container = target.closest('.relic-container');
         if (!container) return;
 
-        if (target.classList.contains('del-relic')) return; // Let nukeRelic handle it via onclick
+        if (target.classList.contains('del-relic')) return;
 
         const rect = container.getBoundingClientRect();
         if (target.classList.contains('resize-handle')) {
@@ -225,7 +226,7 @@
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            exec('insertHTML', `<div class="relic-container" style="width:200px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this)">X</button></div><div class="relic-content"><img src="${ev.target.result}"></div><div class="resize-handle">⌟</div></div><p><br></p>`);
+            exec('insertHTML', `<div class="relic-container" style="width:200px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><img src="${ev.target.result}"></div><div class="resize-handle">⌟</div></div><p><br></p>`);
         };
         reader.readAsDataURL(e.target.files[0]);
     };
@@ -235,23 +236,22 @@
         let t = `<table class="relic-table">`;
         for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
         t += `</table>`;
-        exec('insertHTML', `<div class="relic-container" style="width:240px; height:160px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`);
+        exec('insertHTML', `<div class="relic-container" style="width:240px; height:160px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`);
     };
 
     window.addTextBox = () => {
-    // Add 'height:100%' to the inner div so it follows the container
-    exec('insertHTML', `
-        <div class="relic-container" style="width:200px; height:100px;">
-            <div class="relic-header">
-                <div class="drag-handle">DRAG</div>
-                <button class="del-relic" onclick="nukeRelic(this)">X</button>
-            </div>
-            <div class="relic-content" style="height:100%;">
-                <div class="relic-textbox" contenteditable="true" style="height:100%;">Fragment...</div>
-            </div>
-            <div class="resize-handle">⌟</div>
-        </div><p><br></p>`);
-};
+        exec('insertHTML', `
+            <div class="relic-container" style="width:200px; height:100px;">
+                <div class="relic-header">
+                    <div class="drag-handle">DRAG</div>
+                    <button class="del-relic" onclick="nukeRelic(this, event)">X</button>
+                </div>
+                <div class="relic-content" style="height:100%;">
+                    <div class="relic-textbox" contenteditable="true" style="height:100%;">Fragment...</div>
+                </div>
+                <div class="resize-handle">⌟</div>
+            </div><p><br></p>`);
+    };
 
 </script>
 </body>
