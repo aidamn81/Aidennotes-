@@ -29,6 +29,7 @@
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
+        #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; }
 
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.3); left: 0; top: 0; }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; pointer-events: auto; }
@@ -91,6 +92,10 @@
                 <button class="tool-btn" onclick="exec('italic')">I</button>
                 <button class="tool-btn" onclick="exec('underline')">U</button>
                 <button class="tool-btn" onclick="exec('strikeThrough')">S</button>
+                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
+                <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
+                <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
+                <button class="tool-btn" onclick="addCustomLink()">🔗</button>
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
                 <button class="tool-btn" onclick="customTable()">📊</button>
                 <button class="tool-btn" onclick="addTextBox()">T</button>
@@ -122,6 +127,7 @@
     window.openFolders = () => { document.getElementById('folder-modal').style.display='block'; document.getElementById('overlay').style.display='block'; };
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     window.createNewFolder = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } };
+    window.addCustomLink = () => { const t = prompt("Title:", "Link"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank" contenteditable="false">${t}</a>&nbsp;`); };
 
     window.saveQuick = () => {
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
@@ -156,7 +162,6 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent Notes"; document.getElementById('current-path-display').innerText = "Path: Recent Notes"; };
     
-    // DELETE FUNCTION
     window.nukeRelic = (btn, e) => { 
         if(e) { e.preventDefault(); e.stopPropagation(); }
         const c = btn.closest('.relic-container'); 
@@ -164,7 +169,6 @@
         if (c && confirm(`Purge this ${type}?`)) c.remove(); 
     };
 
-    // FIXED TABLE MODS
     window.modTable = (e, type) => {
         if(e) { e.preventDefault(); e.stopPropagation(); }
         if (!activeTable) return;
@@ -185,7 +189,6 @@
         const target = e.target; 
         const container = target.closest('.relic-container');
         
-        // Handle Table Controls
         if (target.tagName === 'TD') {
             activeTable = target.closest('table');
             document.querySelectorAll('.table-controls').forEach(c => c.style.display = 'none');
@@ -195,9 +198,7 @@
             document.querySelectorAll('.table-controls').forEach(c => c.style.display = 'none');
         }
 
-        // Ignore drag/hold for buttons
         if (target.tagName === 'BUTTON' || target.closest('button')) return;
-
         if (!container) return;
         
         holdTimer = setTimeout(() => {
