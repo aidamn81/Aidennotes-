@@ -34,16 +34,16 @@
         #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; }
 
         /* RELICS */
-        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 80px; min-height: 80px; touch-action: none; background: rgba(0,0,0,0.3); left: 0; top: 0; }
+        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.5); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.3); left: 0; top: 0; }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; pointer-events: auto; }
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; text-align: center; }
         .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; border-radius: 0 3px 0 0; z-index: 20; position: relative; }
         
-        .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; z-index: 1; }
+        .relic-content { width: 100%; height: 100%; position: relative; z-index: 1; }
         .relic-container img { width: 100%; height: 100%; display: block; pointer-events: none; }
-        .relic-table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
-        .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
-        .relic-textbox { width: 100%; height: 100%; background: rgba(245, 230, 211, 0.05); color: var(--parchment); padding: 10px; border: none; outline: none; overflow-y: auto; }
+        .relic-table { width: 100%; height: 100%; border-collapse: collapse; }
+        .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); word-break: break-word; }
+        .relic-textbox { width: 100%; min-height: 100%; background: rgba(245, 230, 211, 0.05); color: var(--parchment); padding: 10px; border: none; outline: none; }
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; color: var(--crimson); font-weight: bold; display: flex; align-items: flex-end; justify-content: flex-end; padding: 2px; pointer-events: auto; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
@@ -147,7 +147,6 @@
             const data = snap.val();
             const notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
             
-            // Build visual tree logic
             const tree = { "Recent Notes": { _notes: [], _sub: {} } };
             notes.forEach(note => {
                 const parts = (note.folder || "Recent Notes").split('/');
@@ -200,7 +199,8 @@
         if (!activeTarget) return; const t = e.touches[0]; const dx = t.clientX - touchStartX; const dy = t.clientY - touchStartY;
         if (isResizing) {
             activeTarget.style.width = Math.max(80, Math.round((initialWidth + dx) / snapGrid) * snapGrid) + 'px';
-            activeTarget.style.height = Math.max(80, Math.round((initialHeight + dy) / snapGrid) * snapGrid) + 'px';
+            activeTarget.style.height = Math.max(40, Math.round((initialHeight + dy) / snapGrid) * snapGrid) + 'px';
+            activeTarget.style.minHeight = 'unset'; // Remove min-height auto-expand logic once manually resized
         } else {
             activeTarget.style.left = Math.round((initialLeft + dx) / snapGrid) * snapGrid + 'px';
             activeTarget.style.top = Math.round((initialTop + dy) / snapGrid) * snapGrid + 'px';
@@ -213,7 +213,6 @@
 
     window.addCustomLink = () => { const t = prompt("Title:", "Click Here"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank" contenteditable="false">${t}</a>&nbsp;`); };
     
-    // IMAGE LOGIC FIXED FOR DUAL-AXIS RESIZING
     window.insertImg = (e) => { 
         const r = new FileReader(); 
         r.onload = (ev) => exec('insertHTML', `
@@ -230,8 +229,20 @@
         r.readAsDataURL(e.target.files[0]); 
     };
 
-    window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } t += `</table>`; exec('insertHTML', `<div class="relic-container" style="width:240px; height:160px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); };
-    window.addTextBox = () => { exec('insertHTML', `<div class="relic-container" style="width:200px; height:100px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content" style="height:100%;"><div class="relic-textbox" contenteditable="true" style="height:100%;">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`); };
+    window.customTable = () => { 
+        const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); 
+        let t = `<table class="relic-table">`; 
+        for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } 
+        t += `</table>`; 
+        // Logic: height is auto, but min-height is set so it doesn't vanish.
+        exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); 
+    };
+
+    window.addTextBox = () => { 
+        // Logic: height is auto so it grows with text, but has a starting min-height.
+        exec('insertHTML', `<div class="relic-container" style="width:250px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><div class="relic-textbox" contenteditable="true">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`); 
+    };
 </script>
 </body>
 </html>
+
