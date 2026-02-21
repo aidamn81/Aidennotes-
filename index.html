@@ -147,7 +147,7 @@
             const data = snap.val();
             const notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
             
-            // Build visual tree
+            // Build visual tree logic
             const tree = { "Recent Notes": { _notes: [], _sub: {} } };
             notes.forEach(note => {
                 const parts = (note.folder || "Recent Notes").split('/');
@@ -212,7 +212,24 @@
     document.getElementById('note-body').addEventListener('click', (e) => { if (e.target.tagName === 'A') { e.preventDefault(); window.open(e.target.href, '_blank'); } });
 
     window.addCustomLink = () => { const t = prompt("Title:", "Click Here"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank" contenteditable="false">${t}</a>&nbsp;`); };
-    window.insertImg = (e) => { const r = new FileReader(); r.onload = (ev) => exec('insertHTML', `<div class="relic-container" style="width:200px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><img src="${ev.target.result}"></div><div class="resize-handle">⌟</div></div><p><br></p>`); r.readAsDataURL(e.target.files[0]); };
+    
+    // IMAGE LOGIC FIXED FOR DUAL-AXIS RESIZING
+    window.insertImg = (e) => { 
+        const r = new FileReader(); 
+        r.onload = (ev) => exec('insertHTML', `
+            <div class="relic-container" style="width:250px; height:200px;">
+                <div class="relic-header">
+                    <div class="drag-handle">DRAG</div>
+                    <button class="del-relic" onclick="nukeRelic(this, event)">X</button>
+                </div>
+                <div class="relic-content" style="width:100%; height:100%; overflow:hidden;">
+                    <img src="${ev.target.result}" style="width:100%; height:100%; object-fit:fill; pointer-events:none;">
+                </div>
+                <div class="resize-handle">⌟</div>
+            </div><p><br></p>`); 
+        r.readAsDataURL(e.target.files[0]); 
+    };
+
     window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } t += `</table>`; exec('insertHTML', `<div class="relic-container" style="width:240px; height:160px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); };
     window.addTextBox = () => { exec('insertHTML', `<div class="relic-container" style="width:200px; height:100px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content" style="height:100%;"><div class="relic-textbox" contenteditable="true" style="height:100%;">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`); };
 </script>
