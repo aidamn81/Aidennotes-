@@ -239,8 +239,20 @@
     };
 
     window.addTextBox = () => {
-        exec('insertHTML', `<div class="relic-container" style="width:200px; height:100px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this)">X</button></div><div class="relic-content"><div class="relic-textbox" contenteditable="true">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`);
-    };
+    // Add 'height:100%' to the inner div so it follows the container
+    exec('insertHTML', `
+        <div class="relic-container" style="width:200px; height:100px;">
+            <div class="relic-header">
+                <div class="drag-handle">DRAG</div>
+                <button class="del-relic" onclick="nukeRelic(this)">X</button>
+            </div>
+            <div class="relic-content" style="height:100%;">
+                <div class="relic-textbox" contenteditable="true" style="height:100%;">Fragment...</div>
+            </div>
+            <div class="resize-handle">⌟</div>
+        </div><p><br></p>`);
+};
+
 </script>
 </body>
 </html>
