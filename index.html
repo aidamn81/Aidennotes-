@@ -182,11 +182,19 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent Notes"; document.getElementById('current-path-display').innerText = "Path: Recent Notes"; };
 
-    window.nukeRelic = (btn, e) => { if(e) e.stopPropagation(); const c = btn.closest('.relic-container'); if (c) c.remove(); };
+    window.nukeRelic = (btn, e) => { if(e) e.stopPropagation(); const c = btn.closest('.relic-container'); if (c && confirm("Purge this content?")) c.remove(); };
 
     let activeTarget = null, touchStartX, touchStartY, initialLeft, initialTop, initialWidth, initialHeight, isResizing = false;
+    let holdTimer;
+
     document.addEventListener('touchstart', (e) => {
         const target = e.target; const container = target.closest('.relic-container'); if (!container || target.classList.contains('del-relic')) return;
+        
+        // Start long-press timer
+        holdTimer = setTimeout(() => {
+            if (confirm("Delete this element?")) container.remove();
+        }, 1000);
+
         const rect = container.getBoundingClientRect();
         if (target.classList.contains('resize-handle')) {
             isResizing = true; activeTarget = container; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; initialWidth = rect.width; initialHeight = rect.height; e.preventDefault();
@@ -196,11 +204,12 @@
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
+        clearTimeout(holdTimer); // Cancel delete if finger moves
         if (!activeTarget) return; const t = e.touches[0]; const dx = t.clientX - touchStartX; const dy = t.clientY - touchStartY;
         if (isResizing) {
             activeTarget.style.width = Math.max(80, Math.round((initialWidth + dx) / snapGrid) * snapGrid) + 'px';
             activeTarget.style.height = Math.max(40, Math.round((initialHeight + dy) / snapGrid) * snapGrid) + 'px';
-            activeTarget.style.minHeight = 'unset'; // Remove min-height auto-expand logic once manually resized
+            activeTarget.style.minHeight = 'unset'; 
         } else {
             activeTarget.style.left = Math.round((initialLeft + dx) / snapGrid) * snapGrid + 'px';
             activeTarget.style.top = Math.round((initialTop + dy) / snapGrid) * snapGrid + 'px';
@@ -208,7 +217,7 @@
         e.preventDefault();
     }, {passive: false});
 
-    document.addEventListener('touchend', () => { activeTarget = null; });
+    document.addEventListener('touchend', () => { clearTimeout(holdTimer); activeTarget = null; });
     document.getElementById('note-body').addEventListener('click', (e) => { if (e.target.tagName === 'A') { e.preventDefault(); window.open(e.target.href, '_blank'); } });
 
     window.addCustomLink = () => { const t = prompt("Title:", "Click Here"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank" contenteditable="false">${t}</a>&nbsp;`); };
@@ -234,15 +243,12 @@
         let t = `<table class="relic-table">`; 
         for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } 
         t += `</table>`; 
-        // Logic: height is auto, but min-height is set so it doesn't vanish.
         exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); 
     };
 
     window.addTextBox = () => { 
-        // Logic: height is auto so it grows with text, but has a starting min-height.
         exec('insertHTML', `<div class="relic-container" style="width:250px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><div class="relic-textbox" contenteditable="true">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`); 
     };
 </script>
 </body>
 </html>
-
