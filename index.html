@@ -17,8 +17,8 @@
         #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: var(--crimson); }
-        .folder-header { background: rgba(139,0,0,0.2); color: var(--crimson); font-weight: bold; border-left: 3px solid var(--crimson); }
-        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); }
+        .folder-header { background: rgba(139,0,0,0.2); color: var(--crimson); font-weight: bold; border-left: 3px solid var(--crimson); border-bottom: 1px solid rgba(255,255,255,0.05) !important; }
+        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); transition: all 0.2s ease-in-out; }
 
         /* EDITOR */
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
@@ -147,22 +147,34 @@
             const data = snap.val();
             const notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
             
-            // Permanent "Recent Notes" folder logic
-            const folderSet = new Set(["Recent Notes"]);
-            notes.forEach(n => { if(n.folder) folderSet.add(n.folder); });
-            const paths = Array.from(folderSet).sort();
-
-            paths.forEach(fullPath => {
-                const safeId = "f_" + btoa(unescape(encodeURIComponent(fullPath))).replace(/[^a-z0-9]/gi, '');
-                side.innerHTML += `<div class="sidebar-item folder-header" onclick="toggleFolder('${safeId}')">📁 ${fullPath}</div>
-                <div id="${safeId}" class="folder-content" style="display:none;">
-                    ${notes.filter(n => (n.folder || "Recent Notes") === fullPath).map(n => `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;">
-                        <span onclick="loadNote('${n.id}')">📜 ${n.title}</span>
-                        <span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span>
-                    </div>`).join('')}
-                    ${notes.filter(n => (n.folder || "Recent Notes") === fullPath).length === 0 ? '<div class="sidebar-item" style="font-size:0.5rem; color:grey; padding-left:20px;">No contents...</div>' : ''}
-                </div>`;
+            // Build visual tree
+            const tree = { "Recent Notes": { _notes: [], _sub: {} } };
+            notes.forEach(note => {
+                const parts = (note.folder || "Recent Notes").split('/');
+                let current = tree;
+                parts.forEach((part, index) => {
+                    if (!current[part]) current[part] = { _notes: [], _sub: {} };
+                    if (index === parts.length - 1) current[part]._notes.push(note);
+                    current = current[part]._sub;
+                });
             });
+
+            function renderLevel(obj, container, depth = 0) {
+                Object.keys(obj).sort().forEach(key => {
+                    const safeId = "f_" + btoa(unescape(encodeURIComponent(key + depth))).replace(/[^a-z0-9]/gi, '');
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="sidebar-item folder-header" style="padding-left: ${12 + (depth * 15)}px" onclick="toggleFolder('${safeId}')">📁 ${key}</div>
+                        <div id="${safeId}" class="folder-content" style="display:none; border-left: 1px solid rgba(139,0,0,0.3); margin-left: ${15 + (depth * 10)}px;">
+                            <div id="${safeId}_sub"></div>
+                        </div>`);
+                    const subContainer = document.getElementById(safeId + "_sub");
+                    renderLevel(obj[key]._sub, subContainer, depth + 1);
+                    obj[key]._notes.forEach(n => {
+                        subContainer.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;"><span onclick="loadNote('${n.id}')">📜 ${n.title}</span><span onclick="deleteNote('${n.id}', '${n.title}')">🗑️</span></div>`);
+                    });
+                });
+            }
+            renderLevel(tree, side);
         });
     }
 
@@ -171,43 +183,21 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent Notes"; document.getElementById('current-path-display').innerText = "Path: Recent Notes"; };
 
-    // DELETE RELIC FUNCTION
-    window.nukeRelic = (btn, e) => {
-        if(e) e.stopPropagation();
-        const container = btn.closest('.relic-container');
-        if (container) container.remove();
-    };
+    window.nukeRelic = (btn, e) => { if(e) e.stopPropagation(); const c = btn.closest('.relic-container'); if (c) c.remove(); };
 
-    // DRAG ENGINE
     let activeTarget = null, touchStartX, touchStartY, initialLeft, initialTop, initialWidth, initialHeight, isResizing = false;
-
     document.addEventListener('touchstart', (e) => {
-        const target = e.target;
-        const container = target.closest('.relic-container');
-        if (!container) return;
-        if (target.classList.contains('del-relic')) return;
-
+        const target = e.target; const container = target.closest('.relic-container'); if (!container || target.classList.contains('del-relic')) return;
         const rect = container.getBoundingClientRect();
         if (target.classList.contains('resize-handle')) {
-            isResizing = true; activeTarget = container;
-            touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-            initialWidth = rect.width; initialHeight = rect.height;
-            e.preventDefault();
+            isResizing = true; activeTarget = container; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; initialWidth = rect.width; initialHeight = rect.height; e.preventDefault();
         } else if (target.closest('.drag-handle')) {
-            isResizing = false; activeTarget = container;
-            touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-            initialLeft = parseInt(container.style.left) || 0;
-            initialTop = parseInt(container.style.top) || 0;
-            e.preventDefault();
+            isResizing = false; activeTarget = container; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; initialLeft = parseInt(container.style.left) || 0; initialTop = parseInt(container.style.top) || 0; e.preventDefault();
         }
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
-        if (!activeTarget) return;
-        const t = e.touches[0];
-        const dx = t.clientX - touchStartX;
-        const dy = t.clientY - touchStartY;
-
+        if (!activeTarget) return; const t = e.touches[0]; const dx = t.clientX - touchStartX; const dy = t.clientY - touchStartY;
         if (isResizing) {
             activeTarget.style.width = Math.max(80, Math.round((initialWidth + dx) / snapGrid) * snapGrid) + 'px';
             activeTarget.style.height = Math.max(80, Math.round((initialHeight + dy) / snapGrid) * snapGrid) + 'px';
@@ -219,44 +209,12 @@
     }, {passive: false});
 
     document.addEventListener('touchend', () => { activeTarget = null; });
-
-    // LINKS
     document.getElementById('note-body').addEventListener('click', (e) => { if (e.target.tagName === 'A') { e.preventDefault(); window.open(e.target.href, '_blank'); } });
 
-    window.addCustomLink = () => {
-        const text = prompt("Title:", "Click Here"), url = prompt("URL:", "https://");
-        if(text && url) exec('insertHTML', `<a href="${url}" target="_blank" contenteditable="false">${text}</a>&nbsp;`);
-    };
-
-    window.insertImg = (e) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            exec('insertHTML', `<div class="relic-container" style="width:200px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><img src="${ev.target.result}"></div><div class="resize-handle">⌟</div></div><p><br></p>`);
-        };
-        reader.readAsDataURL(e.target.files[0]);
-    };
-
-    window.customTable = () => {
-        const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");
-        let t = `<table class="relic-table">`;
-        for(let i=0; i<r; i++) { t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
-        t += `</table>`;
-        exec('insertHTML', `<div class="relic-container" style="width:240px; height:160px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`);
-    };
-
-    window.addTextBox = () => {
-        exec('insertHTML', `
-            <div class="relic-container" style="width:200px; height:100px;">
-                <div class="relic-header">
-                    <div class="drag-handle">DRAG</div>
-                    <button class="del-relic" onclick="nukeRelic(this, event)">X</button>
-                </div>
-                <div class="relic-content" style="height:100%;">
-                    <div class="relic-textbox" contenteditable="true" style="height:100%;">Fragment...</div>
-                </div>
-                <div class="resize-handle">⌟</div>
-            </div><p><br></p>`);
-    };
+    window.addCustomLink = () => { const t = prompt("Title:", "Click Here"), u = prompt("URL:", "https://"); if(t && u) exec('insertHTML', `<a href="${u}" target="_blank" contenteditable="false">${t}</a>&nbsp;`); };
+    window.insertImg = (e) => { const r = new FileReader(); r.onload = (ev) => exec('insertHTML', `<div class="relic-container" style="width:200px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><img src="${ev.target.result}"></div><div class="resize-handle">⌟</div></div><p><br></p>`); r.readAsDataURL(e.target.files[0]); };
+    window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } t += `</table>`; exec('insertHTML', `<div class="relic-container" style="width:240px; height:160px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); };
+    window.addTextBox = () => { exec('insertHTML', `<div class="relic-container" style="width:200px; height:100px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content" style="height:100%;"><div class="relic-textbox" contenteditable="true" style="height:100%;">Fragment...</div></div><div class="resize-handle">⌟</div></div><p><br></p>`); };
 </script>
 </body>
 </html>
