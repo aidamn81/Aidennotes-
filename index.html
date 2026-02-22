@@ -32,8 +32,7 @@
         #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; transition: text-shadow 0.3s ease; }
         #note-body a.link-pulse { text-shadow: 0 0 10px #00ccff, 0 0 20px #00ccff; }
 
-        /* LINK POPUP STYLES */
-        #link-popup { position: fixed; display: none; background: var(--oxblood); border: 1px solid var(--crimson); padding: 8px; border-radius: 4px; z-index: 5000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); pointer-events: auto; }
+        #link-popup { position: fixed; display: none; background: var(--oxblood); border: 1px solid var(--crimson); padding: 8px; border-radius: 4px; z-index: 5000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
         #link-popup button { background: var(--crimson); color: white; border: none; font-family: 'Cinzel'; font-size: 11px; padding: 6px 12px; cursor: pointer; border-radius: 2px; }
 
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.1); left: 0; top: 0; }
@@ -142,37 +141,37 @@
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     window.createNewFolder = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } };
     
-    // LINK HANDLER
-    window.handleLinkTap = (e, el, url) => {
+    // UPDATED LINK HANDLER
+    window.handleLinkClick = (e, el, url) => {
         const now = Date.now();
         const popup = document.getElementById('link-popup');
-        
-        // Double Tap Detection
+        e.preventDefault();
+        e.stopPropagation();
+
         if (now - lastTapTime < 300) {
             el.classList.add('link-pulse');
             setTimeout(() => el.classList.remove('link-pulse'), 500);
             window.open(url, '_blank');
             popup.style.display = 'none';
         } else {
-            // Single Tap: Show Popup
             const rect = el.getBoundingClientRect();
             popup.style.display = 'block';
             popup.style.left = rect.left + 'px';
-            popup.style.top = (rect.bottom + 5) + 'px';
-            document.getElementById('popup-visit-btn').onclick = () => {
+            popup.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            document.getElementById('popup-visit-btn').onclick = (btnEv) => {
+                btnEv.stopPropagation();
                 window.open(url, '_blank');
                 popup.style.display = 'none';
             };
         }
         lastTapTime = now;
-        e.stopPropagation();
     };
 
     window.addCustomLink = () => { 
         const t = prompt("Title:", "Link"), u = prompt("URL:", "https://"); 
         if(t && u) {
             const url = u.startsWith('http') ? u : 'https://' + u;
-            exec('insertHTML', `<a href="${url}" onpointerdown="handleLinkTap(event, this, '${url}')" contenteditable="false">${t}</a>&nbsp;`); 
+            exec('insertHTML', `<a href="${url}" onclick="handleLinkClick(event, this, '${url}')" contenteditable="false">${t}</a>&nbsp;`); 
         }
     };
 
@@ -241,8 +240,7 @@
         const target = e.target; 
         const container = target.closest('.relic-container');
         
-        // Hide popup if clicking away
-        if (!target.closest('#link-popup') && !target.closest('a')) {
+        if (!target.closest('#link-popup') && target.tagName !== 'A') {
             document.getElementById('link-popup').style.display = 'none';
         }
 
