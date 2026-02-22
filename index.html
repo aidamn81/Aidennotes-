@@ -39,7 +39,6 @@
         .relic-container.active-relic .relic-header { opacity: 1; pointer-events: auto; }
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; text-align: center; }
         .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; padding: 0 10px; cursor: pointer; }
-        .relic-content { width: 100%; height: 100%; position: relative; overflow: hidden; }
         
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
@@ -102,8 +101,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
     
-    // ACTION REQUIRED: If your phone shows a different UID, paste it here:
-    const MASTER_UID = "WmMCIqgKBfO3tSGHb0nSa5qBpOc2";
+    // THE NEW MASTER SEAL
+    const MASTER_UID = "L4aYFgfnNsPA7wy5FasTQkXPTpK2";
 
     let currentEditingId = null, currentFolderName = "Recent Notes", isLocked = true, longPressTimer;
 
@@ -126,8 +125,7 @@
                 document.getElementById('login-screen').style.display='none';
                 initApp();
             } else {
-                // THIS WILL SHOW YOU THE ACTUAL UID TO COPY
-                alert("BLOCKING GHOST UID: " + u.uid + "\n\nPlease update your code and rules with this UID.");
+                alert("Unauthorized Entry.\nUID: " + u.uid);
                 auth.signOut();
             }
         }
@@ -148,9 +146,47 @@
     document.addEventListener('touchmove', () => clearTimeout(longPressTimer));
     document.addEventListener('touchend', () => clearTimeout(longPressTimer));
 
-    // ... (Existing initApp, loadNote, saveQuick functions)
-    function initApp() { db.ref('notes').on('value', snap => { /* Sidebar logic */ }); }
-    window.saveQuick = () => { /* Save logic */ };
+    function initApp() {
+        db.ref('notes').on('value', (snap) => {
+            const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
+            const data = snap.val(), notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [], tree = { "Recent Notes": { _notes: [], _sub: {} } };
+            notes.forEach(note => {
+                const parts = (note.folder || "Recent Notes").split('/');
+                let cur = tree; parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i === parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; });
+            });
+            function render(obj, cont, d = 0) {
+                Object.keys(obj).sort().forEach(key => {
+                    const id = "f_" + btoa(unescape(encodeURIComponent(key + d))).replace(/[^a-z0-9]/gi, '');
+                    cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`);
+                    const sub = document.getElementById(id + "_sub"); render(obj[key]._sub, sub, d+1);
+                    obj[key]._notes.forEach(n => { sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:${20+(d*10)}px;" onclick="loadNote('${n.id}')">📜 ${n.title}</div>`); });
+                });
+            }
+            render(tree, side);
+        });
+    }
+
+    window.loadNote = (id) => { 
+        db.ref('notes/'+id).once('value', (s) => { 
+            const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; 
+            document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; 
+            document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
+            if(!isLocked) toggleEditMode(); 
+        }); 
+    };
+
+    window.saveQuick = () => {
+        const pulse = document.getElementById('sync-indicator'); pulse.classList.add('syncing');
+        const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
+        const p = currentEditingId ? db.ref('notes/'+currentEditingId).set(data) : db.ref('notes').push(data).then(r => currentEditingId = r.key);
+        p.then(() => { setTimeout(() => pulse.classList.remove('syncing'), 1500); if(!isLocked) toggleEditMode(); });
+    };
+
+    window.openFolders = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
+    window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
+    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
+    window.addCustomLink = () => { /* basic placeholder */ const url = prompt("URL:"); if(url) exec('insertHTML', `<a href="${url}">${url}</a>`); };
+    window.insertImg = (e) => { const reader = new FileReader(); reader.onload = (ev) => { exec('insertHTML', `<img src="${ev.target.result}" style="max-width:100%;">`); }; reader.readAsDataURL(e.target.files[0]); };
 </script>
 </body>
 </html>
