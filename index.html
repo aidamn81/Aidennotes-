@@ -141,12 +141,11 @@
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     window.createNewFolder = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } };
     
-    // UPDATED LINK HANDLER
+    // REUSABLE BROWSER OPENER
     window.handleLinkClick = (e, el, url) => {
         const now = Date.now();
         const popup = document.getElementById('link-popup');
-        e.preventDefault();
-        e.stopPropagation();
+        if(e) { e.preventDefault(); e.stopPropagation(); }
 
         if (now - lastTapTime < 300) {
             el.classList.add('link-pulse');
@@ -244,6 +243,17 @@
             document.getElementById('link-popup').style.display = 'none';
         }
 
+        // IMAGE LINK DOUBLE TAP DETECTION
+        if (container && container.getAttribute('data-link')) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+                window.open(container.getAttribute('data-link'), '_blank');
+                lastTapTime = now;
+                return;
+            }
+            lastTapTime = now;
+        }
+
         if (target.tagName === 'A') return;
 
         document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
@@ -289,7 +299,13 @@
     document.addEventListener('touchend', () => { clearTimeout(holdTimer); activeTarget = null; });
 
     window.insertImg = (e) => { 
-        const r = new FileReader(); r.onload = (ev) => exec('insertHTML', `<div class="relic-container" style="width:250px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><img src="${ev.target.result}" style="width:100%; height:100%;"></div><div class="resize-handle">⌟</div></div><p><br></p>`); r.readAsDataURL(e.target.files[0]); 
+        const r = new FileReader(); 
+        r.onload = (ev) => {
+            const link = prompt("Add Link behind image? (Optional)", "https://");
+            const linkAttr = link ? `data-link="${link}"` : "";
+            exec('insertHTML', `<div class="relic-container" ${linkAttr} style="width:250px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><img src="${ev.target.result}" style="width:100%; height:100%;"></div><div class="resize-handle">⌟</div></div><p><br></p>`); 
+        };
+        r.readAsDataURL(e.target.files[0]); 
     };
 
     window.customTable = () => { 
