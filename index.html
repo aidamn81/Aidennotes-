@@ -27,8 +27,17 @@
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
         
-        /* PERSISTENT LINK VISIBILITY */
-        #note-body a, .relic-content a { color: var(--link-green) !important; text-decoration: underline !important; font-weight: bold !important; cursor: pointer !important; pointer-events: auto !important; }
+        /* FORCE GREEN LINKS IN ALL MODES */
+        #note-body a, 
+        .relic-container a, 
+        .relic-content a { 
+            color: var(--link-green) !important; 
+            text-decoration: underline !important; 
+            font-weight: bold !important; 
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: inline-block !important;
+        }
 
         .relic-container { display: inline-block; position: relative; margin: 10px; border: 1px solid rgba(139,0,0,0.2); touch-action: none; background: rgba(0,0,0,0.2); left: 0; top: 0; vertical-align: middle; }
         .relic-header { position: absolute; top: -30px; left: -1px; width: calc(100% + 2px); height: 30px; z-index: 10; opacity: 0; pointer-events: none; display: flex; justify-content: flex-end; }
@@ -89,6 +98,7 @@
                 <button class="tool-btn" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onclick="exec('italic')">I</button>
                 <button class="tool-btn" onclick="exec('underline')">U</button>
+                <input type="color" class="tool-btn" style="width:40px; padding:2px;" onchange="exec('foreColor', this.value)" title="Text Color">
                 <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
                 <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
                 <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
@@ -130,17 +140,13 @@
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
 
-    // --- TOUCH ENGINE ---
     document.addEventListener('touchstart', (e) => {
         const target = e.target;
         if (target.tagName === 'A' || target.getAttribute('contenteditable') === 'true') return;
-
         const container = target.closest('.relic-container');
         if (isLocked) return;
-        
         if (container) { lpTimer = setTimeout(() => { if(confirm("Destroy this relic?")) container.remove(); }, 600); }
         if (!container) { if (activeRelic) activeRelic.classList.remove('active-relic'); activeRelic = null; return; }
-        
         if (activeRelic) activeRelic.classList.remove('active-relic');
         activeRelic = container; activeRelic.classList.add('active-relic');
         const touch = e.touches[0];
@@ -175,13 +181,11 @@
         return `<div class="relic-container ${extraClass}" style="left:0; top:0; width:${w}; height:${h};"><div class="relic-header"><button class="del-relic" onclick="this.closest('.relic-container').remove()">DESTROY</button></div><div class="relic-content">${content}</div><div class="relic-footer"><div class="drag-handle">DRAG</div></div><div class="resize-handle"></div></div><span>&nbsp;</span>`;
     }
 
-    // --- LINK RELIC WITH FORCED COLOR ---
     window.addCustomLink = () => {
         const title = prompt("Link Title:");
         if (!title) return;
         const url = prompt("Link URL:", "https://");
         if (!url) return;
-        // Injecting lawngreen color directly into style attribute
         const linkHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#7cfc00 !important; font-weight:bold !important; text-decoration:underline !important;">${title}</a>`;
         exec('insertHTML', wrapRelic(linkHTML, "link-relic"));
     };
