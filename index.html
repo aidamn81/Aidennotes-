@@ -7,103 +7,85 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
+        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; }
         
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
-        #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
-        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
-        .folder-header { background: rgba(139,0,0,0.2); color: var(--crimson); font-weight: bold; border-left: 3px solid var(--crimson); }
+        #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; overflow-y: auto; z-index: 100; }
+        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; }
 
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
-        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
         
-        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
-        .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
-        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
+        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; }
+        .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; }
 
-        #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
+        #note-body { min-height: 65vh; outline: none; padding-bottom: 400px; position: relative; }
         
-        /* RELIC ENGINE v4 STYLING */
-        .relic-container { display: inline-block; position: relative; margin: 40px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 100px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); left: 0; top: 0; }
+        /* THE PRECISION RELIC */
+        .relic-container { 
+            display: inline-block; 
+            position: relative; 
+            margin: 40px 20px; 
+            border: 2px solid transparent; 
+            min-width: 100px; 
+            min-height: 50px; 
+            touch-action: none; 
+            background: rgba(0,0,0,0.2); 
+        }
         
-        /* Utility bars */
-        .relic-header, .relic-footer { position: absolute; left: -1px; width: calc(100% + 2px); height: 30px; z-index: 10; opacity: 0; pointer-events: none; display: flex; }
-        .relic-header { top: -30px; justify-content: flex-end; }
-        .relic-footer { bottom: -30px; }
-        
-        .relic-container.active-relic { border: 1px solid var(--crimson); z-index: 1000; }
+        .relic-container.active-relic { border-color: var(--crimson); }
+
+        /* RE-POSITIONED UI */
+        .relic-header { position: absolute; top: -35px; right: 0; opacity: 0; pointer-events: none; }
+        .relic-footer { 
+            position: absolute; 
+            bottom: -40px; 
+            left: 0; 
+            width: 100%; 
+            height: 40px; 
+            background: var(--crimson); 
+            display: flex; 
+            opacity: 0; 
+            pointer-events: none; 
+            border-radius: 0 0 8px 8px;
+        }
+
         .relic-container.active-relic .relic-header, 
-        .relic-container.active-relic .relic-footer,
-        .relic-container.active-relic .resize-handle { opacity: 1; pointer-events: auto; }
-        
-        /* DRAG AT BOTTOM ONLY */
-        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 10px; cursor: move; font-family: 'Cinzel'; text-align: center; line-height: 22px; font-weight: bold; letter-spacing: 2px; border-radius: 0 0 5px 5px; }
-        
-        /* DELETE AT TOP ONLY */
-        .del-relic { background: #333; color: #ff4444; border: 1px solid var(--crimson); font-size: 14px; cursor: pointer; padding: 0 15px; border-radius: 5px 5px 0 0; }
-        
-        .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: auto; }
-        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
-        .relic-table { width: 100%; height: 100%; border-collapse: collapse; }
-        .relic-table td { border: 1px solid var(--crimson); padding: 8px; color: var(--parchment); }
-        
-        /* RESIZE AT CORNER ONLY */
-        .resize-handle { position: absolute; bottom: -5px; right: -5px; width: 40px; height: 40px; cursor: nwse-resize; z-index: 120; background: linear-gradient(135deg, transparent 50%, #ffd700 50%); opacity: 0; border-radius: 0 0 5px 0; }
+        .relic-container.active-relic .relic-footer { opacity: 1; pointer-events: auto; }
 
-        #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
-        .locked-mode .relic-header, .locked-mode .relic-footer, .locked-mode .resize-handle { display: none !important; }
+        .drag-zone { flex-grow: 1; color: white; font-family: 'Cinzel'; font-size: 10px; text-align: center; line-height: 40px; font-weight: bold; letter-spacing: 2px; }
+        .resize-zone { width: 50px; background: #ffd700; color: black; text-align: center; line-height: 40px; font-weight: bold; border-radius: 0 0 8px 0; }
+        
+        .del-btn { background: #222; color: #ff4444; border: 1px solid var(--crimson); padding: 5px 10px; font-family: 'Cinzel'; cursor: pointer; }
+
+        .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+        .relic-container img { width: 100%; height: 100%; object-fit: contain; }
+
+        .locked-mode .relic-header, .locked-mode .relic-footer { display: none !important; }
     </style>
 </head>
 <body class="locked-mode">
 
-<div id="login-screen">
-    <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
+<div id="login-screen" style="position:fixed; inset:0; background:var(--ink); z-index:2000; display:flex; align-items:center; justify-content:center;">
+    <div style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
         <h2 style="font-family:'Cinzel'; color:var(--crimson);">THE BLOOD SEAL</h2>
-        <input type="email" id="login-email" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Email">
-        <input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Password">
+        <input type="password" id="login-pass" style="width:100%; margin:10px 0; padding:12px; background:#000; color:#fff; border:1px solid var(--crimson);" placeholder="Keyphrase">
         <button class="tool-btn" style="width:100%; background:var(--crimson); padding:15px;" onclick="handleLogin()">UNLOCK</button>
     </div>
 </div>
 
 <div class="app-container" id="app">
-    <aside id="sidebar">
-        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.2);" onclick="startNewNote()">✨ NEW NOTE</div>
-        <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
-    </aside>
-
     <main id="main-editor">
         <div class="scroll-content">
-            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver); margin-bottom:10px;">Path: Recent Notes</div>
-            <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
-            
+            <input type="text" id="note-title" style="width:100%; background:transparent; border:none; color:var(--crimson); font-family:'Cinzel'; font-size:1.5rem; outline:none;" placeholder="Untitled...">
             <div class="sub-title-toolbar">
-                <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
-                <button class="tool-btn" onclick="exec('undo')">↶</button>
-                <button class="tool-btn" onclick="exec('redo')">↷</button>
-                <select class="tool-select" onchange="exec('formatBlock', this.value); this.selectedIndex=0;">
-                    <option value="">Style</option>
-                    <option value="H1">H1</option>
-                    <option value="H2">H2</option>
-                    <option value="P">Text</option>
-                </select>
-                <button class="tool-btn" onclick="exec('bold')">B</button>
-                <button class="tool-btn" onclick="exec('italic')">I</button>
-                <button class="tool-btn" onclick="exec('underline')">U</button>
-                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
-                <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
-                <button class="tool-btn" onclick="addCustomLink()">🔗</button>
-                <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
-                <button class="tool-btn" onclick="customTable()">📊</button>
-                <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
-                <button class="tool-btn" onclick="openFolders()">DIR</button>
+                <button class="tool-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
+                <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷 IMAGE</button>
+                <button class="tool-btn" onclick="saveQuick()">SAVE</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
-            
             <div id="note-body" contenteditable="false"></div>
         </div>
     </main>
@@ -114,65 +96,51 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyDEodYl9Lv2uTUv2UKSFVipKMyU5mqFmkA", authDomain: "aidennotes-fee01.firebaseapp.com", databaseURL: "https://aidennotes-fee01-default-rtdb.europe-west1.firebasedatabase.app", projectId: "aidennotes-fee01", storageBucket: "aidennotes-fee01.firebasestorage.app", messagingSenderId: "858517974563", appId: "1:858517974563:web:c97dc8eae300e0581a8b96" };
+    const firebaseConfig = { apiKey: "AIzaSyDEodYl9Lv2uTUv2UKSFVipKMyU5mqFmkA", authDomain: "aidennotes-fee01.firebaseapp.com", databaseURL: "https://aidennotes-fee01-default-rtdb.europe-west1.firebasedatabase.app", projectId: "aidennotes-fee01" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
     const MASTER_UID = "L4aYFgfnNsPA7wy5FasTQkXPTpK2";
 
-    let currentEditingId = null, currentFolderName = "Recent Notes", isLocked = true;
-    let activeRelic = null, isDragging = false, isResizing = false, startX, startY, startW, startH, startLeft, startTop, longPressTimer;
+    let currentEditingId = null, isLocked = true, activeRelic = null;
+    let isDragging = false, isResizing = false, startX, startY, startW, startH, startL, startT, lpTimer;
 
-    function exec(cmd, val = null) { if(!isLocked) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); } }
+    function handleLogin() { auth.signInWithEmailAndPassword("aiden@notes.com", document.getElementById('login-pass').value).catch(() => alert("Denied")); }
+    auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; } });
 
     window.toggleEditMode = () => {
         isLocked = !isLocked;
         document.body.classList.toggle('locked-mode', isLocked);
         document.getElementById('note-body').contentEditable = !isLocked;
-        document.getElementById('note-title').readOnly = isLocked;
-        document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
-        if(isLocked && activeRelic) { activeRelic.classList.remove('active-relic'); activeRelic = null; }
+        document.getElementById('edit-lock-btn').innerText = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
     };
 
-    window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Denied")); };
-    auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
-    window.handleLogout = () => auth.signOut().then(() => location.reload());
-
-    // --- TOUCH ENGINE ---
+    // --- NEW PRECISION ENGINE ---
     document.addEventListener('touchstart', (e) => {
         const target = e.target;
         const container = target.closest('.relic-container');
-        
-        if (isLocked) return;
-
-        // Long Press Delete
-        if (container) {
-            longPressTimer = setTimeout(() => {
-                if (confirm("Destroy this relic?")) container.remove();
-            }, 600);
-        }
-
-        if (!container) {
+        if (isLocked || !container) {
             if (activeRelic) activeRelic.classList.remove('active-relic');
             activeRelic = null;
             return;
         }
 
+        // Long Press Delete (700ms)
+        lpTimer = setTimeout(() => { if(confirm("Destroy?")) container.remove(); }, 700);
+
+        // Selection
+        if (activeRelic) activeRelic.classList.remove('active-relic');
         activeRelic = container;
-        document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
         activeRelic.classList.add('active-relic');
 
         const touch = e.touches[0];
-        
-        // ONLY DRAG IF TARGETING FOOTER HANDLE
-        if (target.classList.contains('drag-handle')) {
+        // Identify Zone
+        if (target.classList.contains('drag-zone')) {
             isDragging = true;
             startX = touch.clientX; startY = touch.clientY;
-            startLeft = parseInt(activeRelic.style.left) || 0;
-            startTop = parseInt(activeRelic.style.top) || 0;
+            startL = parseInt(activeRelic.style.left) || 0;
+            startT = parseInt(activeRelic.style.top) || 0;
             e.preventDefault();
-        } 
-        // ONLY RESIZE IF TARGETING GOLD CORNER
-        else if (target.classList.contains('resize-handle')) {
+        } else if (target.classList.contains('resize-zone')) {
             isResizing = true;
             startX = touch.clientX; startY = touch.clientY;
             startW = activeRelic.offsetWidth; startH = activeRelic.offsetHeight;
@@ -182,90 +150,43 @@
 
     document.addEventListener('touchmove', (e) => {
         if (!isDragging && !isResizing) return;
-        clearTimeout(longPressTimer);
+        clearTimeout(lpTimer);
         const touch = e.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
 
         if (isDragging) {
-            activeRelic.style.left = (startLeft + (touch.clientX - startX)) + 'px';
-            activeRelic.style.top = (startTop + (touch.clientY - startY)) + 'px';
-            e.preventDefault();
+            activeRelic.style.left = (startL + dx) + 'px';
+            activeRelic.style.top = (startT + dy) + 'px';
         } else if (isResizing) {
-            activeRelic.style.width = Math.max(80, startW + (touch.clientX - startX)) + 'px';
-            activeRelic.style.height = Math.max(40, startH + (touch.clientY - startY)) + 'px';
-            e.preventDefault();
+            activeRelic.style.width = Math.max(80, startW + dx) + 'px';
+            activeRelic.style.height = Math.max(40, startH + dy) + 'px';
         }
+        e.preventDefault();
     }, {passive: false});
 
-    document.addEventListener('touchend', () => { clearTimeout(longPressTimer); isDragging = false; isResizing = false; });
+    document.addEventListener('touchend', () => { clearTimeout(lpTimer); isDragging = false; isResizing = false; });
 
-    // --- TEMPLATE ---
-    function wrapRelic(content, w="250px", h="200px") {
-        return `<div class="relic-container" style="width:${w}; height:${h}; left:0; top:0;">
-            <div class="relic-header"><button class="del-relic" onclick="this.closest('.relic-container').remove()">DESTROY</button></div>
-            <div class="relic-content">${content}</div>
-            <div class="relic-footer"><div class="drag-handle">DRAG RELIC</div></div>
-            <div class="resize-handle"></div>
-        </div><p><br></p>`;
-    }
-
-    // --- CORE LOGIC ---
     window.insertImg = (e) => {
         const reader = new FileReader();
-        reader.onload = (ev) => { exec('insertHTML', wrapRelic(`<img src="${ev.target.result}">`)); };
+        reader.onload = (ev) => {
+            const html = `<div class="relic-container" style="width:200px; height:150px; left:0; top:0;">
+                <div class="relic-header"><button class="del-btn" onclick="this.closest('.relic-container').remove()">X</button></div>
+                <div class="relic-content"><img src="${ev.target.result}"></div>
+                <div class="relic-footer">
+                    <div class="drag-zone">DRAG</div>
+                    <div class="resize-zone">⤡</div>
+                </div>
+            </div><p><br></p>`;
+            document.execCommand('insertHTML', false, html);
+        };
         reader.readAsDataURL(e.target.files[0]);
     };
 
-    window.customTable = () => {
-        const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");
-        let t = `<table class="relic-table">`;
-        for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
-        t += `</table>`;
-        exec('insertHTML', wrapRelic(t, "300px", "150px"));
-    };
-
-    window.addCustomLink = () => {
-        const url = prompt("URL:", "https://");
-        if(url) exec('insertHTML', `<a href="${url}" target="_blank">${url}</a>&nbsp;`);
-    };
-
     window.saveQuick = () => {
-        const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
-        const p = currentEditingId ? db.ref('notes/'+currentEditingId).set(data) : db.ref('notes').push(data).then(r => currentEditingId = r.key);
-        p.then(() => { if(!isLocked) toggleEditMode(); alert("Secured."); });
+        const data = { title: document.getElementById('note-title').value, body: document.getElementById('note-body').innerHTML, timestamp: Date.now() };
+        db.ref('notes/' + (currentEditingId || db.ref('notes').push().key)).set(data).then(() => alert("Saved"));
     };
-
-    function initApp() {
-        db.ref('notes').on('value', (snap) => {
-            const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
-            const data = snap.val(), notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [], tree = { "Recent Notes": { _notes: [], _sub: {} } };
-            notes.forEach(note => {
-                const parts = (note.folder || "Recent Notes").split('/');
-                let cur = tree; parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i === parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; });
-            });
-            function render(obj, cont, d = 0) {
-                Object.keys(obj).sort().forEach(key => {
-                    const id = "f_" + btoa(unescape(encodeURIComponent(key + d))).replace(/[^a-z0-9]/gi, '');
-                    cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`);
-                    const sub = document.getElementById(id + "_sub"); render(obj[key]._sub, sub, d+1);
-                    obj[key]._notes.forEach(n => { sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;" onclick="loadNote('${n.id}')">📜 ${n.title}</div>`); });
-                });
-            }
-            render(tree, side);
-        });
-    }
-
-    window.loadNote = (id) => { 
-        db.ref('notes/'+id).once('value', (s) => { 
-            const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; 
-            document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; 
-            document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
-            if(!isLocked) toggleEditMode(); 
-        }); 
-    };
-
-    window.openFolders = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
-    window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
-    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
 </script>
 </body>
 </html>
