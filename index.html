@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>AidenNotes | Fortress Master</title>
+    <title>AidenNotes | Fortress Final</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
@@ -26,26 +26,27 @@
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
         
-        /* RELIC STYLING */
+        /* UPDATED RELIC ENGINE STYLING */
         .relic-container { display: inline-block; position: relative; margin: 40px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 100px; min-height: 50px; touch-action: none; background: rgba(0,0,0,0.2); }
-        .relic-header, .relic-footer { position: absolute; left: -1px; width: calc(100% + 2px); height: 25px; z-index: 10; opacity: 0; pointer-events: none; display: flex; }
-        .relic-header { top: -25px; }
-        .relic-footer { bottom: -25px; }
+        .relic-header, .relic-footer { position: absolute; left: -1px; width: calc(100% + 2px); height: 28px; z-index: 10; opacity: 0; pointer-events: none; display: flex; }
+        .relic-header { top: -28px; }
+        .relic-footer { bottom: -28px; }
         
         .relic-container.active-relic { border: 1px solid var(--crimson); z-index: 1000; }
         .relic-container.active-relic .relic-header, 
         .relic-container.active-relic .relic-footer,
         .relic-container.active-relic .resize-handle { opacity: 1; pointer-events: auto; }
         
-        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; font-family: 'Cinzel'; text-align: center; line-height: 17px; }
-        .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; }
+        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 10px; cursor: move; font-family: 'Cinzel'; text-align: center; line-height: 20px; font-weight: bold; letter-spacing: 1px; }
+        .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 12px; }
         
-        .relic-content { width: 100%; height: 100%; overflow: hidden; }
+        .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: auto; }
         .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
         .relic-table { width: 100%; height: 100%; border-collapse: collapse; }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; color: var(--parchment); }
         
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; cursor: nwse-resize; z-index: 120; background: linear-gradient(135deg, transparent 50%, var(--crimson) 50%); opacity: 0; }
+        /* SEPARATE RESIZE HANDLE */
+        .resize-handle { position: absolute; bottom: -5px; right: -5px; width: 35px; height: 35px; cursor: nwse-resize; z-index: 120; background: linear-gradient(135deg, transparent 60%, gold 60%); opacity: 0; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
@@ -114,7 +115,7 @@
     const MASTER_UID = "L4aYFgfnNsPA7wy5FasTQkXPTpK2";
 
     let currentEditingId = null, currentFolderName = "Recent Notes", isLocked = true;
-    let activeRelic = null, isDragging = false, isResizing = false, startX, startY, startW, startH, startLeft, startTop;
+    let activeRelic = null, isDragging = false, isResizing = false, startX, startY, startW, startH, startLeft, startTop, longPressTimer;
 
     function exec(cmd, val = null) { if(!isLocked) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); } }
 
@@ -124,33 +125,49 @@
         document.getElementById('note-body').contentEditable = !isLocked;
         document.getElementById('note-title').readOnly = isLocked;
         document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
-        if(isLocked) document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
+        if(isLocked) { if(activeRelic) activeRelic.classList.remove('active-relic'); activeRelic = null; }
     };
 
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Denied")); };
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
     window.handleLogout = () => auth.signOut().then(() => location.reload());
 
-    // RELIC ENGINE (DRAG & RESIZE)
+    // --- RELIC ENGINE & LONG PRESS ---
     document.addEventListener('touchstart', (e) => {
         const target = e.target;
         const container = target.closest('.relic-container');
         
-        if (isLocked || !container) return;
+        if (isLocked) return;
 
-        // Select Relic
+        // Long Press Delete Logic (500ms)
+        if (container) {
+            longPressTimer = setTimeout(() => {
+                if (confirm("Destroy this relic?")) container.remove();
+            }, 500);
+        }
+
+        if (!container) {
+            if (activeRelic) activeRelic.classList.remove('active-relic');
+            activeRelic = null;
+            return;
+        }
+
+        // Activation
         if (activeRelic) activeRelic.classList.remove('active-relic');
         activeRelic = container;
         activeRelic.classList.add('active-relic');
 
         const touch = e.touches[0];
+        // DRAG from Top OR Bottom handle
         if (target.classList.contains('drag-handle')) {
             isDragging = true;
             startX = touch.clientX; startY = touch.clientY;
             startLeft = parseInt(activeRelic.style.left) || 0;
             startTop = parseInt(activeRelic.style.top) || 0;
             e.preventDefault();
-        } else if (target.classList.contains('resize-handle')) {
+        } 
+        // RESIZE from Corner handle
+        else if (target.classList.contains('resize-handle')) {
             isResizing = true;
             startX = touch.clientX; startY = touch.clientY;
             startW = activeRelic.offsetWidth; startH = activeRelic.offsetHeight;
@@ -159,6 +176,7 @@
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
+        clearTimeout(longPressTimer); // Cancel delete if moving
         if (!activeRelic) return;
         const touch = e.touches[0];
 
@@ -171,24 +189,29 @@
         } else if (isResizing) {
             const dx = touch.clientX - startX;
             const dy = touch.clientY - startY;
-            activeRelic.style.width = (startW + dx) + 'px';
-            activeRelic.style.height = (startH + dy) + 'px';
+            activeRelic.style.width = Math.max(80, startW + dx) + 'px';
+            activeRelic.style.height = Math.max(40, startH + dy) + 'px';
             e.preventDefault();
         }
     }, {passive: false});
 
-    document.addEventListener('touchend', () => { isDragging = false; isResizing = false; });
+    document.addEventListener('touchend', () => { 
+        clearTimeout(longPressTimer);
+        isDragging = false; 
+        isResizing = false; 
+    });
 
-    // TEMPLATE FOR NEW RELICS
+    // --- TEMPLATE GENERATOR ---
     function wrapRelic(content, w="250px", h="200px") {
         return `<div class="relic-container" style="width:${w}; height:${h}; left:0; top:0;">
             <div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div>
             <div class="relic-content">${content}</div>
-            <div class="relic-footer"><div class="drag-handle">GRIP</div></div>
+            <div class="relic-footer"><div class="drag-handle">DRAG</div></div>
             <div class="resize-handle"></div>
         </div><p><br></p>`;
     }
 
+    // --- OTHER FUNCTIONS ---
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => { exec('insertHTML', wrapRelic(`<img src="${ev.target.result}">`)); };
