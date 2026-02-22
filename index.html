@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>AidenNotes | Fortress Final</title>
+    <title>AidenNotes | Relic Fix</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
@@ -23,30 +23,30 @@
         
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
-        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
-        
+
         /* THE WORKING RELIC SYSTEM */
-        .relic-container { display: inline-block; position: relative; margin: 40px 10px; border: 1px solid rgba(139,0,0,0.3); touch-action: none; background: rgba(0,0,0,0.3); vertical-align: middle; }
+        .relic-container { display: inline-block; position: relative; margin: 40px 10px; border: 1px solid rgba(139,0,0,0.4); background: rgba(0,0,0,0.3); vertical-align: middle; touch-action: none; }
         .relic-container.active-relic { border: 2px solid var(--crimson); z-index: 1000; }
 
-        /* UI ELEMENTS - Forced Non-Editable */
-        .relic-header { position: absolute; top: -32px; right: -1px; height: 32px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; }
-        .relic-footer { position: absolute; bottom: -42px; left: -1px; width: calc(100% + 2px); height: 42px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; }
-        
-        .relic-container.active-relic .relic-header, .relic-container.active-relic .relic-footer, .relic-container.active-relic .resize-handle { opacity: 1; pointer-events: auto; }
-        
-        .del-relic-btn { background: var(--oxblood); color: #ff4444; border: 1px solid var(--crimson); font-family: 'Cinzel'; font-size: 9px; padding: 0 12px; cursor: pointer; border-bottom: none; border-radius: 4px 4px 0 0; }
-        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; }
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 1200; background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); opacity: 0; }
+        /* HEADER UI (Destroy) */
+        .relic-header { position: absolute; top: -35px; right: -1px; height: 35px; z-index: 1100; opacity: 0; pointer-events: none; }
+        .del-relic-btn { background: var(--oxblood); color: #ff4444; border: 2px solid var(--crimson); font-family: 'Cinzel'; font-size: 9px; padding: 5px 12px; cursor: pointer; border-bottom: none; border-radius: 5px 5px 0 0; font-weight: bold; pointer-events: auto; }
 
-        /* CONTENT AREAS */
+        /* FOOTER UI (Drag/Resize) */
+        .relic-footer { position: absolute; bottom: -45px; left: -1px; width: calc(100% + 2px); height: 45px; z-index: 1100; opacity: 0; pointer-events: none; background: var(--crimson); display: flex; align-items: center; justify-content: center; }
+        .drag-handle { width: 100%; height: 100%; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 10px; font-weight: bold; cursor: move; pointer-events: auto; }
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; cursor: nwse-resize; z-index: 1200; background: linear-gradient(135deg, transparent 60%, var(--gold) 60%); pointer-events: auto; }
+
+        .relic-container.active-relic .relic-header, .relic-container.active-relic .relic-footer { opacity: 1; pointer-events: auto; }
+
+        /* CONTENT WRAPPERS */
         .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; }
         .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
         .text-box-relic .relic-content { padding: 10px; overflow-y: auto; }
-        .link-relic .relic-content { padding: 8px; }
-        .link-relic a { color: var(--link-green) !important; text-decoration: underline; font-weight: bold; }
+        .link-relic .relic-content { padding: 10px; }
+        .link-relic a { color: var(--link-green) !important; text-decoration: underline; font-weight: bold; pointer-events: auto; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn), .locked-mode .relic-header, .locked-mode .relic-footer { display: none !important; }
@@ -78,19 +78,8 @@
                 <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
                 <button class="tool-btn" onclick="exec('undo')">↶</button>
                 <button class="tool-btn" onclick="exec('redo')">↷</button>
-                <select class="tool-select" onchange="exec('formatBlock', this.value); this.selectedIndex=0;">
-                    <option value="">Style</option>
-                    <option value="H1">H1</option>
-                    <option value="H2">H2</option>
-                    <option value="P">Text</option>
-                </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onclick="exec('italic')">I</button>
-                <button class="tool-btn" onclick="exec('underline')">U</button>
-                <input type="color" class="tool-btn" style="width:40px; padding:2px;" onchange="exec('foreColor', this.value)">
-                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
-                <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
-                <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
                 <button class="tool-btn" onclick="addCustomLink()">🔗</button>
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
                 <button class="tool-btn" onclick="addTextBox()">📄</button>
@@ -129,10 +118,8 @@
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
 
-    // TOUCH LOGIC
     document.addEventListener('touchstart', (e) => {
         const target = e.target;
-        if (target.closest('[contenteditable="true"]')) return;
         const container = target.closest('.relic-container');
         if (isLocked) return;
         
@@ -173,8 +160,7 @@
 
     document.addEventListener('touchend', () => { isDragging = false; isResizing = false; });
 
-    // THE WRAPPER - REINSTATED & SECURED
-    function wrapRelic(content, extraClass = "", w="auto", h="auto") {
+    function wrapRelic(content, extraClass = "", w="200px", h="auto") {
         return `<div class="relic-container ${extraClass}" style="left:0; top:0; width:${w}; height:${h};" contenteditable="false">
             <div class="relic-header" contenteditable="false">
                 <button class="del-relic-btn" onclick="confirmRelicDeletion(this)">DESTROY 🗑️</button>
@@ -182,8 +168,8 @@
             <div class="relic-content" contenteditable="false">${content}</div>
             <div class="relic-footer" contenteditable="false">
                 <div class="drag-handle" contenteditable="false">DRAG</div>
+                <div class="resize-handle" contenteditable="false"></div>
             </div>
-            <div class="resize-handle" contenteditable="false"></div>
         </div><span>&nbsp;</span>`;
     }
 
@@ -194,28 +180,22 @@
     window.addCustomLink = () => {
         const title = prompt("Title:"); if (!title) return;
         const url = prompt("URL:", "https://"); if (!url) return;
-        exec('insertHTML', wrapRelic(`<a href="${url}" target="_blank">${title}</a>`, "link-relic"));
+        exec('insertHTML', wrapRelic(`<a href="${url}" target="_blank">${title}</a>`, "link-relic", "150px"));
     };
 
     window.addTextBox = () => {
-        exec('insertHTML', wrapRelic(`<div contenteditable="true" style="width:100%; height:100%; min-height:40px; outline:none;">Type...</div>`, "text-box-relic", "180px", "80px"));
+        exec('insertHTML', wrapRelic(`<div contenteditable="true" style="width:100%; height:100%; outline:none; color:inherit;">Type...</div>`, "text-box-relic", "200px", "100px"));
     };
 
     window.insertImg = (e) => {
         const reader = new FileReader();
-        reader.onload = (ev) => { exec('insertHTML', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "220px", "160px")); };
+        reader.onload = (ev) => { exec('insertHTML', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "250px", "200px")); };
         reader.readAsDataURL(e.target.files[0]);
     };
     
     window.saveQuick = () => {
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
-        const p = currentEditingId ? db.ref('notes/'+currentEditingId).set(data) : db.ref('notes').push(data).then(r => currentEditingId = r.key);
-        p.then(() => alert("Secured."));
-    };
-
-    window.deleteNote = (id, e) => {
-        e.stopPropagation();
-        if(confirm("Permanently erase?")) db.ref('notes/'+id).remove();
+        db.ref('notes/' + (currentEditingId || db.ref('notes').push().key)).set(data).then(() => alert("Secured."));
     };
 
     function initApp() {
@@ -241,10 +221,11 @@
     }
 
     window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; if(!isLocked) toggleEditMode(); }); };
-    window.openFolders = () => { const n = prompt("Folder Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
+    window.openFolders = () => { const n = prompt("Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
     window.handleLogout = () => auth.signOut().then(() => location.reload());
+    window.deleteNote = (id, e) => { e.stopPropagation(); if(confirm("Permanently erase?")) db.ref('notes/'+id).remove(); };
 </script>
 </body>
 </html>
