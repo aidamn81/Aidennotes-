@@ -15,22 +15,23 @@
         
         #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         
-        /* IPHONE SPECIFIC: SIDEBAR TO TOP */
+        /* FIXED IPHONE SIDEBAR: FLEX ROW */
         @media screen and (max-width: 600px) {
             .app-container { flex-direction: column; }
             #sidebar { 
                 width: 100%; 
-                height: 120px; 
-                flex-direction: row; 
-                overflow-x: auto; 
-                overflow-y: hidden;
+                height: 140px; 
+                display: flex !important;
+                flex-direction: row !important; 
+                overflow-x: auto !important; 
+                overflow-y: hidden !important;
                 border-right: none;
                 border-bottom: 1px solid var(--crimson);
-                white-space: nowrap;
-                display: block;
+                flex-shrink: 0;
             }
-            .sidebar-item { display: inline-block; min-width: 120px; height: 100%; border-right: 1px solid rgba(139,0,0,0.2); vertical-align: top; }
-            .folder-content { display: inline-block !important; background: transparent; padding-left: 0; }
+            #folder-list-sidebar { display: flex; flex-direction: row; }
+            .sidebar-item { min-width: 140px; height: 100%; border-right: 1px solid rgba(139,0,0,0.2); flex-shrink: 0; white-space: normal; }
+            .folder-content { display: block !important; position: relative; }
         }
 
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
@@ -48,21 +49,18 @@
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
         #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; }
         
+        /* RELIC LOGIC (Resizing & Draggable Preserved) */
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.1); left: 0; top: 0; }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; opacity: 0; pointer-events: none; }
         .relic-container.active-relic { border-color: var(--crimson); }
         .relic-container.active-relic .relic-header { opacity: 1; pointer-events: auto; }
-        
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; text-align: center; }
         .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; border-radius: 0 3px 0 0; position: relative; z-index: 200; }
-        
         .relic-content { width: 100%; height: 100%; position: relative; overflow: hidden; }
         .relic-container img { width: 100%; height: 100%; display: block; pointer-events: none; object-fit: fill; }
         .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.3); }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
-        
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; color: var(--crimson); display: flex; align-items: flex-end; justify-content: flex-end; padding: 2px; opacity: 0; pointer-events: auto; font-weight: bold; }
-        .relic-container.active-relic .resize-handle { opacity: 1; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         
@@ -84,9 +82,9 @@
 
 <div class="app-container" id="app">
     <aside id="sidebar">
-        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.2);" onclick="startNewNote()">✨ NEW NOTE</div>
-        <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
+        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.2); flex-shrink:0;" onclick="startNewNote()">✨ NEW NOTE</div>
+        <div id="folder-list-sidebar" style="display:contents;"></div>
+        <div class="sidebar-item" style="color:var(--silver); margin-left:auto;" onclick="handleLogout()">🚪 EXIT</div>
     </aside>
 
     <main id="main-editor">
@@ -184,7 +182,6 @@
 
     document.addEventListener('touchend', () => { activeTarget = null; });
 
-    // IMAGE AND LINK INSERTION (NEW TABS PROMISED)
     window.addCustomLink = async () => {
         const type = prompt("1: Text Link | 2: Image Link", "1");
         const urlInput = prompt("Target URL:", "https://");
@@ -234,9 +231,9 @@
             function render(obj, cont, d = 0) {
                 Object.keys(obj).sort().forEach(key => {
                     const id = "f_" + btoa(unescape(encodeURIComponent(key + d))).replace(/[^a-z0-9]/gi, '');
-                    cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" class="folder-content" style="display:none;"><div id="${id}_sub"></div></div>`);
+                    cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" class="folder-content" style="display:none;"><div id="${id}_sub"></div></div>`);
                     const sub = document.getElementById(id + "_sub"); render(obj[key]._sub, sub, d+1);
-                    obj[key]._notes.forEach(n => { sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;"><span onclick="loadNote('${n.id}')">📜 ${n.title}</span></div>`); });
+                    obj[key]._notes.forEach(n => { sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem;"><span onclick="loadNote('${n.id}')">📜 ${n.title}</span></div>`); });
                 });
             }
             render(tree, side);
