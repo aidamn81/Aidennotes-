@@ -34,21 +34,20 @@
             pointer-events: auto !important; 
         }
 
-        /* FUNCTIONAL RELIC UI - Forced non-editable */
-        .relic-container { display: inline-block; position: relative; margin: 45px 10px; border: 1px solid rgba(139,0,0,0.2); touch-action: none; background: rgba(0,0,0,0.2); left: 0; top: 0; vertical-align: middle; overflow: visible !important; user-select: none; }
+        /* HARDENED UI WRAPPERS */
+        .relic-container { display: inline-block; position: relative; margin: 45px 10px; border: 1px solid rgba(139,0,0,0.2); touch-action: none; background: rgba(0,0,0,0.2); left: 0; top: 0; vertical-align: middle; overflow: visible !important; }
         
-        .relic-header { position: absolute; top: -35px; right: -1px; height: 35px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; }
-        .relic-footer { position: absolute; bottom: -45px; left: -1px; width: calc(100% + 2px); height: 45px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; }
+        .relic-header { position: absolute; top: -35px; right: -1px; height: 35px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; user-select: none; }
+        .relic-footer { position: absolute; bottom: -45px; left: -1px; width: calc(100% + 2px); height: 45px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; user-select: none; }
         
         .relic-container.active-relic { border: 2px solid var(--crimson); z-index: 1000; }
         .relic-container.active-relic .relic-header, .relic-container.active-relic .relic-footer, .relic-container.active-relic .resize-handle { opacity: 1; pointer-events: auto; }
         
-        .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: none; user-select: auto; }
-        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; }
+        /* CONTENT IS INTERACTIVE AGAIN */
+        .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: auto; }
+        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
         
-        /* INTERACTIVE CONTENT */
-        .text-box-relic .relic-content, .link-relic .relic-content { pointer-events: auto; padding: 10px; color: var(--parchment); }
-        .text-box-relic .relic-content { overflow-y: auto; }
+        .text-box-relic .relic-content { padding: 10px; color: var(--parchment); overflow-y: auto; }
 
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 10px; cursor: move; font-family: 'Cinzel'; text-align: center; line-height: 35px; font-weight: bold; letter-spacing: 2px; }
         .del-relic-btn { background: #1a0505; color: #ff4444; border: 2px solid var(--crimson); font-family: 'Cinzel'; font-size: 10px; font-weight: bold; cursor: pointer; padding: 0 15px; height: 100%; display: flex; align-items: center; border-bottom: none; border-radius: 6px 6px 0 0; white-space: nowrap; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
@@ -172,17 +171,16 @@
 
     document.addEventListener('touchend', () => { isDragging = false; isResizing = false; });
 
-    // FIXED: contenteditable="false" on the UI wrapper elements
     function wrapRelic(content, extraClass = "", w="auto", h="auto") {
         return `<div class="relic-container ${extraClass}" style="left:0; top:0; width:${w}; height:${h};" contenteditable="false">
-            <div class="relic-header" contenteditable="false">
+            <div class="relic-header">
                 <button class="del-relic-btn" onclick="confirmRelicDeletion(this)">DESTROY 🗑️</button>
             </div>
             <div class="relic-content">${content}</div>
-            <div class="relic-footer" contenteditable="false">
+            <div class="relic-footer">
                 <div class="drag-handle">DRAG</div>
             </div>
-            <div class="resize-handle" contenteditable="false"></div>
+            <div class="resize-handle"></div>
         </div><span>&nbsp;</span>`;
     }
 
