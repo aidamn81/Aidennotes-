@@ -29,8 +29,11 @@
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
-        #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; transition: text-shadow 0.3s ease; }
-        #note-body a.link-pulse { text-shadow: 0 0 10px #00ccff, 0 0 20px #00ccff; }
+        #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; }
+        
+        /* IMAGE LINK FIX: Ensure images are clickable in Locked Mode */
+        .relic-link { display: block; width: 100%; height: 100%; pointer-events: auto; }
+        .locked-mode .relic-link { cursor: pointer; }
 
         #link-popup { position: fixed; display: none; background: var(--oxblood); border: 1px solid var(--crimson); padding: 8px; border-radius: 4px; z-index: 5000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
         #link-popup button { background: var(--crimson); color: white; border: none; font-family: 'Cinzel'; font-size: 11px; padding: 6px 12px; cursor: pointer; border-radius: 2px; }
@@ -201,11 +204,7 @@
     window.saveQuick = () => {
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
         const savePromise = currentEditingId ? db.ref('notes/' + currentEditingId).set(data) : db.ref('notes').push(data).then(ref => { currentEditingId = ref.key; });
-        
-        savePromise.then(() => {
-            if(!isLocked) toggleEditMode();
-            alert("Fortress Secured.");
-        });
+        savePromise.then(() => { if(!isLocked) toggleEditMode(); alert("Fortress Secured."); });
     };
 
     function initApp() {
@@ -232,11 +231,8 @@
 
     window.loadNote = (id) => { 
         db.ref('notes/'+id).once('value', (s) => { 
-            const n = s.val(); 
-            currentEditingId = id; 
-            currentFolderName = n.folder || "Recent Notes"; 
-            document.getElementById('note-title').value = n.title; 
-            document.getElementById('note-body').innerHTML = n.body; 
+            const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; 
+            document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; 
             document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
             if(!isLocked) toggleEditMode(); 
         }); 
@@ -245,47 +241,22 @@
     window.deleteNote = (id, title) => { if (confirm(`Delete ${title}?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { 
-        currentEditingId = null; 
-        document.getElementById('note-title').value = ""; 
-        document.getElementById('note-body').innerHTML = ""; 
-        currentFolderName = "Recent Notes"; 
-        document.getElementById('current-path-display').innerText = "Path: Recent Notes";
+        currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; 
+        currentFolderName = "Recent Notes"; document.getElementById('current-path-display').innerText = "Path: Recent Notes";
         if(isLocked) toggleEditMode(); 
     };
     
-    window.nukeRelic = (btn, e) => { 
-        if(isLocked) return;
-        if(e) { e.preventDefault(); e.stopPropagation(); }
-        const c = btn.closest('.relic-container'); 
-        if (c && confirm(`Purge this relic?`)) c.remove(); 
-    };
+    window.nukeRelic = (btn, e) => { if(isLocked) return; if(e) { e.preventDefault(); e.stopPropagation(); } const c = btn.closest('.relic-container'); if (c && confirm(`Purge this relic?`)) c.remove(); };
 
     let activeTarget = null, touchStartX, touchStartY, initialLeft, initialTop, initialWidth, initialHeight, isResizing = false;
 
     document.addEventListener('touchstart', (e) => {
         const target = e.target; 
         const container = target.closest('.relic-container');
-        
-        if (!target.closest('#link-popup') && target.tagName !== 'A') {
-            document.getElementById('link-popup').style.display = 'none';
-        }
+        if (!target.closest('#link-popup') && target.tagName !== 'A') document.getElementById('link-popup').style.display = 'none';
 
-        // IMAGE LINK FIX
-        if (container && container.getAttribute('data-link')) {
-            if (isLocked) {
-                window.open(container.getAttribute('data-link'), '_blank');
-                return;
-            }
-            const now = Date.now();
-            if (now - lastTapTime < 300) {
-                window.open(container.getAttribute('data-link'), '_blank');
-                lastTapTime = now;
-                return;
-            }
-            lastTapTime = now;
-        }
-
-        if (target.tagName === 'A' || isLocked) return;
+        if (target.tagName === 'A' || target.closest('.relic-link')) return; // Allow native link behavior
+        if (isLocked) return;
 
         document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
         if (container) container.classList.add('active-relic');
@@ -293,9 +264,7 @@
         if (target.tagName === 'BUTTON' || target.closest('button')) return;
         if (!container) return;
         
-        holdTimer = setTimeout(() => {
-            if (!isLocked && confirm(`Delete this relic?`)) container.remove();
-        }, 1200);
+        holdTimer = setTimeout(() => { if (!isLocked && confirm(`Delete this relic?`)) container.remove(); }, 1200);
 
         const rect = container.getBoundingClientRect();
         if (target.classList.contains('resize-handle')) {
@@ -306,8 +275,7 @@
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
-        if(isLocked) return;
-        clearTimeout(holdTimer);
+        if(isLocked) return; clearTimeout(holdTimer);
         if (!activeTarget) return; 
         const t = e.touches[0], dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
         if (isResizing) {
@@ -326,8 +294,12 @@
         const r = new FileReader(); 
         r.onload = (ev) => {
             const link = prompt("Add Link behind image? (Optional)", "https://");
-            const linkAttr = link ? `data-link="${link}"` : "";
-            exec('insertHTML', `<div class="relic-container" ${linkAttr} style="width:250px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content"><img src="${ev.target.result}" style="width:100%; height:100%;"></div><div class="resize-handle">⌟</div></div><p><br></p>`); 
+            let content = `<img src="${ev.target.result}" style="width:100%; height:100%;">`;
+            if(link) {
+                const url = link.startsWith('http') ? link : 'https://' + link;
+                content = `<a href="${url}" class="relic-link" onclick="handleLinkClick(event, this, '${url}')" contenteditable="false">${content}</a>`;
+            }
+            exec('insertHTML', `<div class="relic-container" style="width:250px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${content}</div><div class="resize-handle">⌟</div></div><p><br></p>`); 
         };
         r.readAsDataURL(e.target.files[0]); 
     };
