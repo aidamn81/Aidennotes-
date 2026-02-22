@@ -57,9 +57,14 @@
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
+        
+        /* LOCK STATE STYLES */
+        .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
+        .locked-mode .relic-header, .locked-mode .resize-handle, .locked-mode .table-controls { display: none !important; }
+        .locked-mode #note-body { border-top: 1px solid rgba(139,0,0,0.3); padding-top: 20px; }
     </style>
 </head>
-<body>
+<body class="locked-mode">
 
 <div id="login-screen">
     <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
@@ -90,8 +95,9 @@
     <main id="main-editor">
         <div class="scroll-content">
             <div id="current-path-display">Path: Recent Notes</div>
-            <input type="text" id="note-title" placeholder="Untitled Fragment...">
+            <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
             <div class="sub-title-toolbar">
+                <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()" style="background:var(--crimson); border:1px solid gold;">🛡️ EDIT</button>
                 <button class="tool-btn" onclick="exec('undo')">↶</button>
                 <button class="tool-btn" onclick="exec('redo')">↷</button>
                 <select class="tool-select" onchange="exec('formatBlock', this.value); this.selectedIndex=0;">
@@ -115,7 +121,7 @@
                 <button class="tool-btn" onclick="openFolders()">DIR</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
-            <div id="note-body" contenteditable="true"></div>
+            <div id="note-body" contenteditable="false"></div>
         </div>
     </main>
 </div>
@@ -130,8 +136,28 @@
     const db = firebase.database(), auth = firebase.auth();
     let currentEditingId = null, currentFolderName = "Recent Notes", snapGrid = 20, holdTimer;
     let lastTapTime = 0;
+    let isLocked = true;
 
-    function exec(cmd, val = null) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
+    function exec(cmd, val = null) { if(isLocked) return; document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
+
+    window.toggleEditMode = () => {
+        isLocked = !isLocked;
+        const body = document.getElementById('note-body');
+        const title = document.getElementById('note-title');
+        const btn = document.getElementById('edit-lock-btn');
+        
+        if(isLocked) {
+            document.body.classList.add('locked-mode');
+            body.contentEditable = "false";
+            title.readOnly = true;
+            btn.innerHTML = "🛡️ EDIT";
+        } else {
+            document.body.classList.remove('locked-mode');
+            body.contentEditable = "true";
+            title.readOnly = false;
+            btn.innerHTML = "🔓 LOCK";
+        }
+    };
 
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Denied")); };
     auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
@@ -141,8 +167,11 @@
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     window.createNewFolder = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } };
     
-    // REUSABLE BROWSER OPENER
     window.handleLinkClick = (e, el, url) => {
+        if(isLocked) {
+            window.open(url, '_blank');
+            return;
+        }
         const now = Date.now();
         const popup = document.getElementById('link-popup');
         if(e) { e.preventDefault(); e.stopPropagation(); }
@@ -176,8 +205,12 @@
 
     window.saveQuick = () => {
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
-        if (currentEditingId) db.ref('notes/' + currentEditingId).set(data).then(() => alert("Saved."));
-        else { const newRef = db.ref('notes').push(); currentEditingId = newRef.key; newRef.set(data); }
+        const savePromise = currentEditingId ? db.ref('notes/' + currentEditingId).set(data) : db.ref('notes').push(data).then(ref => { currentEditingId = ref.key; });
+        
+        savePromise.then(() => {
+            if(!isLocked) toggleEditMode(); // Auto-lock after save
+            alert("Fortress Secured.");
+        });
     };
 
     function initApp() {
@@ -202,18 +235,38 @@
         });
     }
 
-    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; }); };
+    window.loadNote = (id) => { 
+        db.ref('notes/'+id).once('value', (s) => { 
+            const n = s.val(); 
+            currentEditingId = id; 
+            currentFolderName = n.folder || "Recent Notes"; 
+            document.getElementById('note-title').value = n.title; 
+            document.getElementById('note-body').innerHTML = n.body; 
+            document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
+            if(!isLocked) toggleEditMode(); // Load in locked mode
+        }); 
+    };
+    
     window.deleteNote = (id, title) => { if (confirm(`Delete ${title}?`)) db.ref('notes/'+id).remove(); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
-    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; currentFolderName = "Recent Notes"; document.getElementById('current-path-display').innerText = "Path: Recent Notes"; };
+    window.startNewNote = () => { 
+        currentEditingId = null; 
+        document.getElementById('note-title').value = ""; 
+        document.getElementById('note-body').innerHTML = ""; 
+        currentFolderName = "Recent Notes"; 
+        document.getElementById('current-path-display').innerText = "Path: Recent Notes";
+        if(isLocked) toggleEditMode(); // Start in edit mode for new notes
+    };
     
     window.nukeRelic = (btn, e) => { 
+        if(isLocked) return;
         if(e) { e.preventDefault(); e.stopPropagation(); }
         const c = btn.closest('.relic-container'); 
         if (c && confirm(`Purge this relic?`)) c.remove(); 
     };
 
     window.modTable = (btn, type, e) => {
+        if(isLocked) return;
         if(e) { e.preventDefault(); e.stopPropagation(); }
         const relic = btn.closest('.relic-container');
         const tbl = relic.querySelector('.relic-table');
@@ -243,9 +296,13 @@
             document.getElementById('link-popup').style.display = 'none';
         }
 
-        // IMAGE LINK DOUBLE TAP DETECTION
+        // IMAGE LINK BEHAVIOR
         if (container && container.getAttribute('data-link')) {
             const now = Date.now();
+            if (isLocked) {
+                window.open(container.getAttribute('data-link'), '_blank');
+                return;
+            }
             if (now - lastTapTime < 300) {
                 window.open(container.getAttribute('data-link'), '_blank');
                 lastTapTime = now;
@@ -255,6 +312,7 @@
         }
 
         if (target.tagName === 'A') return;
+        if (isLocked) return; // Prevent drag/edit if locked
 
         document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
         if (container) container.classList.add('active-relic');
@@ -263,8 +321,6 @@
             document.querySelectorAll('.table-controls').forEach(c => c.style.display = 'none');
             const ctrl = container.querySelector('.table-controls');
             if (ctrl) ctrl.style.display = 'flex';
-        } else if (!target.closest('.table-controls')) {
-            document.querySelectorAll('.table-controls').forEach(c => c.style.display = 'none');
         }
 
         if (target.tagName === 'BUTTON' || target.closest('button')) return;
@@ -283,6 +339,7 @@
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
+        if(isLocked) return;
         clearTimeout(holdTimer);
         if (!activeTarget) return; 
         const t = e.touches[0], dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
