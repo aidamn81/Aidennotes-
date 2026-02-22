@@ -31,9 +31,7 @@
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
         #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; }
         
-        /* IMAGE LINK FIX: Ensure images are clickable in Locked Mode */
-        .relic-link { display: block; width: 100%; height: 100%; pointer-events: auto; }
-        .locked-mode .relic-link { cursor: pointer; }
+        .relic-link { display: block; width: 100%; height: 100%; pointer-events: auto; text-decoration: none; }
 
         #link-popup { position: fixed; display: none; background: var(--oxblood); border: 1px solid var(--crimson); padding: 8px; border-radius: 4px; z-index: 5000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
         #link-popup button { background: var(--crimson); color: white; border: none; font-family: 'Cinzel'; font-size: 11px; padding: 6px 12px; cursor: pointer; border-radius: 2px; }
@@ -42,8 +40,7 @@
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .relic-container.active-relic { border-color: var(--crimson); }
         .relic-container.active-relic .relic-header { opacity: 1; pointer-events: auto; }
-        .relic-container.active-relic .resize-handle { opacity: 1; }
-
+        
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; text-align: center; }
         .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; border-radius: 0 3px 0 0; z-index: 200; position: relative; }
         
@@ -58,9 +55,10 @@
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1001; }
         #folder-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--oxblood); border: 2px solid var(--crimson); padding: 25px; z-index: 1002; width: 90%; max-width: 350px; }
         
-        /* LOCK STATE STYLES */
+        /* GHOST LOCK MODE STYLES */
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
         .locked-mode .relic-header, .locked-mode .resize-handle { display: none !important; }
+        .locked-mode .relic-container { border: none !important; background: transparent !important; }
         .locked-mode #note-body { border-top: 1px solid rgba(139,0,0,0.3); padding-top: 20px; }
     </style>
 </head>
@@ -134,28 +132,17 @@
     const firebaseConfig = { apiKey: "AIzaSyDEodYl9Lv2uTUv2UKSFVipKMyU5mqFmkA", authDomain: "aidennotes-fee01.firebaseapp.com", databaseURL: "https://aidennotes-fee01-default-rtdb.europe-west1.firebasedatabase.app", projectId: "aidennotes-fee01", storageBucket: "aidennotes-fee01.firebasestorage.app", messagingSenderId: "858517974563", appId: "1:858517974563:web:c97dc8eae300e0581a8b96" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
-    let currentEditingId = null, currentFolderName = "Recent Notes", snapGrid = 20, holdTimer;
-    let lastTapTime = 0;
-    let isLocked = true;
+    let currentEditingId = null, currentFolderName = "Recent Notes", snapGrid = 20, holdTimer, lastTapTime = 0, isLocked = true;
 
     function exec(cmd, val = null) { if(isLocked) return; document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
 
     window.toggleEditMode = () => {
         isLocked = !isLocked;
-        const body = document.getElementById('note-body');
-        const title = document.getElementById('note-title');
-        const btn = document.getElementById('edit-lock-btn');
-        
+        const body = document.getElementById('note-body'), title = document.getElementById('note-title'), btn = document.getElementById('edit-lock-btn');
         if(isLocked) {
-            document.body.classList.add('locked-mode');
-            body.contentEditable = "false";
-            title.readOnly = true;
-            btn.innerHTML = "🛡️ EDIT";
+            document.body.classList.add('locked-mode'); body.contentEditable = "false"; title.readOnly = true; btn.innerHTML = "🛡️ EDIT";
         } else {
-            document.body.classList.remove('locked-mode');
-            body.contentEditable = "true";
-            title.readOnly = false;
-            btn.innerHTML = "🔓 LOCK";
+            document.body.classList.remove('locked-mode'); body.contentEditable = "true"; title.readOnly = false; btn.innerHTML = "🔓 LOCK";
         }
     };
 
@@ -168,37 +155,20 @@
     window.createNewFolder = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } };
     
     window.handleLinkClick = (e, el, url) => {
-        if(isLocked) {
-            window.open(url, '_blank');
-            return;
-        }
-        const now = Date.now();
-        const popup = document.getElementById('link-popup');
+        if(isLocked) { window.open(url, '_blank'); return; }
+        const now = Date.now(), popup = document.getElementById('link-popup');
         if(e) { e.preventDefault(); e.stopPropagation(); }
-
-        if (now - lastTapTime < 300) {
-            window.open(url, '_blank');
-            popup.style.display = 'none';
-        } else {
-            const rect = el.getBoundingClientRect();
-            popup.style.display = 'block';
-            popup.style.left = rect.left + 'px';
-            popup.style.top = (rect.bottom + window.scrollY + 5) + 'px';
-            document.getElementById('popup-visit-btn').onclick = (btnEv) => {
-                btnEv.stopPropagation();
-                window.open(url, '_blank');
-                popup.style.display = 'none';
-            };
+        if (now - lastTapTime < 300) { window.open(url, '_blank'); popup.style.display = 'none'; } 
+        else {
+            const rect = el.getBoundingClientRect(); popup.style.display = 'block'; popup.style.left = rect.left + 'px'; popup.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            document.getElementById('popup-visit-btn').onclick = (btnEv) => { btnEv.stopPropagation(); window.open(url, '_blank'); popup.style.display = 'none'; };
         }
         lastTapTime = now;
     };
 
     window.addCustomLink = () => { 
         const t = prompt("Title:", "Link"), u = prompt("URL:", "https://"); 
-        if(t && u) {
-            const url = u.startsWith('http') ? u : 'https://' + u;
-            exec('insertHTML', `<a href="${url}" onclick="handleLinkClick(event, this, '${url}')" contenteditable="false">${t}</a>&nbsp;`); 
-        }
+        if(t && u) { const url = u.startsWith('http') ? u : 'https://' + u; exec('insertHTML', `<a href="${url}" onclick="handleLinkClick(event, this, '${url}')" contenteditable="false">${t}</a>&nbsp;`); }
     };
 
     window.saveQuick = () => {
@@ -210,9 +180,7 @@
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
-            const data = snap.val();
-            const notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [];
-            const tree = { "Recent Notes": { _notes: [], _sub: {} } };
+            const data = snap.val(), notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [], tree = { "Recent Notes": { _notes: [], _sub: {} } };
             notes.forEach(note => {
                 const parts = (note.folder || "Recent Notes").split('/');
                 let cur = tree; parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i === parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; });
@@ -251,16 +219,13 @@
     let activeTarget = null, touchStartX, touchStartY, initialLeft, initialTop, initialWidth, initialHeight, isResizing = false;
 
     document.addEventListener('touchstart', (e) => {
-        const target = e.target; 
-        const container = target.closest('.relic-container');
-        if (!target.closest('#link-popup') && target.tagName !== 'A') document.getElementById('link-popup').style.display = 'none';
-
-        if (target.tagName === 'A' || target.closest('.relic-link')) return; // Allow native link behavior
+        const target = e.target, container = target.closest('.relic-container'), linkEl = target.closest('.relic-link') || target.closest('a');
+        if (!target.closest('#link-popup') && !linkEl) document.getElementById('link-popup').style.display = 'none';
+        if (linkEl && isLocked) { window.open(linkEl.href, '_blank'); e.preventDefault(); return; }
         if (isLocked) return;
 
         document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
         if (container) container.classList.add('active-relic');
-
         if (target.tagName === 'BUTTON' || target.closest('button')) return;
         if (!container) return;
         
