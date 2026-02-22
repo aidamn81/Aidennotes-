@@ -7,7 +7,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
+        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; --gold: #ffd700; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; }
         
@@ -21,24 +21,8 @@
             .app-container { flex-direction: column; }
             #sidebar { width: 100%; height: 30vh; border-right: none; border-bottom: 2px solid var(--crimson); display: block; }
             #main-editor { height: 70vh; }
-            
-            /* FORCE VERTICAL STACKING: Disables iPad Absolute Positioning */
-            .relic-container { 
-                position: relative !important; 
-                display: block !important;
-                width: 100% !important; 
-                height: auto !important; 
-                left: 0 !important; 
-                top: 0 !important; 
-                margin: 20px 0 !important;
-                transform: none !important;
-                border: 1px solid rgba(139,0,0,0.5) !important;
-            }
-            .relic-content, .relic-content a, .relic-content img, .relic-table {
-                width: 100% !important;
-                height: auto !important;
-                position: relative !important;
-            }
+            .relic-container { position: relative !important; display: block !important; width: 100% !important; height: auto !important; left: 0 !important; top: 0 !important; margin: 20px 0 !important; transform: none !important; border: 1px solid rgba(139,0,0,0.5) !important; }
+            .relic-content, .relic-content a, .relic-content img, .relic-table { width: 100% !important; height: auto !important; position: relative !important; }
         }
 
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
@@ -50,11 +34,14 @@
         
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
-        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
+        
+        /* SYNC PULSE */
+        #sync-indicator { width: 10px; height: 10px; background: #330000; border-radius: 50%; margin-left: 10px; border: 1px solid var(--crimson); transition: 0.3s; }
+        .syncing { background: var(--gold) !important; box-shadow: 0 0 10px var(--gold); }
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
         
-        /* IPAD/DESKTOP CORE (Draggable/Resizable Preserved) */
+        /* RELIC CORE (iPad Draggable/Resizable Preserved) */
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.1); left: 0; top: 0; }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; opacity: 0; pointer-events: none; }
         .relic-container.active-relic { border-color: var(--crimson); }
@@ -89,31 +76,27 @@
     <aside id="sidebar">
         <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.2);" onclick="startNewNote()">✨ NEW NOTE</div>
         <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
+        
+        <div style="margin-top:auto; background: rgba(0,0,0,0.3); border-top: 1px solid var(--crimson);">
+            <div class="sidebar-item" style="font-size:0.5rem; color:var(--silver); cursor:default;">
+                ID: <span id="user-uid-display" style="user-select:all; color:var(--gold);">Loading...</span>
+            </div>
+            <div class="sidebar-item" style="color:var(--silver);" onclick="handleLogout()">🚪 EXIT</div>
+        </div>
     </aside>
 
     <main id="main-editor">
         <div class="scroll-content">
-            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver); margin-bottom:10px;">Path: Recent Notes</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver); margin-bottom:10px;">Path: Recent Notes</div>
+                <div id="sync-indicator" title="Sync Status"></div>
+            </div>
             <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
             
             <div class="sub-title-toolbar">
                 <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()" style="background:var(--crimson); border:1px solid gold;">🛡️ EDIT</button>
                 <button class="tool-btn" onclick="exec('undo')">↶</button>
-                <button class="tool-btn" onclick="exec('redo')">↷</button>
-                <select class="tool-select" onchange="exec('formatBlock', this.value); this.selectedIndex=0;">
-                    <option value="">Style</option>
-                    <option value="H1">Heading 1</option>
-                    <option value="H2">Heading 2</option>
-                    <option value="P">Paragraph</option>
-                </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
-                <button class="tool-btn" onclick="exec('italic')">I</button>
-                <button class="tool-btn" onclick="exec('underline')">U</button>
-                <button class="tool-btn" onclick="exec('strikeThrough')">S</button>
-                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
-                <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
-                <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
                 <button class="tool-btn" onclick="addCustomLink()">🔗</button>
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
                 <button class="tool-btn" onclick="customTable()">📊</button>
@@ -149,7 +132,14 @@
     };
 
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value).catch(e => alert("Denied")); };
-    auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
+    auth.onAuthStateChanged(u => { 
+        if(u) { 
+            document.getElementById('app').style.display='flex'; 
+            document.getElementById('login-screen').style.display='none'; 
+            document.getElementById('user-uid-display').innerText = u.uid; // Displays your UID for the security rules
+            initApp(); 
+        } 
+    });
     window.handleLogout = () => auth.signOut().then(() => location.reload());
 
     // TOUCH ENGINE
@@ -173,10 +163,7 @@
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
-        if (!activeTarget || isLocked) return;
-        // Skip moving/resizing logic on small screens to prevent glitches
-        if (window.innerWidth <= 600) return; 
-
+        if (!activeTarget || isLocked || window.innerWidth <= 600) return;
         const t = e.touches[0], dx = t.clientX - touchStartX, dy = t.clientY - touchStartY;
         if (isResizing) {
             activeTarget.style.width = Math.max(80, Math.round((initialWidth + dx) / snapGrid) * snapGrid) + 'px';
@@ -190,26 +177,13 @@
 
     document.addEventListener('touchend', () => { activeTarget = null; });
 
-    // INSERTION LOGIC
+    // SURGICAL INSERTION LOGIC (Preserved)
     window.addCustomLink = async () => {
-        const type = prompt("1: Text | 2: Image Link", "1");
         const urlInput = prompt("URL:", "https://");
         if(!urlInput) return;
         const url = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
-        if(type === "1") {
-            const text = prompt("Text:", "Link");
-            exec('insertHTML', `<a href="${url}" target="_blank">${text}</a>&nbsp;`);
-        } else {
-            const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
-            input.onchange = (e) => {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    exec('insertHTML', `<div class="relic-container" style="width:200px; height:150px; left:0; top:0;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div><div class="relic-content"><a href="${url}" target="_blank" style="display:block; width:100%; height:100%; pointer-events:auto;"><img src="${ev.target.result}" style="width:100%; height:100%;"></a></div><div class="resize-handle">⌟</div></div><p><br></p>`);
-                };
-                reader.readAsDataURL(e.target.files[0]);
-            };
-            input.click();
-        }
+        const text = prompt("Text:", "Link");
+        exec('insertHTML', `<a href="${url}" target="_blank">${text}</a>&nbsp;`);
     };
 
     window.insertImg = (e) => {
@@ -258,9 +232,14 @@
     };
 
     window.saveQuick = () => {
+        const pulse = document.getElementById('sync-indicator');
+        pulse.classList.add('syncing');
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
         const p = currentEditingId ? db.ref('notes/'+currentEditingId).set(data) : db.ref('notes').push(data).then(r => currentEditingId = r.key);
-        p.then(() => { if(!isLocked) toggleEditMode(); alert("Secured."); });
+        p.then(() => { 
+            setTimeout(() => pulse.classList.remove('syncing'), 1000);
+            if(!isLocked) toggleEditMode(); 
+        });
     };
 
     window.openFolders = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
