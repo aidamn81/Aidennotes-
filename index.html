@@ -14,6 +14,25 @@
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         
         #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
+        
+        /* IPHONE SPECIFIC: SIDEBAR TO TOP */
+        @media screen and (max-width: 600px) {
+            .app-container { flex-direction: column; }
+            #sidebar { 
+                width: 100%; 
+                height: 120px; 
+                flex-direction: row; 
+                overflow-x: auto; 
+                overflow-y: hidden;
+                border-right: none;
+                border-bottom: 1px solid var(--crimson);
+                white-space: nowrap;
+                display: block;
+            }
+            .sidebar-item { display: inline-block; min-width: 120px; height: 100%; border-right: 1px solid rgba(139,0,0,0.2); vertical-align: top; }
+            .folder-content { display: inline-block !important; background: transparent; padding-left: 0; }
+        }
+
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: var(--crimson); }
         .folder-header { background: rgba(139,0,0,0.2); color: var(--crimson); font-weight: bold; border-left: 3px solid var(--crimson); border-bottom: 1px solid rgba(255,255,255,0.05) !important; }
@@ -130,19 +149,11 @@
     auth.onAuthStateChanged(u => { if(u) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
     window.handleLogout = () => auth.signOut().then(() => location.reload());
 
-    // TOUCH ENGINE: HANDLES LINKS, DRAGS, AND RESIZING
+    // TOUCH ENGINE
     document.addEventListener('touchstart', (e) => {
         const target = e.target, container = target.closest('.relic-container'), link = target.closest('a');
-        
-        if (link && isLocked) {
-            window.open(link.href, '_blank'); 
-            e.preventDefault(); e.stopPropagation(); return;
-        }
-        if (isLocked && target.tagName === 'A') {
-             window.open(target.href, '_blank'); e.preventDefault(); return;
-        }
+        if (link && isLocked) { window.open(link.href, '_blank'); e.preventDefault(); e.stopPropagation(); return; }
         if (isLocked) return;
-
         document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
         if (container) {
             container.classList.add('active-relic');
@@ -173,13 +184,12 @@
 
     document.addEventListener('touchend', () => { activeTarget = null; });
 
-    // IMAGE AND LINK INSERTION
+    // IMAGE AND LINK INSERTION (NEW TABS PROMISED)
     window.addCustomLink = async () => {
         const type = prompt("1: Text Link | 2: Image Link", "1");
         const urlInput = prompt("Target URL:", "https://");
         if(!urlInput) return;
         const url = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
-
         if(type === "1") {
             const text = prompt("Display Text:", "Link");
             exec('insertHTML', `<a href="${url}" target="_blank">${text}</a>&nbsp;`);
@@ -213,7 +223,6 @@
         exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:120px; left:0; top:0;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`);
     };
 
-    // FOLDERS & FIREBASE (PRESERVED)
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
