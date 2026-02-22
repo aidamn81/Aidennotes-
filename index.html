@@ -35,25 +35,25 @@
         }
 
         /* RELIC CORE */
-        .relic-container { display: inline-block; position: relative; margin: 40px 10px; border: 1px solid rgba(139,0,0,0.2); touch-action: none; background: rgba(0,0,0,0.2); left: 0; top: 0; vertical-align: middle; }
-        .relic-header { position: absolute; top: -32px; right: -1px; height: 32px; z-index: 10; opacity: 0; pointer-events: none; display: flex; }
-        .relic-footer { position: absolute; bottom: -40px; left: -1px; width: calc(100% + 2px); height: 40px; z-index: 10; opacity: 0; pointer-events: none; display: flex; }
+        .relic-container { display: inline-block; position: relative; margin: 45px 10px; border: 1px solid rgba(139,0,0,0.2); touch-action: none; background: rgba(0,0,0,0.2); left: 0; top: 0; vertical-align: middle; overflow: visible !important; }
+        .relic-header { position: absolute; top: -35px; right: -2px; height: 35px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; }
+        .relic-footer { position: absolute; bottom: -45px; left: -2px; width: calc(100% + 4px); height: 45px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; }
         
         .relic-container.active-relic { border: 2px solid var(--crimson); z-index: 1000; }
         .relic-container.active-relic .relic-header, .relic-container.active-relic .relic-footer, .relic-container.active-relic .resize-handle { opacity: 1; pointer-events: auto; }
         
-        /* LINK RELIC SPECIFIC */
-        .link-relic { min-width: 80px; }
-        .link-relic .relic-content { padding: 8px 15px; white-space: nowrap; overflow: visible; pointer-events: auto; }
+        /* LINK RELIC SPECIFIC - Force Space for Button */
+        .link-relic { min-width: 100px; min-height: 40px; }
+        .link-relic .relic-content { padding: 10px 15px; white-space: nowrap; overflow: visible; pointer-events: auto; }
 
-        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 10px; cursor: move; font-family: 'Cinzel'; text-align: center; line-height: 32px; font-weight: bold; letter-spacing: 2px; }
-        .del-relic-btn { background: #222; color: #ff4444; border: 2px solid var(--crimson); font-family: 'Cinzel'; font-size: 10px; font-weight: bold; cursor: pointer; padding: 0 12px; height: 100%; display: flex; align-items: center; border-bottom: none; border-radius: 5px 5px 0 0; }
+        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 10px; cursor: move; font-family: 'Cinzel'; text-align: center; line-height: 35px; font-weight: bold; letter-spacing: 2px; }
+        .del-relic-btn { background: #1a0505; color: #ff4444; border: 2px solid var(--crimson); font-family: 'Cinzel'; font-size: 10px; font-weight: bold; cursor: pointer; padding: 0 15px; height: 100%; display: flex; align-items: center; border-bottom: none; border-radius: 6px 6px 0 0; white-space: nowrap; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
         
         .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
         .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; }
         .text-box-relic .relic-content { pointer-events: auto; padding: 10px; color: var(--parchment); overflow-y: auto; }
         
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; cursor: nwse-resize; z-index: 120; background: linear-gradient(135deg, transparent 60%, var(--gold) 60%); opacity: 0; }
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; cursor: nwse-resize; z-index: 1200; background: linear-gradient(135deg, transparent 60%, var(--gold) 60%); opacity: 0; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
@@ -142,6 +142,7 @@
         if (target.tagName === 'A' || target.getAttribute('contenteditable') === 'true') return;
         const container = target.closest('.relic-container');
         if (isLocked) return;
+        
         if (!container) { if (activeRelic) activeRelic.classList.remove('active-relic'); activeRelic = null; return; }
         
         if (activeRelic) activeRelic.classList.remove('active-relic');
@@ -174,7 +175,6 @@
 
     document.addEventListener('touchend', () => { isDragging = false; isResizing = false; });
 
-    // SURGICAL FIX: Repositioned header and added explicit button logic
     function wrapRelic(content, extraClass = "", w="auto", h="auto") {
         return `<div class="relic-container ${extraClass}" style="left:0; top:0; width:${w}; height:${h};">
             <div class="relic-header">
