@@ -13,10 +13,9 @@
         
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         
-        /* SIDEBAR ENGINE */
+        /* SIDEBAR */
         #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         
-        /* IPHONE CHAOS FIX (MAX-WIDTH 600px) */
         @media screen and (max-width: 600px) {
             .app-container { flex-direction: column; }
             #sidebar { width: 100%; height: 30vh; border-right: none; border-bottom: 2px solid var(--crimson); display: block; }
@@ -32,16 +31,18 @@
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; margin-bottom: 5px; }
         
+        /* RESTORED FULL TOOLBAR */
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
+        .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
         
-        /* SYNC PULSE */
-        #sync-indicator { width: 10px; height: 10px; background: #330000; border-radius: 50%; margin-left: 10px; border: 1px solid var(--crimson); transition: 0.3s; }
-        .syncing { background: var(--gold) !important; box-shadow: 0 0 10px var(--gold); }
+        /* SYNC LIGHT */
+        #sync-indicator { width: 12px; height: 12px; background: #330000; border-radius: 50%; border: 1px solid var(--crimson); transition: 0.5s; box-shadow: inset 0 0 5px #000; }
+        .syncing { background: var(--gold) !important; box-shadow: 0 0 15px var(--gold), 0 0 5px var(--gold) !important; }
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
         
-        /* RELIC CORE (iPad Draggable/Resizable Preserved) */
+        /* RELIC CORE */
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.1); left: 0; top: 0; }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; opacity: 0; pointer-events: none; }
         .relic-container.active-relic { border-color: var(--crimson); }
@@ -76,10 +77,9 @@
     <aside id="sidebar">
         <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:rgba(0,0,0,0.2);" onclick="startNewNote()">✨ NEW NOTE</div>
         <div id="folder-list-sidebar"></div>
-        
         <div style="margin-top:auto; background: rgba(0,0,0,0.3); border-top: 1px solid var(--crimson);">
-            <div class="sidebar-item" style="font-size:0.5rem; color:var(--silver); cursor:default;">
-                ID: <span id="user-uid-display" style="user-select:all; color:var(--gold);">Loading...</span>
+            <div class="sidebar-item" style="font-size:0.5rem; color:var(--silver); cursor:default; overflow:hidden; text-overflow:ellipsis;">
+                ID: <span id="user-uid-display" style="user-select:all; color:var(--gold);">...</span>
             </div>
             <div class="sidebar-item" style="color:var(--silver);" onclick="handleLogout()">🚪 EXIT</div>
         </div>
@@ -87,16 +87,29 @@
 
     <main id="main-editor">
         <div class="scroll-content">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver); margin-bottom:10px;">Path: Recent Notes</div>
-                <div id="sync-indicator" title="Sync Status"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: Recent Notes</div>
+                <div id="sync-indicator"></div>
             </div>
             <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
             
             <div class="sub-title-toolbar">
                 <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()" style="background:var(--crimson); border:1px solid gold;">🛡️ EDIT</button>
                 <button class="tool-btn" onclick="exec('undo')">↶</button>
+                <button class="tool-btn" onclick="exec('redo')">↷</button>
+                <select class="tool-select" onchange="exec('formatBlock', this.value); this.selectedIndex=0;">
+                    <option value="">Style</option>
+                    <option value="H1">H1</option>
+                    <option value="H2">H2</option>
+                    <option value="P">Text</option>
+                </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
+                <button class="tool-btn" onclick="exec('italic')">I</button>
+                <button class="tool-btn" onclick="exec('underline')">U</button>
+                <button class="tool-btn" onclick="exec('strikeThrough')">S</button>
+                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
+                <button class="tool-btn" onclick="exec('justifyCenter')">⬆</button>
+                <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
                 <button class="tool-btn" onclick="addCustomLink()">🔗</button>
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
                 <button class="tool-btn" onclick="customTable()">📊</button>
@@ -136,7 +149,7 @@
         if(u) { 
             document.getElementById('app').style.display='flex'; 
             document.getElementById('login-screen').style.display='none'; 
-            document.getElementById('user-uid-display').innerText = u.uid; // Displays your UID for the security rules
+            document.getElementById('user-uid-display').innerText = u.uid;
             initApp(); 
         } 
     });
@@ -177,13 +190,26 @@
 
     document.addEventListener('touchend', () => { activeTarget = null; });
 
-    // SURGICAL INSERTION LOGIC (Preserved)
+    // INSERTION LOGIC
     window.addCustomLink = async () => {
+        const type = prompt("1: Text | 2: Image Link", "1");
         const urlInput = prompt("URL:", "https://");
         if(!urlInput) return;
         const url = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
-        const text = prompt("Text:", "Link");
-        exec('insertHTML', `<a href="${url}" target="_blank">${text}</a>&nbsp;`);
+        if(type === "1") {
+            const text = prompt("Text:", "Link");
+            exec('insertHTML', `<a href="${url}" target="_blank">${text}</a>&nbsp;`);
+        } else {
+            const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+            input.onchange = (e) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    exec('insertHTML', `<div class="relic-container" style="width:200px; height:150px; left:0; top:0;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div><div class="relic-content"><a href="${url}" target="_blank" style="display:block; width:100%; height:100%; pointer-events:auto;"><img src="${ev.target.result}" style="width:100%; height:100%;"></a></div><div class="resize-handle">⌟</div></div><p><br></p>`);
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            };
+            input.click();
+        }
     };
 
     window.insertImg = (e) => {
@@ -237,7 +263,7 @@
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
         const p = currentEditingId ? db.ref('notes/'+currentEditingId).set(data) : db.ref('notes').push(data).then(r => currentEditingId = r.key);
         p.then(() => { 
-            setTimeout(() => pulse.classList.remove('syncing'), 1000);
+            setTimeout(() => pulse.classList.remove('syncing'), 1500);
             if(!isLocked) toggleEditMode(); 
         });
     };
