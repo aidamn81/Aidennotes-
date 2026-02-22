@@ -168,7 +168,7 @@
 
     window.addCustomLink = () => { 
         const t = prompt("Title:", "Link"), u = prompt("URL:", "https://"); 
-        if(t && u) { const url = u.startsWith('http') ? u : 'https://' + u; exec('insertHTML', `<a href="${url}" onclick="handleLinkClick(event, this, '${url}')" contenteditable="false">${t}</a>&nbsp;`); }
+        if(t && u) { const url = u.startsWith('http') ? u : 'https://' + u; exec('insertHTML', `<a href="${url}" target="_blank" onclick="handleLinkClick(event, this, '${url}')" contenteditable="false">${t}</a>&nbsp;`); }
     };
 
     window.saveQuick = () => {
@@ -221,7 +221,13 @@
     document.addEventListener('touchstart', (e) => {
         const target = e.target, container = target.closest('.relic-container'), linkEl = target.closest('.relic-link') || target.closest('a');
         if (!target.closest('#link-popup') && !linkEl) document.getElementById('link-popup').style.display = 'none';
-        if (linkEl && isLocked) { window.open(linkEl.href, '_blank'); e.preventDefault(); return; }
+        
+        if (linkEl && isLocked) { 
+            window.open(linkEl.href, '_blank'); 
+            e.preventDefault(); 
+            return; 
+        }
+        
         if (isLocked) return;
 
         document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
@@ -262,7 +268,7 @@
             let content = `<img src="${ev.target.result}" style="width:100%; height:100%;">`;
             if(link) {
                 const url = link.startsWith('http') ? link : 'https://' + link;
-                content = `<a href="${url}" class="relic-link" onclick="handleLinkClick(event, this, '${url}')" contenteditable="false">${content}</a>`;
+                content = `<a href="${url}" target="_blank" class="relic-link" onclick="handleLinkClick(event, this, '${url}')" contenteditable="false">${content}</a>`;
             }
             exec('insertHTML', `<div class="relic-container" style="width:250px; height:200px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="nukeRelic(this, event)">X</button></div><div class="relic-content">${content}</div><div class="resize-handle">⌟</div></div><p><br></p>`); 
         };
