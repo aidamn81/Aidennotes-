@@ -32,8 +32,9 @@
         #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; transition: text-shadow 0.3s ease; }
         #note-body a.link-pulse { text-shadow: 0 0 10px #00ccff, 0 0 20px #00ccff; }
 
-        #link-popup { position: fixed; display: none; background: var(--oxblood); border: 1px solid var(--crimson); padding: 5px; border-radius: 4px; z-index: 3000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        #link-popup button { background: var(--crimson); color: white; border: none; font-family: 'Cinzel'; font-size: 10px; padding: 5px 10px; cursor: pointer; border-radius: 2px; }
+        /* LINK POPUP STYLES */
+        #link-popup { position: fixed; display: none; background: var(--oxblood); border: 1px solid var(--crimson); padding: 8px; border-radius: 4px; z-index: 5000; box-shadow: 0 4px 15px rgba(0,0,0,0.8); pointer-events: auto; }
+        #link-popup button { background: var(--crimson); color: white; border: none; font-family: 'Cinzel'; font-size: 11px; padding: 6px 12px; cursor: pointer; border-radius: 2px; }
 
         .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.1); left: 0; top: 0; }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
@@ -129,7 +130,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
     let currentEditingId = null, currentFolderName = "Recent Notes", snapGrid = 20, holdTimer;
-    let lastTap = 0;
+    let lastTapTime = 0;
 
     function exec(cmd, val = null) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); }
 
@@ -141,30 +142,29 @@
     window.closeModal = () => { document.getElementById('folder-modal').style.display='none'; document.getElementById('overlay').style.display='none'; };
     window.createNewFolder = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeModal(); } };
     
-    window.showLinkPopup = (el, url) => {
-        const popup = document.getElementById('link-popup');
-        const rect = el.getBoundingClientRect();
-        popup.style.display = 'block';
-        popup.style.left = rect.left + 'px';
-        popup.style.top = (rect.bottom + window.scrollY + 5) + 'px';
-        document.getElementById('popup-visit-btn').onclick = () => {
-            window.open(url, '_blank');
-            popup.style.display = 'none';
-        };
-    };
-
+    // LINK HANDLER
     window.handleLinkTap = (e, el, url) => {
         const now = Date.now();
-        const timesince = now - lastTap;
-        if (timesince < 350 && timesince > 0) {
+        const popup = document.getElementById('link-popup');
+        
+        // Double Tap Detection
+        if (now - lastTapTime < 300) {
             el.classList.add('link-pulse');
             setTimeout(() => el.classList.remove('link-pulse'), 500);
             window.open(url, '_blank');
-            document.getElementById('link-popup').style.display = 'none';
+            popup.style.display = 'none';
         } else {
-            window.showLinkPopup(el, url);
+            // Single Tap: Show Popup
+            const rect = el.getBoundingClientRect();
+            popup.style.display = 'block';
+            popup.style.left = rect.left + 'px';
+            popup.style.top = (rect.bottom + 5) + 'px';
+            document.getElementById('popup-visit-btn').onclick = () => {
+                window.open(url, '_blank');
+                popup.style.display = 'none';
+            };
         }
-        lastTap = now;
+        lastTapTime = now;
         e.stopPropagation();
     };
 
@@ -241,7 +241,8 @@
         const target = e.target; 
         const container = target.closest('.relic-container');
         
-        if (!target.closest('#link-popup')) {
+        // Hide popup if clicking away
+        if (!target.closest('#link-popup') && !target.closest('a')) {
             document.getElementById('link-popup').style.display = 'none';
         }
 
