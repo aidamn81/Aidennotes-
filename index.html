@@ -34,7 +34,7 @@
             pointer-events: auto !important; 
         }
 
-        /* RELIC CORE */
+        /* UNIFIED RELIC SYSTEM CSS */
         .relic-container { display: inline-block; position: relative; margin: 45px 10px; border: 1px solid rgba(139,0,0,0.2); touch-action: none; background: rgba(0,0,0,0.2); left: 0; top: 0; vertical-align: middle; overflow: visible !important; }
         .relic-header { position: absolute; top: -35px; right: -2px; height: 35px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; }
         .relic-footer { position: absolute; bottom: -45px; left: -2px; width: calc(100% + 4px); height: 45px; z-index: 1100; opacity: 0; pointer-events: none; display: flex; }
@@ -42,16 +42,15 @@
         .relic-container.active-relic { border: 2px solid var(--crimson); z-index: 1000; }
         .relic-container.active-relic .relic-header, .relic-container.active-relic .relic-footer, .relic-container.active-relic .resize-handle { opacity: 1; pointer-events: auto; }
         
-        /* LINK RELIC SPECIFIC - Force Space for Button */
-        .link-relic { min-width: 100px; min-height: 40px; }
-        .link-relic .relic-content { padding: 10px 15px; white-space: nowrap; overflow: visible; pointer-events: auto; }
+        .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; }
+        
+        /* INTERACTIVE CONTENT */
+        .text-box-relic .relic-content, .link-relic .relic-content { pointer-events: auto; padding: 10px; color: var(--parchment); }
+        .text-box-relic .relic-content { overflow-y: auto; }
 
         .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 10px; cursor: move; font-family: 'Cinzel'; text-align: center; line-height: 35px; font-weight: bold; letter-spacing: 2px; }
         .del-relic-btn { background: #1a0505; color: #ff4444; border: 2px solid var(--crimson); font-family: 'Cinzel'; font-size: 10px; font-weight: bold; cursor: pointer; padding: 0 15px; height: 100%; display: flex; align-items: center; border-bottom: none; border-radius: 6px 6px 0 0; white-space: nowrap; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
-        
-        .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
-        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; }
-        .text-box-relic .relic-content { pointer-events: auto; padding: 10px; color: var(--parchment); overflow-y: auto; }
         
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; cursor: nwse-resize; z-index: 1200; background: linear-gradient(135deg, transparent 60%, var(--gold) 60%); opacity: 0; }
 
@@ -142,13 +141,10 @@
         if (target.tagName === 'A' || target.getAttribute('contenteditable') === 'true') return;
         const container = target.closest('.relic-container');
         if (isLocked) return;
-        
         if (!container) { if (activeRelic) activeRelic.classList.remove('active-relic'); activeRelic = null; return; }
-        
         if (activeRelic) activeRelic.classList.remove('active-relic');
         activeRelic = container; activeRelic.classList.add('active-relic');
         const touch = e.touches[0];
-        
         if (target.classList.contains('drag-handle')) {
             isDragging = true; startX = touch.clientX; startY = touch.clientY;
             startL = parseInt(activeRelic.style.left) || 0; startT = parseInt(activeRelic.style.top) || 0;
@@ -175,23 +171,18 @@
 
     document.addEventListener('touchend', () => { isDragging = false; isResizing = false; });
 
+    // UNIFIED WRAPPER
     function wrapRelic(content, extraClass = "", w="auto", h="auto") {
         return `<div class="relic-container ${extraClass}" style="left:0; top:0; width:${w}; height:${h};">
-            <div class="relic-header">
-                <button class="del-relic-btn" onclick="confirmRelicDeletion(this)">DESTROY 🗑️</button>
-            </div>
+            <div class="relic-header"><button class="del-relic-btn" onclick="confirmRelicDeletion(this)">DESTROY 🗑️</button></div>
             <div class="relic-content">${content}</div>
-            <div class="relic-footer">
-                <div class="drag-handle">DRAG</div>
-            </div>
+            <div class="relic-footer"><div class="drag-handle">DRAG</div></div>
             <div class="resize-handle"></div>
         </div><span>&nbsp;</span>`;
     }
 
     window.confirmRelicDeletion = (btn) => {
-        if(confirm("Erase this relic from existence?")) {
-            btn.closest('.relic-container').remove();
-        }
+        if(confirm("Erase this relic from existence?")) btn.closest('.relic-container').remove();
     };
 
     window.addCustomLink = () => {
@@ -206,7 +197,7 @@
         exec('insertHTML', wrapRelic(html, "text-box-relic", "200px", "100px"));
     };
 
-    window.insertImg = (e) => { const reader = new FileReader(); reader.onload = (ev) => { exec('insertHTML', wrapRelic(`<img src="${ev.target.result}">`, "", "250px", "200px")); }; reader.readAsDataURL(e.target.files[0]); };
+    window.insertImg = (e) => { const reader = new FileReader(); reader.onload = (ev) => { exec('insertHTML', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "250px", "200px")); }; reader.readAsDataURL(e.target.files[0]); };
     
     window.saveQuick = () => {
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
