@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>AidenNotes | Fortress</title>
+    <title>AidenNotes | Fortress Full</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; }
+        :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; --gold: #ffd700; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; }
         
@@ -16,33 +16,35 @@
         #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; z-index: 100; }
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .sidebar-item:hover { background: var(--crimson); }
-        .folder-header { background: rgba(139,0,0,0.2); color: var(--crimson); font-weight: bold; border-left: 3px solid var(--crimson); border-bottom: 1px solid rgba(255,255,255,0.05) !important; }
-        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); transition: all 0.2s ease-in-out; }
+        .folder-header { background: rgba(139,0,0,0.2); color: var(--crimson); font-weight: bold; border-left: 3px solid var(--crimson); }
+        .folder-content { padding-left: 10px; background: rgba(0,0,0,0.3); }
 
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; margin-bottom: 5px; }
         
+        /* FULL RESTORED TOOLBAR */
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
         .tool-select { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 5px; font-size: 0.7rem; font-family: 'Cinzel'; border-radius: 3px; }
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
-        #note-body a { color: #00ccff; text-decoration: underline; cursor: pointer; pointer-events: auto !important; }
+        #note-body a { color: #00ccff; text-decoration: underline; }
         
-        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.1); left: 0; top: 0; }
+        .relic-container { display: inline-block; position: relative; margin: 30px 0; border: 1px solid rgba(139,0,0,0.2); min-width: 80px; min-height: 40px; touch-action: none; background: rgba(0,0,0,0.1); }
         .relic-header { position: absolute; top: -25px; left: -1px; display: flex; width: calc(100% + 2px); height: 25px; z-index: 10; opacity: 0; pointer-events: none; }
         .relic-container.active-relic { border-color: var(--crimson); }
         .relic-container.active-relic .relic-header { opacity: 1; pointer-events: auto; }
         
-        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; font-family: 'Cinzel'; border-radius: 3px 3px 0 0; text-align: center; }
-        .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; border-radius: 0 3px 0 0; position: relative; z-index: 200; }
+        .drag-handle { flex-grow: 1; background: var(--crimson); color: white; padding: 4px; font-size: 9px; cursor: move; font-family: 'Cinzel'; text-align: center; }
+        .del-relic { background: #333; color: #ff4444; border: none; font-size: 11px; cursor: pointer; padding: 0 10px; }
         
         .relic-content { width: 100%; height: 100%; position: relative; }
-        .relic-container img { width: 100%; height: 100%; display: block; pointer-events: none; object-fit: fill; }
-        .relic-table { width: 100%; height: 100%; border-collapse: collapse; }
+        .relic-container img { width: 100%; height: 100%; display: block; object-fit: fill; pointer-events: none; }
+        .relic-table { width: 100%; height: 100%; border-collapse: collapse; background: rgba(0,0,0,0.2); }
         .relic-table td { border: 1px solid var(--crimson); padding: 8px; outline: none; color: var(--parchment); }
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; color: var(--crimson); display: flex; align-items: flex-end; justify-content: flex-end; padding: 2px; opacity: 0; pointer-events: auto; }
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 120; color: var(--crimson); display: flex; align-items: flex-end; justify-content: flex-end; opacity: 0; pointer-events: auto; font-weight: bold; }
+        .relic-container.active-relic .resize-handle { opacity: 1; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         
@@ -113,7 +115,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
     
-    // NEW MASTER SEAL
+    // THE BLOOD SEAL UID
     const MASTER_UID = "L4aYFgfnNsPA7wy5FasTQkXPTpK2";
 
     let currentEditingId = null, currentFolderName = "Recent Notes", isLocked = true, longPressTimer;
@@ -145,7 +147,7 @@
 
     window.handleLogout = () => auth.signOut().then(() => location.reload());
 
-    // Snappy Long Press Delete
+    // Snappy 500ms Long Press Delete
     document.addEventListener('touchstart', (e) => {
         const target = e.target, container = target.closest('.relic-container');
         if (isLocked) return;
@@ -158,11 +160,13 @@
     document.addEventListener('touchmove', () => clearTimeout(longPressTimer));
     document.addEventListener('touchend', () => clearTimeout(longPressTimer));
 
+    // Advanced Link & Image-Link Composition
     window.addCustomLink = async () => {
-        const type = prompt("Type '1' for Text Link or '2' for Image Link", "1");
-        const urlInput = prompt("Target URL:", "https://");
+        const type = prompt("1: Text Link | 2: Image Link", "1");
+        const urlInput = prompt("URL:", "https://");
         if(!urlInput) return;
         const url = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
+
         if(type === "1") {
             const text = prompt("Display Text:", "Link");
             exec('insertHTML', `<a href="${url}" target="_blank">${text}</a>&nbsp;`);
@@ -172,8 +176,8 @@
             input.onchange = (e) => {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    const imgHtml = `<img src="${ev.target.result}" style="width:100%; height:100%; pointer-events:none;">`;
-                    exec('insertHTML', `<div class="relic-container" style="width:200px; height:150px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div><div class="relic-content"><a href="${url}" target="_blank" style="display:block; width:100%; height:100%;">${imgHtml}</a></div><div class="resize-handle">⌟</div></div><p><br></p>`);
+                    const imgHtml = `<img src="${ev.target.result}" style="width:100%; height:100%;">`;
+                    exec('insertHTML', `<div class="relic-container" style="width:200px; height:150px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div><div class="relic-content"><a href="${url}" target="_blank" style="display:block; width:100%; height:100%; pointer-events:auto;">${imgHtml}</a></div><div class="resize-handle">⌟</div></div><p><br></p>`);
                 };
                 reader.readAsDataURL(e.target.files[0]);
             };
@@ -189,6 +193,16 @@
         reader.readAsDataURL(e.target.files[0]);
     };
 
+    // Table Creation
+    window.customTable = () => {
+        const r = prompt("Rows?", "2"), c = prompt("Cols?", "2");
+        let t = `<table class="relic-table">`;
+        for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; }
+        t += `</table>`;
+        exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`);
+    };
+
+    // Global Link Interceptor (Open in new tab when Locked)
     document.addEventListener('click', (e) => {
         const link = e.target.closest('a');
         if (link && isLocked) { e.preventDefault(); e.stopPropagation(); window.open(link.href, '_blank'); }
@@ -232,7 +246,6 @@
     window.openFolders = () => { const n = prompt("Target Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
-    window.customTable = () => { const r = prompt("Rows?", "2"), c = prompt("Cols?", "2"); let t = `<table class="relic-table">`; for(let i=0; i<r; i++){ t += `<tr>`; for(let j=0; j<c; j++) t += `<td contenteditable="true">...</td>`; t += `</tr>`; } t += `</table>`; exec('insertHTML', `<div class="relic-container" style="width:auto; min-width:240px; height:auto; min-height:80px;"><div class="relic-header"><div class="drag-handle">DRAG</div><button class="del-relic" onclick="this.closest('.relic-container').remove()">X</button></div><div class="relic-content">${t}</div><div class="resize-handle">⌟</div></div><p><br></p>`); };
 </script>
 </body>
 </html>
