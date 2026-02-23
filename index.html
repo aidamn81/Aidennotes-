@@ -19,6 +19,7 @@
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; }
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
         
+        /* RESTORED FULL TOOLBAR */
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
         .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 10px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; border-radius: 3px; }
 
@@ -26,8 +27,6 @@
 
         /* RELIC CONTAINERS */
         .relic-container { display: inline-block; position: relative; margin: 15px; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); vertical-align: middle; touch-action: none; }
-        
-        /* HIDDEN ELEMENTS */
         .relic-header, .destroy-btn { display: none !important; }
 
         /* THE FOOTER (DRAG BAR) */
@@ -41,7 +40,7 @@
 
         .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; }
 
-        /* THE GOLD TRIANGLE - TRANSPARENT BY DEFAULT */
+        /* GOLD TRIANGLES: TRANSPARENT BY DEFAULT */
         .resize-handle { 
             position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; 
             cursor: nwse-resize; z-index: 1200; 
@@ -57,6 +56,8 @@
         .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        
+        /* Ensures toolbar buttons only hide in Locked Mode */
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
         
         body:not(.locked-mode) .relic-container.active-relic { border: 2px solid var(--crimson); }
@@ -84,6 +85,7 @@
         <div class="scroll-content">
             <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver); margin-bottom:10px;">Path: Recent Notes</div>
             <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
+            
             <div class="sub-title-toolbar">
                 <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
                 <button class="tool-btn" onclick="exec('undo')">↶</button>
@@ -97,6 +99,7 @@
                 <button class="tool-btn" onclick="openFolders()">DIR</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
             </div>
+            
             <div id="note-body" contenteditable="false"></div>
         </div>
     </main>
@@ -125,7 +128,6 @@
         document.getElementById('note-title').readOnly = isLocked;
         document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
         if (isLocked && activeRelic) activeRelic.classList.remove('active-relic');
-        document.querySelectorAll('.relic-header, .destroy-btn').forEach(el => el.remove());
     };
 
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
@@ -146,7 +148,6 @@
         activeRelic = container; 
         activeRelic.classList.add('active-relic');
 
-        // LONG PRESS DELETE (Preserved)
         longPressTimer = setTimeout(() => {
             if (confirm("Permanently delete this relic?")) {
                 activeRelic.remove();
