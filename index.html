@@ -30,14 +30,13 @@
         .relic-container { display: inline-block; position: relative; margin: 10px; border: 1px solid rgba(139,0,0,0.4); background: rgba(0,0,0,0.3); vertical-align: middle; touch-action: none; transition: box-shadow 0.2s; }
         .relic-container.active-relic { border: 2px solid var(--crimson); z-index: 1000; box-shadow: 0 0 15px var(--crimson); }
 
-        /* UI ELEMENTS */
+        /* FOOTER UI */
         .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 1100; opacity: 0; pointer-events: none; background: var(--crimson); display: flex; }
         .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; pointer-events: auto; user-select: none; }
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 1200; background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); pointer-events: auto; }
 
         .relic-container.active-relic .relic-footer { opacity: 1; pointer-events: auto; }
 
-        /* CONTENT WRAPPERS */
         .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; pointer-events: auto; }
         .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
         .text-box-relic .relic-content { padding: 10px; overflow-y: auto; }
@@ -114,7 +113,6 @@
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
 
-    // TOUCH LOGIC
     document.addEventListener('touchstart', (e) => {
         const target = e.target;
         const container = target.closest('.relic-container');
@@ -130,9 +128,9 @@
         activeRelic = container; 
         activeRelic.classList.add('active-relic');
 
-        // LONG PRESS DELETE LOGIC
+        // LONG PRESS DELETE
         longPressTimer = setTimeout(() => {
-            if (confirm("Destroy this relic permanently?")) {
+            if (confirm("Destroy this relic?")) {
                 activeRelic.remove();
                 activeRelic = null;
             }
@@ -172,7 +170,7 @@
         return `<div class="relic-container ${extraClass}" style="left:0; top:0; width:${w}; height:${h};" contenteditable="false">
             <div class="relic-content" contenteditable="false">${content}</div>
             <div class="relic-footer" contenteditable="false">
-                <div class="drag-handle" contenteditable="false">HOLD TO KILL / DRAG</div>
+                <div class="drag-handle" contenteditable="false">HOLD TO DELETE / DRAG</div>
                 <div class="resize-handle" contenteditable="false"></div>
             </div>
         </div><span>&nbsp;</span>`;
