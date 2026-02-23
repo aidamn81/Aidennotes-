@@ -26,16 +26,22 @@
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
 
-        /* THE WORKING RELIC SYSTEM - NO HEADER */
+        /* THE WORKING RELIC SYSTEM */
         .relic-container { display: inline-block; position: relative; margin: 15px; border: 1px solid rgba(139,0,0,0.4); background: rgba(0,0,0,0.3); vertical-align: middle; touch-action: none; transition: box-shadow 0.2s; }
         .relic-container.active-relic { border: 2px solid var(--crimson); z-index: 1000; box-shadow: 0 0 15px var(--crimson); }
 
-        /* FOOTER UI - Drag & Resize Only */
-        .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 1100; opacity: 0; pointer-events: none; background: var(--crimson); display: flex; border-radius: 0 0 4px 4px; }
+        /* UI ELEMENTS VISIBILITY CONTROL */
+        .relic-footer { 
+            position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; 
+            z-index: 1100; opacity: 0; pointer-events: none; background: var(--crimson); 
+            display: none; /* Hidden by default */
+        }
+        
+        /* Show UI only in active state AND when unlocked */
+        body:not(.locked-mode) .relic-container.active-relic .relic-footer { display: flex; opacity: 1; pointer-events: auto; }
+
         .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; pointer-events: auto; user-select: none; }
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 1200; background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); pointer-events: auto; }
-
-        .relic-container.active-relic .relic-footer { opacity: 1; pointer-events: auto; }
 
         .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; pointer-events: auto; }
         .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
@@ -43,7 +49,7 @@
         .link-relic a { color: var(--link-green) !important; text-decoration: underline; font-weight: bold; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn), .locked-mode .relic-footer { display: none !important; }
+        .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
     </style>
 </head>
 <body class="locked-mode">
@@ -108,6 +114,7 @@
         document.getElementById('note-body').contentEditable = !isLocked;
         document.getElementById('note-title').readOnly = isLocked;
         document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
+        if (isLocked && activeRelic) activeRelic.classList.remove('active-relic');
     };
 
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
@@ -128,7 +135,7 @@
         activeRelic = container; 
         activeRelic.classList.add('active-relic');
 
-        // LONG PRESS DELETE (REMAINING OPTION)
+        // LONG PRESS DELETE
         longPressTimer = setTimeout(() => {
             if (confirm("Destroy this relic?")) {
                 activeRelic.remove();
@@ -166,7 +173,6 @@
 
     document.addEventListener('touchend', () => { clearTimeout(longPressTimer); isDragging = false; isResizing = false; });
 
-    // WRAPPER COMPLETELY PURGED OF DESTROY BUTTONS
     function wrapRelic(content, extraClass = "", w="220px", h="auto") {
         return `<div class="relic-container ${extraClass}" style="left:0; top:0; width:${w}; height:${h};" contenteditable="false">
             <div class="relic-content" contenteditable="false">${content}</div>
@@ -184,7 +190,7 @@
     };
 
     window.addTextBox = () => {
-        exec('insertHTML', wrapRelic(`<div contenteditable="true" style="width:100%; height:100%; outline:none; color:inherit;">Type Here...</div>`, "text-box-relic", "200px", "100px"));
+        exec('insertHTML', wrapRelic(`<div contenteditable="true" style="width:100%; height:100%; outline:none; color:inherit;">Text...</div>`, "text-box-relic", "200px", "100px"));
     };
 
     window.insertImg = (e) => {
@@ -226,7 +232,6 @@
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
     window.handleLogout = () => auth.signOut().then(() => location.reload());
     
-    // SAVED INSTRUCTION: Delete Note with confirmation
     window.deleteNote = (id, e) => { 
         e.stopPropagation(); 
         if(confirm("Permanently erase this note?")) db.ref('notes/'+id).remove(); 
