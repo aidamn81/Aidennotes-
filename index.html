@@ -24,31 +24,33 @@
 
         #note-body { min-height: 65vh; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 400px; position: relative; }
 
-        /* RELIC SYSTEM - NO HEADERS/BUTTONS */
+        /* RELIC CONTAINERS */
         .relic-container { display: inline-block; position: relative; margin: 15px; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); vertical-align: middle; touch-action: none; }
-        .relic-header, .destroy-btn { display: none !important; visibility: hidden !important; }
+        
+        /* HIDDEN ELEMENTS */
+        .relic-header, .destroy-btn { display: none !important; }
 
-        /* UI ELEMENTS: ONLY VISIBLE IF BODY IS UNLOCKED AND RELIC IS ACTIVE */
+        /* THE FOOTER (DRAG BAR) */
         .relic-footer { 
             position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; 
-            z-index: 1100; background: var(--crimson); 
-            display: none !important; /* Total blackout by default */
+            z-index: 1100; background: var(--crimson); display: none; 
         }
         
-        /* THE TRIGGER: Strictly requires both .active-relic AND NOT .locked-mode */
-        body:not(.locked-mode) .relic-container.active-relic .relic-footer { 
-            display: flex !important; 
-            opacity: 1; 
-            pointer-events: auto; 
-        }
+        /* SHOW DRAG BAR ONLY IN EDIT MODE ON ACTIVE RELIC */
+        body:not(.locked-mode) .relic-container.active-relic .relic-footer { display: flex; }
 
         .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; }
-        
-        /* THE GOLD TRIANGLE */
+
+        /* THE GOLD TRIANGLE - TRANSPARENT BY DEFAULT */
         .resize-handle { 
             position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; 
             cursor: nwse-resize; z-index: 1200; 
-            background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); 
+            background: linear-gradient(135deg, transparent 50%, transparent 50%); 
+        }
+
+        /* REVEAL GOLD ONLY IN EDIT MODE WHEN ACTIVE */
+        body:not(.locked-mode) .relic-container.active-relic .resize-handle {
+            background: linear-gradient(135deg, transparent 50%, var(--gold) 50%);
         }
 
         .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; pointer-events: auto; }
@@ -114,11 +116,6 @@
     let activeRelic = null, isDragging = false, isResizing = false, startX, startY, startW, startH, startL, startT;
     let longPressTimer;
 
-    function deactivateAll() {
-        document.querySelectorAll('.relic-container').forEach(r => r.classList.remove('active-relic'));
-        activeRelic = null;
-    }
-
     function exec(cmd, val = null) { if(!isLocked) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); } }
 
     window.toggleEditMode = () => {
@@ -127,11 +124,7 @@
         document.getElementById('note-body').contentEditable = !isLocked;
         document.getElementById('note-title').readOnly = isLocked;
         document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
-        
-        // SCRIPT GUARD: Force-remove active states when locking
-        if (isLocked) deactivateAll();
-        
-        // Purge any ghost buttons
+        if (isLocked && activeRelic) activeRelic.classList.remove('active-relic');
         document.querySelectorAll('.relic-header, .destroy-btn').forEach(el => el.remove());
     };
 
@@ -139,13 +132,13 @@
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
 
     document.addEventListener('touchstart', (e) => {
-        if (isLocked) return; // Ignore all touches on relics if locked
-        
         const target = e.target;
         const container = target.closest('.relic-container');
+        if (isLocked) return;
         
         if (!container) { 
-            deactivateAll();
+            if (activeRelic) activeRelic.classList.remove('active-relic'); 
+            activeRelic = null; 
             return; 
         }
         
@@ -155,7 +148,7 @@
 
         // LONG PRESS DELETE (Preserved)
         longPressTimer = setTimeout(() => {
-            if (confirm("Destroy this relic?")) {
+            if (confirm("Permanently delete this relic?")) {
                 activeRelic.remove();
                 activeRelic = null;
             }
@@ -195,7 +188,7 @@
         return `<div class="relic-container ${extraClass}" style="left:0; top:0; width:${w}; height:${h};" contenteditable="false">
             <div class="relic-content" contenteditable="false">${content}</div>
             <div class="relic-footer" contenteditable="false">
-                <div class="drag-handle" contenteditable="false">DRAG / HOLD TO KILL</div>
+                <div class="drag-handle" contenteditable="false">DRAG / HOLD TO DELETE</div>
                 <div class="resize-handle" contenteditable="false"></div>
             </div>
         </div><span>&nbsp;</span>`;
@@ -218,9 +211,8 @@
     };
     
     window.saveQuick = () => {
-        deactivateAll(); // Never save an 'active' relic to the database
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName || "Recent Notes", timestamp: Date.now() };
-        db.ref('notes/' + (currentEditingId || db.ref('notes').push().key)).set(data).then(() => alert("Sealed."));
+        db.ref('notes/' + (currentEditingId || db.ref('notes').push().key)).set(data).then(() => alert("Saved."));
     };
 
     function initApp() {
@@ -245,7 +237,7 @@
         });
     }
 
-    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; if(!isLocked) toggleEditMode(); deactivateAll(); }); };
+    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; if(!isLocked) toggleEditMode(); }); };
     window.openFolders = () => { const n = prompt("Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
