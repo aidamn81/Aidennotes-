@@ -27,19 +27,19 @@
         /* THE RELIC SYSTEM */
         .relic-container { display: inline-block; position: relative; margin: 15px; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); vertical-align: middle; touch-action: none; }
         
-        /* NO BUTTONS EVER */
+        /* PURGE DESTROY BUTTONS */
         .relic-header, .destroy-btn { display: none !important; }
 
-        /* FOOTER UI (Drag & Resize) - VISIBILITY LOGIC */
+        /* FOOTER UI (Drag & Resize) - STRICT VISIBILITY */
         .relic-footer { 
             position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; 
             z-index: 1100; opacity: 0; pointer-events: none; background: var(--crimson); 
-            display: none; 
+            display: none !important; /* Force hide by default */
         }
         
-        /* ONLY show UI elements when BODY does NOT have .locked-mode AND relic is active */
+        /* Only allow the footer to show if the body is UNLOCKED AND the relic is active */
         body:not(.locked-mode) .relic-container.active-relic .relic-footer { 
-            display: flex; 
+            display: flex !important; 
             opacity: 1; 
             pointer-events: auto; 
         }
@@ -53,7 +53,6 @@
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
         
-        /* Visual indicator for active relic in edit mode */
         body:not(.locked-mode) .relic-container.active-relic { border: 2px solid var(--crimson); box-shadow: 0 0 10px var(--crimson); }
     </style>
 </head>
@@ -145,7 +144,7 @@
         activeRelic = container; 
         activeRelic.classList.add('active-relic');
 
-        // LONG PRESS DELETE
+        // LONG PRESS DELETE PRESERVED
         longPressTimer = setTimeout(() => {
             if (confirm("Destroy this relic?")) {
                 activeRelic.remove();
