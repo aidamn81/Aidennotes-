@@ -21,37 +21,34 @@
         }
 
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; overflow: hidden; }
+        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         
-        /* FIXED HEADER: Permanently stays above Safari UI */
+        /* FIXED HEADER ZONE: Pins title and toolbar to top */
         .fixed-header-zone { position: absolute; top: 0; left: 0; right: 0; z-index: 1900; background: var(--ink); padding: 10px 15px 5px 15px; border-bottom: 1px solid var(--crimson); }
-        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.4rem; outline: none; }
-        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; align-items: center; }
-
-        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 120px 15px 15px 15px; -webkit-overflow-scrolling: touch; position: relative; }
-        .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; outline: none; }
+        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 110px 15px 15px 15px; -webkit-overflow-scrolling: touch; position: relative; }
         
-        #note-body { min-height: 80vh; width: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 500px; position: relative; display: block; }
+        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
+        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; margin-top: 5px; }
+        .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.65rem; border-radius: 3px; outline: none; }
+        
+        #note-body { min-height: 80vh; width: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 500px; position: relative; }
 
         /* RELIC SYSTEM */
         .relic-container { position: absolute; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); touch-action: none; z-index: 5; }
-        .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 10; background: var(--crimson); display: none; align-items: center; justify-content: center; }
+        .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 1100; background: var(--crimson); display: none; align-items: center; justify-content: center; }
         body:not(.locked-mode) .relic-container.active-relic .relic-footer { display: flex; }
-        .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; height: 100%; }
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 11; background: transparent; }
+        .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; }
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 1200; background: transparent; }
         body:not(.locked-mode) .relic-container.active-relic .resize-handle { background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); }
 
-        .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; pointer-events: none; }
-        body:not(.locked-mode) .relic-content[contenteditable], body:not(.locked-mode) .relic-content table, body:not(.locked-mode) .relic-content td { pointer-events: auto !important; }
-        
-        /* TABLE IMAGE RESIZING */
-        td img { max-width: 100%; height: auto; display: block; transition: width 0.2s; cursor: pointer; border: 1px dashed transparent; }
-        body:not(.locked-mode) td img:active { border-color: var(--gold); }
+        .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; }
         .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
-
+        
+        /* Table and In-Table Image Style */
         table { border-collapse: collapse; width: 100%; color: var(--parchment); border: 1px solid var(--crimson); table-layout: fixed; }
-        td { border: 1px solid var(--crimson); padding: 8px; min-height: 30px; word-wrap: break-word; vertical-align: top; }
+        td { border: 1px solid var(--crimson); padding: 8px; min-height: 35px; word-wrap: break-word; vertical-align: top; }
+        td img { max-width: 100%; height: auto; display: block; cursor: pointer; transition: width 0.2s; }
 
-        #folder-picker-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
         body:not(.locked-mode) .relic-container.active-relic { border: 2px solid var(--crimson); }
@@ -68,16 +65,6 @@
     </div>
 </div>
 
-<div id="folder-picker-overlay">
-    <div style="background:var(--oxblood); border:2px solid var(--crimson); width:80%; max-width:400px; max-height:70vh; display:flex; flex-direction:column;">
-        <div style="padding:15px; border-bottom:1px solid var(--crimson); font-family:'Cinzel'; color:var(--gold); display:flex; justify-content:space-between;">
-            <span>SELECT DESTINATION</span><span onclick="closeFolderPicker()" style="cursor:pointer;">✕</span>
-        </div>
-        <div id="picker-list" style="overflow-y:auto; padding:10px;"></div>
-        <button class="tool-btn" style="margin:10px; border-style:dashed;" onclick="createNewFolderFromPicker()">+ NEW FOLDER</button>
-    </div>
-</div>
-
 <div class="app-container" id="app">
     <aside id="sidebar">
         <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:var(--oxblood); position:sticky; top:0; z-index:10;" onclick="startNewNote()">✨ NEW NOTE</div>
@@ -88,20 +75,17 @@
     <main id="main-editor">
         <div class="fixed-header-zone">
             <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
-            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.55rem; color:var(--silver);">Path: Recent Notes</div>
+            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: Recent Notes</div>
             <div class="sub-title-toolbar">
                 <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
                 <button class="tool-btn" onclick="exec('undo')">↶</button>
                 <button class="tool-btn" onclick="exec('redo')">↷</button>
                 <select class="tool-select" onchange="exec('fontSize', this.value)">
-                    <option value="3">Size</option><option value="2">S</option><option value="4">M</option><option value="6">L</option>
+                    <option value="3">Size</option><option value="2">Small</option><option value="4">Medium</option><option value="6">Large</option>
                 </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onclick="exec('italic')">I</button>
                 <button class="tool-btn" onclick="exec('underline')">U</button>
-                <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
-                <button class="tool-btn" onclick="exec('justifyCenter')">➖</button>
-                <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
                 <input type="color" class="tool-color" onchange="exec('foreColor', this.value)">
                 <button class="tool-btn" onclick="addCustomLink()">🔗</button>
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
@@ -133,41 +117,28 @@
 
     function exec(cmd, val = null) { if(!isLocked) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); } }
     
-    window.toggleEditMode = () => { 
-        isLocked = !isLocked; 
-        document.body.classList.toggle('locked-mode', isLocked); 
-        document.getElementById('note-body').contentEditable = !isLocked; 
-        document.getElementById('note-title').readOnly = isLocked; 
-        document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK"; 
-        const subEditables = document.getElementById('note-body').querySelectorAll('[contenteditable], td');
-        subEditables.forEach(el => el.setAttribute('contenteditable', !isLocked));
+    window.toggleEditMode = () => {
+        isLocked = !isLocked;
+        document.body.classList.toggle('locked-mode', isLocked);
+        document.getElementById('note-body').contentEditable = !isLocked;
+        document.getElementById('note-title').readOnly = isLocked;
+        document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
+        const innerEditables = document.getElementById('note-body').querySelectorAll('[contenteditable], td');
+        innerEditables.forEach(el => el.setAttribute('contenteditable', !isLocked));
     };
 
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
 
-    window.openFolders = () => {
-        const overlay = document.getElementById('folder-picker-overlay');
-        const list = document.getElementById('picker-list');
-        list.innerHTML = ""; overlay.style.display = 'flex';
-        const folders = new Set(["⚡️IMPORTANT⚡️", "Recent Notes"]);
-        document.querySelectorAll('.folder-header').forEach(el => folders.add(el.innerText.replace('📁 ', '')));
-        folders.forEach(f => {
-            const item = document.createElement('div'); item.className = 'sidebar-item'; item.innerHTML = `📁 ${f}`;
-            item.onclick = () => { currentFolderName = f; document.getElementById('current-path-display').innerText = "Path: " + f; closeFolderPicker(); };
-            list.appendChild(item);
-        });
-    };
-    window.closeFolderPicker = () => document.getElementById('folder-picker-overlay').style.display = 'none';
-    window.createNewFolderFromPicker = () => { const n = prompt("New folder:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeFolderPicker(); } };
-
+    // COLLISION DETECTION FOR FLOATING RELICS
     const isOverlapping = (r1, r2) => !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
 
     document.addEventListener('touchstart', (e) => {
         const target = e.target;
-        // TABLE IMAGE RESIZE LOGIC
+        
+        // TABLE IMAGE RESIZING LOGIC
         if (!isLocked && target.tagName === 'IMG' && target.closest('td')) {
-            const size = prompt("Resize Table Image: 1 (Small), 2 (Medium), 3 (Full)", "2");
+            const size = prompt("Resize image? (1=Small, 2=Medium, 3=Full)", "2");
             if (size === "1") target.style.width = "30%";
             else if (size === "2") target.style.width = "60%";
             else if (size === "3") target.style.width = "100%";
@@ -179,70 +150,89 @@
         activeRelic = container; activeRelic.classList.add('active-relic');
         longPressTimer = setTimeout(() => { if (confirm("Delete relic?")) { activeRelic.remove(); activeRelic = null; } }, 800);
         const touch = e.touches[0];
-        if (target.classList.contains('drag-handle')) { clearTimeout(longPressTimer); isDragging = true; startX = touch.clientX; startY = touch.clientY; startL = activeRelic.offsetLeft; startT = activeRelic.offsetTop; e.preventDefault(); }
-        else if (target.classList.contains('resize-handle')) { clearTimeout(longPressTimer); isResizing = true; startX = touch.clientX; startY = touch.clientY; startW = activeRelic.offsetWidth; startH = activeRelic.offsetHeight; e.preventDefault(); }
+        if (target.classList.contains('drag-handle')) {
+            clearTimeout(longPressTimer); isDragging = true; startX = touch.clientX; startY = touch.clientY;
+            startL = activeRelic.offsetLeft; startT = activeRelic.offsetTop; e.preventDefault();
+        } else if (target.classList.contains('resize-handle')) {
+            clearTimeout(longPressTimer); isResizing = true; startX = touch.clientX; startY = touch.clientY;
+            startW = activeRelic.offsetWidth; startH = activeRelic.offsetHeight; e.preventDefault();
+        }
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
         if (!isDragging && !isResizing) return;
         const touch = e.touches[0]; const rect = document.getElementById('note-body').getBoundingClientRect();
-        const otherRelics = Array.from(document.querySelectorAll('.relic-container')).filter(r => r !== activeRelic);
+        const others = Array.from(document.querySelectorAll('.relic-container')).filter(r => r !== activeRelic);
         let pL = activeRelic.style.left, pT = activeRelic.style.top, pW = activeRelic.style.width, pH = activeRelic.style.height;
 
         if (isDragging) {
-            let nL = Math.max(0, startL + (touch.clientX - startX)); 
-            let nT = Math.max(0, startT + (touch.clientY - startY));
+            let nL = startL + (touch.clientX - startX); let nT = startT + (touch.clientY - startY);
             pL = ((nL / rect.width) * 100) + '%'; pT = nT + 'px';
         } else if (isResizing) {
-            pW = Math.max(80, startW + (touch.clientX - startX)) + 'px'; pH = Math.max(40, startH + (touch.clientY - startY)) + 'px';
+            pW = Math.max(80, startW + (touch.clientX - startX)) + 'px';
+            pH = Math.max(40, startH + (touch.clientY - startY)) + 'px';
         }
 
-        const oL = activeRelic.style.left, oT = activeRelic.style.top, oW = activeRelic.style.width, oH = activeRelic.style.height;
+        const oldL = activeRelic.style.left, oldT = activeRelic.style.top, oldW = activeRelic.style.width, oldH = activeRelic.style.height;
         activeRelic.style.left = pL; activeRelic.style.top = pT; activeRelic.style.width = pW; activeRelic.style.height = pH;
 
-        if (otherRelics.some(o => isOverlapping(activeRelic.getBoundingClientRect(), o.getBoundingClientRect()))) {
-            activeRelic.style.left = oL; activeRelic.style.top = oT; activeRelic.style.width = oW; activeRelic.style.height = oH;
+        const cRect = activeRelic.getBoundingClientRect();
+        if (others.some(o => isOverlapping(cRect, o.getBoundingClientRect()))) {
+            activeRelic.style.left = oldL; activeRelic.style.top = oldT; activeRelic.style.width = oldW; activeRelic.style.height = oldH;
         }
         e.preventDefault();
     }, {passive: false});
 
     document.addEventListener('touchend', () => { clearTimeout(longPressTimer); isDragging = false; isResizing = false; });
 
-    function wrapRelic(content, cls, w="200px", h="auto") { 
-        return `<div class="relic-container ${cls}" style="left:5%; top:10px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content" contenteditable="false">${content}</div><div class="relic-footer" contenteditable="false"><div class="drag-handle" contenteditable="false">DRAG</div><div class="resize-handle" contenteditable="false"></div></div></div>`; 
+    function wrapRelic(content, cls = "", w="200px", h="auto") {
+        return `<div class="relic-container ${cls}" style="left:5%; top:10px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content" contenteditable="false">${content}</div><div class="relic-footer" contenteditable="false"><div class="drag-handle" contenteditable="false">DRAG</div><div class="resize-handle" contenteditable="false"></div></div></div>`;
     }
-    
-    window.addCustomLink = () => { const t = prompt("Title:"); const u = prompt("URL:", "https://"); if(t && u) document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<a href="${u}" target="_blank" style="color:var(--link-green)">${t}</a>`, "link-relic", "160px") + "<span>&nbsp;</span>"); };
-    window.addTextBox = () => { const s = isLocked ? "false" : "true"; document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="${s}" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px") + "<div><br></div>"); };
-    window.addTable = () => { 
-        const r = prompt("Rows:", "2"), c = prompt("Cols:", "2"), s = isLocked ? "false" : "true";
-        let html = '<table contenteditable="false">'; for(let i=0; i<r; i++) { html += '<tr>'; for(let j=0; j<c; j++) { html += `<td contenteditable="${s}">...</td>`; } html += '</tr>'; } html += '</table>'; 
-        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(html, "table-relic", "280px", "auto") + "<div><br></div>"); 
-    };
 
-    window.insertImg = (e) => { 
-        const reader = new FileReader(); 
-        reader.onload = (ev) => { 
+    window.addCustomLink = () => {
+        const t = prompt("Title:"); if (!t) return; const u = prompt("URL:", "https://"); if (!u) return;
+        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<a href="${u}" target="_blank" style="color:var(--link-green)">${t}</a>`, "link-relic", "160px") + "<span>&nbsp;</span>");
+    };
+    window.addTextBox = () => {
+        const state = isLocked ? "false" : "true";
+        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="${state}" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px") + "<div><br></div>");
+    };
+    window.addTable = () => {
+        const r = prompt("Rows:", "2"), c = prompt("Cols:", "2"); const state = isLocked ? "false" : "true";
+        let html = '<table>'; for(let i=0; i<r; i++) { html += '<tr>'; for(let j=0; j<c; j++) { html += `<td contenteditable="${state}">...</td>`; } html += '</tr>'; } html += '</table>';
+        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(html, "table-relic", "280px", "auto") + "<div><br></div>");
+    };
+    window.insertImg = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
             const sel = window.getSelection();
             if (sel.rangeCount > 0) {
-                const td = sel.getRangeAt(0).startContainer.parentElement?.closest('td');
-                if (td) {
+                const cell = sel.getRangeAt(0).startContainer.parentElement?.closest('td');
+                if (cell) {
                     const img = document.createElement('img'); img.src = ev.target.result; img.style.width = "60%";
                     sel.getRangeAt(0).insertNode(img); return;
                 }
             }
-            document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "150px", "150px") + "<span>&nbsp;</span>"); 
-        }; reader.readAsDataURL(e.target.files[0]); 
+            document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "250px", "200px") + "<span>&nbsp;</span>");
+        };
+        reader.readAsDataURL(e.target.files[0]);
     };
 
-    window.saveQuick = () => { const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now() }; db.ref('notes/' + (currentEditingId || db.ref('notes').push().key)).set(data).then(() => alert("Saved.")); };
+    window.saveQuick = () => {
+        const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now() };
+        db.ref('notes/' + (currentEditingId || db.ref('notes').push().key)).set(data).then(() => alert("Saved."));
+    };
+
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
-            const data = snap.val(), notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [], tree = { "⚡️IMPORTANT⚡️": { _notes: [], _sub: {} }, "Recent Notes": { _notes: [], _sub: {} } };
-            notes.forEach(note => { const parts = (note.folder || "Recent Notes").split('/'); let cur = tree; parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i === parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; }); });
+            const data = snap.val(), notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [], tree = { "Recent Notes": { _notes: [], _sub: {} } };
+            notes.forEach(note => {
+                const parts = (note.folder || "Recent Notes").split('/'); let cur = tree;
+                parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i === parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; });
+            });
             function render(obj, cont, d = 0) {
-                Object.keys(obj).sort((a,b) => (a==="⚡️IMPORTANT⚡️" ? -1 : b==="⚡️IMPORTANT⚡️" ? 1 : a.localeCompare(b))).forEach(key => {
+                Object.keys(obj).sort().forEach(key => {
                     const id = "f_" + btoa(unescape(encodeURIComponent(key + d))).replace(/[^a-z0-9]/gi, '');
                     cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`);
                     const sub = document.getElementById(id + "_sub"); render(obj[key]._sub, sub, d+1);
@@ -252,7 +242,9 @@
             render(tree, side);
         });
     }
-    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + n.folder; if(isLocked) { document.getElementById('note-body').querySelectorAll('[contenteditable], td').forEach(el => el.setAttribute('contenteditable', 'false')); } }); };
+
+    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; if(!isLocked) toggleEditMode(); }); };
+    window.openFolders = () => { const n = prompt("Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
     window.handleLogout = () => auth.signOut().then(() => location.reload());
