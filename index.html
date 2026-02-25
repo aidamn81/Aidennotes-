@@ -28,18 +28,21 @@
 
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; overflow: hidden; }
         .sidebar-item { padding: 12px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
-        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; }
+        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; position: relative; }
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
         
+        /* CRITICAL CONSTRAINT: RELICS STAY IN BODY */
+        #note-body { min-height: 80vh; width: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 500px; position: relative; overflow: visible; }
+
         #storage-container { padding: 15px; border-top: 1px solid var(--crimson); background: rgba(0,0,0,0.3); }
         .meter-bg { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 5px; }
         .meter-fill { height: 100%; background: var(--crimson); width: 0%; transition: width 0.5s; }
 
-        .relic-container { position: absolute; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); touch-action: none; }
-        .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 1100; background: var(--crimson); display: none; align-items: center; justify-content: center;}
+        .relic-container { position: absolute; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); touch-action: none; z-index: 5; }
+        .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 10; background: var(--crimson); display: none; align-items: center; justify-content: center;}
         body:not(.locked-mode) .relic-container.active-relic .relic-footer { display: flex; }
         .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; height: 100%; }
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; z-index: 1200; background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); }
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; z-index: 11; background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); }
         
         .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
         .relic-content[contenteditable="true"] { pointer-events: auto; }
@@ -47,7 +50,7 @@
         table { border-collapse: collapse; width: 100%; border: 1px solid var(--crimson); }
         td { border: 1px solid var(--crimson); padding: 5px; }
 
-        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
+        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; z-index: 50; position: sticky; top: 0; }
         .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.65rem; border-radius: 3px; outline: none; }
 
         #folder-picker-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; }
@@ -229,22 +232,47 @@
         document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<a href="${u}" target="_blank" style="color:var(--link-green); text-decoration:none; font-weight:bold;">${t}</a>`, "link-relic", "160px"));
     };
 
-    function wrapRelic(c, cls, w, h) { return `<div class="relic-container ${cls}" style="left:5%; top:10px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content">${c}</div><div class="relic-footer"><div class="drag-handle">DRAG</div><div class="resize-handle"></div></div></div>`; }
+    function wrapRelic(c, cls, w, h) { return `<div class="relic-container ${cls}" style="left:5px; top:5px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content">${c}</div><div class="relic-footer"><div class="drag-handle">DRAG</div><div class="resize-handle"></div></div></div>`; }
 
-    // TOUCH & DELETE ENGINE
+    // TOUCH & DELETE ENGINE (CONSTRAINED TO NOTE-BODY)
     document.addEventListener('touchstart', (e) => {
         const t = e.target; const c = t.closest('.relic-container'); if(isLocked || !c) return;
-        activeRelic = c; longPressTimer = setTimeout(() => { if(confirm("Erase relic?")) c.remove(); }, 800);
+        activeRelic = c; 
+        longPressTimer = setTimeout(() => { if(confirm("Erase relic?")) c.remove(); }, 800);
         const touch = e.touches[0];
-        if(t.classList.contains('drag-handle')){ clearTimeout(longPressTimer); isDragging=true; startX=touch.clientX; startY=touch.clientY; startL=c.offsetLeft; startT=c.offsetTop; e.preventDefault(); }
-        else if(t.classList.contains('resize-handle')){ clearTimeout(longPressTimer); isResizing=true; startX=touch.clientX; startY=touch.clientY; startW=c.offsetWidth; startH=c.offsetHeight; e.preventDefault(); }
+        if(t.classList.contains('drag-handle')){ 
+            clearTimeout(longPressTimer); isDragging=true; 
+            startX=touch.clientX; startY=touch.clientY; 
+            startL=c.offsetLeft; startT=c.offsetTop; e.preventDefault(); 
+        }
+        else if(t.classList.contains('resize-handle')){ 
+            clearTimeout(longPressTimer); isResizing=true; 
+            startX=touch.clientX; startY=touch.clientY; 
+            startW=c.offsetWidth; startH=c.offsetHeight; e.preventDefault(); 
+        }
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
         clearTimeout(longPressTimer); if(!isDragging && !isResizing) return;
-        const touch = e.touches[0]; const rect = document.getElementById('note-body').getBoundingClientRect();
-        if(isDragging){ activeRelic.style.left = (((startL + (touch.clientX - startX)) / rect.width) * 100) + '%'; activeRelic.style.top = (startT + (touch.clientY - startY)) + 'px'; }
-        else if(isResizing){ activeRelic.style.width = Math.max(40, startW + (touch.clientX - startX)) + 'px'; activeRelic.style.height = Math.max(40, startH + (touch.clientY - startY)) + 'px'; }
+        const touch = e.touches[0]; 
+        const rect = document.getElementById('note-body').getBoundingClientRect();
+        
+        if(isDragging){ 
+            // Percentage-based horizontal movement relative to container width
+            let newLeft = ((startL + (touch.clientX - startX)) / rect.width) * 100;
+            // Strict Left/Right bounds
+            newLeft = Math.max(0, Math.min(newLeft, 95));
+            activeRelic.style.left = newLeft + '%'; 
+            
+            // Vertical movement
+            let newTop = startT + (touch.clientY - startY);
+            newTop = Math.max(0, newTop); // Bottom limit is natural scroll height
+            activeRelic.style.top = newTop + 'px'; 
+        }
+        else if(isResizing){ 
+            activeRelic.style.width = Math.max(40, startW + (touch.clientX - startX)) + 'px'; 
+            activeRelic.style.height = Math.max(40, startH + (touch.clientY - startY)) + 'px'; 
+        }
         e.preventDefault();
     }, {passive: false});
 
