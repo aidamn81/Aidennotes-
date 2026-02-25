@@ -23,12 +23,13 @@
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; overflow: hidden; }
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         
-        /* FIXED HEADER ZONE: Pins title and toolbar to top */
-        .fixed-header-zone { position: absolute; top: 0; left: 0; right: 0; z-index: 1900; background: var(--ink); padding: 10px 15px 5px 15px; border-bottom: 1px solid var(--crimson); }
-        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 110px 15px 15px 15px; -webkit-overflow-scrolling: touch; position: relative; }
+        /* PINNED HEADER ZONE */
+        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 0 15px 15px 15px; -webkit-overflow-scrolling: touch; position: relative; }
+        .sticky-header { position: sticky; top: 0; background: rgba(10,10,10,0.95); backdrop-filter: blur(10px); z-index: 1500; padding: 10px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 10px; }
         
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
-        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; margin-top: 5px; }
+        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; margin-top: 5px; }
+        
         .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.65rem; border-radius: 3px; outline: none; }
         
         #note-body { min-height: 80vh; width: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 500px; position: relative; }
@@ -41,13 +42,11 @@
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 1200; background: transparent; }
         body:not(.locked-mode) .relic-container.active-relic .resize-handle { background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); }
 
-        .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; }
-        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
-        
         /* Table and In-Table Image Style */
         table { border-collapse: collapse; width: 100%; color: var(--parchment); border: 1px solid var(--crimson); table-layout: fixed; }
         td { border: 1px solid var(--crimson); padding: 8px; min-height: 35px; word-wrap: break-word; vertical-align: top; }
-        td img { max-width: 100%; height: auto; display: block; cursor: pointer; transition: width 0.2s; }
+        td img { max-width: 100%; height: auto; display: block; transition: width 0.2s; cursor: pointer; }
+        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
@@ -73,30 +72,30 @@
     </aside>
 
     <main id="main-editor">
-        <div class="fixed-header-zone">
-            <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
-            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: Recent Notes</div>
-            <div class="sub-title-toolbar">
-                <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
-                <button class="tool-btn" onclick="exec('undo')">↶</button>
-                <button class="tool-btn" onclick="exec('redo')">↷</button>
-                <select class="tool-select" onchange="exec('fontSize', this.value)">
-                    <option value="3">Size</option><option value="2">Small</option><option value="4">Medium</option><option value="6">Large</option>
-                </select>
-                <button class="tool-btn" onclick="exec('bold')">B</button>
-                <button class="tool-btn" onclick="exec('italic')">I</button>
-                <button class="tool-btn" onclick="exec('underline')">U</button>
-                <input type="color" class="tool-color" onchange="exec('foreColor', this.value)">
-                <button class="tool-btn" onclick="addCustomLink()">🔗</button>
-                <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
-                <button class="tool-btn" onclick="addTable()">📊</button>
-                <button class="tool-btn" onclick="addTextBox()">📄</button>
-                <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
-                <button class="tool-btn" onclick="openFolders()">DIR</button>
-                <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
-            </div>
-        </div>
         <div class="scroll-content" id="editor-viewport">
+            <div class="sticky-header">
+                <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
+                <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: Recent Notes</div>
+                <div class="sub-title-toolbar">
+                    <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
+                    <button class="tool-btn" onclick="exec('undo')">↶</button>
+                    <button class="tool-btn" onclick="exec('redo')">↷</button>
+                    <select class="tool-select" onchange="exec('fontSize', this.value)">
+                        <option value="3">Size</option><option value="2">Small</option><option value="4">Medium</option><option value="6">Large</option>
+                    </select>
+                    <button class="tool-btn" onclick="exec('bold')">B</button>
+                    <button class="tool-btn" onclick="exec('italic')">I</button>
+                    <button class="tool-btn" onclick="exec('underline')">U</button>
+                    <input type="color" class="tool-color" onchange="exec('foreColor', this.value)">
+                    <button class="tool-btn" onclick="addCustomLink()">🔗</button>
+                    <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
+                    <button class="tool-btn" onclick="addTable()">📊</button>
+                    <button class="tool-btn" onclick="addTextBox()">📄</button>
+                    <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
+                    <button class="tool-btn" onclick="openFolders()">DIR</button>
+                    <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
+                </div>
+            </div>
             <div id="note-body" contenteditable="false"></div>
         </div>
     </main>
@@ -123,22 +122,21 @@
         document.getElementById('note-body').contentEditable = !isLocked;
         document.getElementById('note-title').readOnly = isLocked;
         document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
-        const innerEditables = document.getElementById('note-body').querySelectorAll('[contenteditable], td');
-        innerEditables.forEach(el => el.setAttribute('contenteditable', !isLocked));
+        const inners = document.getElementById('note-body').querySelectorAll('[contenteditable], td');
+        inners.forEach(el => el.setAttribute('contenteditable', !isLocked));
     };
 
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
 
-    // COLLISION DETECTION FOR FLOATING RELICS
     const isOverlapping = (r1, r2) => !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
 
     document.addEventListener('touchstart', (e) => {
         const target = e.target;
         
-        // TABLE IMAGE RESIZING LOGIC
+        // TABLE IMAGE RESIZING
         if (!isLocked && target.tagName === 'IMG' && target.closest('td')) {
-            const size = prompt("Resize image? (1=Small, 2=Medium, 3=Full)", "2");
+            const size = prompt("Image width? (1=Small, 2=Medium, 3=Full)", "2");
             if (size === "1") target.style.width = "30%";
             else if (size === "2") target.style.width = "60%";
             else if (size === "3") target.style.width = "100%";
@@ -189,10 +187,6 @@
         return `<div class="relic-container ${cls}" style="left:5%; top:10px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content" contenteditable="false">${content}</div><div class="relic-footer" contenteditable="false"><div class="drag-handle" contenteditable="false">DRAG</div><div class="resize-handle" contenteditable="false"></div></div></div>`;
     }
 
-    window.addCustomLink = () => {
-        const t = prompt("Title:"); if (!t) return; const u = prompt("URL:", "https://"); if (!u) return;
-        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<a href="${u}" target="_blank" style="color:var(--link-green)">${t}</a>`, "link-relic", "160px") + "<span>&nbsp;</span>");
-    };
     window.addTextBox = () => {
         const state = isLocked ? "false" : "true";
         document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="${state}" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px") + "<div><br></div>");
@@ -243,7 +237,7 @@
         });
     }
 
-    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; if(!isLocked) toggleEditMode(); }); };
+    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes"; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; if(!isLocked) toggleEditMode(); }); };
     window.openFolders = () => { const n = prompt("Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
