@@ -21,23 +21,14 @@
         }
 
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; overflow: hidden; }
-        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         
-        /* FIXED: Toolbar now stays at the top of this container */
-        .scroll-content { flex-grow: 1; overflow-y: auto; padding-top: 100px; padding-left: 15px; padding-right: 15px; -webkit-overflow-scrolling: touch; position: relative; }
-        
-        .fixed-header-zone { position: absolute; top: 0; left: 0; right: 0; z-index: 1900; background: var(--ink); padding: 10px 15px 0 15px; }
-        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
-        
-        /* FIXED: Forced visibility for Safari search bar overlap */
-        .sub-title-toolbar { 
-            display: flex; gap: 4px; flex-wrap: wrap; padding: 10px; 
-            border-bottom: 1px solid var(--crimson); 
-            background: rgba(26,5,5,0.95); backdrop-filter: blur(10px);
-            border-radius: 5px; margin-top: 5px;
-        }
+        /* FIXED HEADER: Permanently stays above Safari UI */
+        .fixed-header-zone { position: absolute; top: 0; left: 0; right: 0; z-index: 1900; background: var(--ink); padding: 10px 15px 5px 15px; border-bottom: 1px solid var(--crimson); }
+        #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.4rem; outline: none; }
+        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; align-items: center; }
 
-        .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.65rem; border-radius: 3px; outline: none; }
+        .scroll-content { flex-grow: 1; overflow-y: auto; padding: 120px 15px 15px 15px; -webkit-overflow-scrolling: touch; position: relative; }
+        .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.6rem; border-radius: 3px; outline: none; }
         
         #note-body { min-height: 80vh; width: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 500px; position: relative; display: block; }
 
@@ -52,11 +43,13 @@
         .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; pointer-events: none; }
         body:not(.locked-mode) .relic-content[contenteditable], body:not(.locked-mode) .relic-content table, body:not(.locked-mode) .relic-content td { pointer-events: auto !important; }
         
-        /* Table and Embedded Image Styles */
-        table { border-collapse: collapse; width: 100%; color: var(--parchment); border: 1px solid var(--crimson); table-layout: fixed; }
-        td { border: 1px solid var(--crimson); padding: 8px; min-height: 35px; word-wrap: break-word; vertical-align: top; }
-        td img { max-width: 100%; height: auto; display: block; cursor: nwse-resize; transition: width 0.2s; }
+        /* TABLE IMAGE RESIZING */
+        td img { max-width: 100%; height: auto; display: block; transition: width 0.2s; cursor: pointer; border: 1px dashed transparent; }
+        body:not(.locked-mode) td img:active { border-color: var(--gold); }
         .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
+
+        table { border-collapse: collapse; width: 100%; color: var(--parchment); border: 1px solid var(--crimson); table-layout: fixed; }
+        td { border: 1px solid var(--crimson); padding: 8px; min-height: 30px; word-wrap: break-word; vertical-align: top; }
 
         #folder-picker-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
@@ -95,13 +88,13 @@
     <main id="main-editor">
         <div class="fixed-header-zone">
             <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
-            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: Recent Notes</div>
+            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.55rem; color:var(--silver);">Path: Recent Notes</div>
             <div class="sub-title-toolbar">
                 <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
                 <button class="tool-btn" onclick="exec('undo')">↶</button>
                 <button class="tool-btn" onclick="exec('redo')">↷</button>
                 <select class="tool-select" onchange="exec('fontSize', this.value)">
-                    <option value="3">Size</option><option value="2">Small</option><option value="4">Medium</option><option value="6">Large</option>
+                    <option value="3">Size</option><option value="2">S</option><option value="4">M</option><option value="6">L</option>
                 </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onclick="exec('italic')">I</button>
@@ -168,15 +161,13 @@
     window.closeFolderPicker = () => document.getElementById('folder-picker-overlay').style.display = 'none';
     window.createNewFolderFromPicker = () => { const n = prompt("New folder:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeFolderPicker(); } };
 
-    const isOverlapping = (rect1, rect2) => {
-        return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
-    };
+    const isOverlapping = (r1, r2) => !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
 
     document.addEventListener('touchstart', (e) => {
-        const target = e.target; 
-        // Logic for Resizing Images inside Tables
+        const target = e.target;
+        // TABLE IMAGE RESIZE LOGIC
         if (!isLocked && target.tagName === 'IMG' && target.closest('td')) {
-            const size = prompt("Image width? (1=Small, 2=Medium, 3=Full)", "2");
+            const size = prompt("Resize Table Image: 1 (Small), 2 (Medium), 3 (Full)", "2");
             if (size === "1") target.style.width = "30%";
             else if (size === "2") target.style.width = "60%";
             else if (size === "3") target.style.width = "100%";
@@ -196,24 +187,22 @@
         if (!isDragging && !isResizing) return;
         const touch = e.touches[0]; const rect = document.getElementById('note-body').getBoundingClientRect();
         const otherRelics = Array.from(document.querySelectorAll('.relic-container')).filter(r => r !== activeRelic);
-        
-        let proposedL = activeRelic.style.left, proposedT = activeRelic.style.top, proposedW = activeRelic.style.width, proposedH = activeRelic.style.height;
+        let pL = activeRelic.style.left, pT = activeRelic.style.top, pW = activeRelic.style.width, pH = activeRelic.style.height;
 
         if (isDragging) {
-            let newL = Math.max(0, startL + (touch.clientX - startX)); 
-            let newT = Math.max(0, startT + (touch.clientY - startY));
-            proposedL = ((newL / rect.width) * 100) + '%'; proposedT = newT + 'px';
+            let nL = Math.max(0, startL + (touch.clientX - startX)); 
+            let nT = Math.max(0, startT + (touch.clientY - startY));
+            pL = ((nL / rect.width) * 100) + '%'; pT = nT + 'px';
         } else if (isResizing) {
-            proposedW = Math.max(80, startW + (touch.clientX - startX)) + 'px';
-            proposedH = Math.max(40, startH + (touch.clientY - startY)) + 'px';
+            pW = Math.max(80, startW + (touch.clientX - startX)) + 'px'; pH = Math.max(40, startH + (touch.clientY - startY)) + 'px';
         }
 
-        const oldL = activeRelic.style.left, oldT = activeRelic.style.top, oldW = activeRelic.style.width, oldH = activeRelic.style.height;
-        activeRelic.style.left = proposedL; activeRelic.style.top = proposedT; activeRelic.style.width = proposedW; activeRelic.style.height = proposedH;
+        const oL = activeRelic.style.left, oT = activeRelic.style.top, oW = activeRelic.style.width, oH = activeRelic.style.height;
+        activeRelic.style.left = pL; activeRelic.style.top = pT; activeRelic.style.width = pW; activeRelic.style.height = pH;
 
-        const currentRect = activeRelic.getBoundingClientRect();
-        const collision = otherRelics.some(other => isOverlapping(currentRect, other.getBoundingClientRect()));
-        if (collision) { activeRelic.style.left = oldL; activeRelic.style.top = oldT; activeRelic.style.width = oldW; activeRelic.style.height = oldH; }
+        if (otherRelics.some(o => isOverlapping(activeRelic.getBoundingClientRect(), o.getBoundingClientRect()))) {
+            activeRelic.style.left = oL; activeRelic.style.top = oT; activeRelic.style.width = oW; activeRelic.style.height = oH;
+        }
         e.preventDefault();
     }, {passive: false});
 
@@ -224,10 +213,10 @@
     }
     
     window.addCustomLink = () => { const t = prompt("Title:"); const u = prompt("URL:", "https://"); if(t && u) document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<a href="${u}" target="_blank" style="color:var(--link-green)">${t}</a>`, "link-relic", "160px") + "<span>&nbsp;</span>"); };
-    window.addTextBox = () => { const state = isLocked ? "false" : "true"; document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="${state}" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px") + "<div><br></div>"); };
+    window.addTextBox = () => { const s = isLocked ? "false" : "true"; document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="${s}" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px") + "<div><br></div>"); };
     window.addTable = () => { 
-        const r = prompt("Rows:", "2"), c = prompt("Cols:", "2"); const state = isLocked ? "false" : "true";
-        let html = '<table contenteditable="false">'; for(let i=0; i<r; i++) { html += '<tr>'; for(let j=0; j<c; j++) { html += `<td contenteditable="${state}">...</td>`; } html += '</tr>'; } html += '</table>'; 
+        const r = prompt("Rows:", "2"), c = prompt("Cols:", "2"), s = isLocked ? "false" : "true";
+        let html = '<table contenteditable="false">'; for(let i=0; i<r; i++) { html += '<tr>'; for(let j=0; j<c; j++) { html += `<td contenteditable="${s}">...</td>`; } html += '</tr>'; } html += '</table>'; 
         document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(html, "table-relic", "280px", "auto") + "<div><br></div>"); 
     };
 
@@ -236,18 +225,14 @@
         reader.onload = (ev) => { 
             const sel = window.getSelection();
             if (sel.rangeCount > 0) {
-                const parentCell = sel.getRangeAt(0).startContainer.parentElement?.closest('td');
-                if (parentCell) {
-                    const img = document.createElement('img');
-                    img.src = ev.target.result;
-                    img.style.width = "60%"; // Default medium
-                    sel.getRangeAt(0).insertNode(img);
-                    return;
+                const td = sel.getRangeAt(0).startContainer.parentElement?.closest('td');
+                if (td) {
+                    const img = document.createElement('img'); img.src = ev.target.result; img.style.width = "60%";
+                    sel.getRangeAt(0).insertNode(img); return;
                 }
             }
             document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "150px", "150px") + "<span>&nbsp;</span>"); 
-        }; 
-        reader.readAsDataURL(e.target.files[0]); 
+        }; reader.readAsDataURL(e.target.files[0]); 
     };
 
     window.saveQuick = () => { const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now() }; db.ref('notes/' + (currentEditingId || db.ref('notes').push().key)).set(data).then(() => alert("Saved.")); };
@@ -267,7 +252,7 @@
             render(tree, side);
         });
     }
-    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + n.folder; if(isLocked) { const subEditables = document.getElementById('note-body').querySelectorAll('[contenteditable], td'); subEditables.forEach(el => el.setAttribute('contenteditable', 'false')); } }); };
+    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + n.folder; if(isLocked) { document.getElementById('note-body').querySelectorAll('[contenteditable], td').forEach(el => el.setAttribute('contenteditable', 'false')); } }); };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
     window.handleLogout = () => auth.signOut().then(() => location.reload());
