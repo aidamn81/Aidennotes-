@@ -24,7 +24,6 @@
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 0 15px 15px 15px; -webkit-overflow-scrolling: touch; position: relative; }
-        /* Safari-safe pinned header */
         .sticky-header { position: sticky; top: 0; background: rgba(10,10,10,0.98); backdrop-filter: blur(10px); z-index: 1500; padding: 10px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 10px; }
         
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
@@ -33,7 +32,7 @@
         
         #note-body { min-height: 80vh; width: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 500px; position: relative; }
 
-        /* RELIC SYSTEM FIX: Prevents content from hanging out */
+        /* RELIC SYSTEM */
         .relic-container { position: absolute; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); touch-action: none; z-index: 5; display: flex; flex-direction: column; }
         .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; display: flex; flex-direction: column; }
         .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 1100; background: var(--crimson); display: none; align-items: center; justify-content: center; }
@@ -44,10 +43,9 @@
 
         /* Table & In-Table Image Style */
         table { border-collapse: collapse; width: 100%; color: var(--parchment); border: 1px solid var(--crimson); table-layout: fixed; }
-        td { border: 1px solid var(--crimson); padding: 8px; min-height: 35px; word-wrap: break-word; vertical-align: top; }
-        /* 3x3cm thumbnail defaults, top-aligned */
-        td img { width: 3cm; height: 3cm; object-fit: cover; display: block; cursor: pointer; transition: all 0.2s ease; margin-bottom: 5px; align-self: flex-start; }
-        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
+        td { border: 1px solid var(--crimson); padding: 8px; min-height: 35px; word-wrap: break-word; vertical-align: top; overflow: hidden; }
+        td img { width: 3cm; height: 3cm; object-fit: cover; display: block; cursor: pointer; align-self: flex-start; margin-bottom: 5px; -webkit-user-select: auto; user-select: auto; pointer-events: auto !important; }
+        .relic-container:not(.table-relic) img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
@@ -81,12 +79,22 @@
                     <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
                     <button class="tool-btn" onclick="exec('undo')">↶</button>
                     <button class="tool-btn" onclick="exec('redo')">↷</button>
-                    <select class="tool-select" onchange="exec('fontSize', this.value)">
-                        <option value="3">Size</option><option value="2">Small</option><option value="4">Medium</option><option value="6">Large</option>
-                    </select>
+                    
                     <button class="tool-btn" onclick="exec('bold')">B</button>
                     <button class="tool-btn" onclick="exec('italic')">I</button>
                     <button class="tool-btn" onclick="exec('underline')">U</button>
+                    
+                    <button class="tool-btn" onclick="exec('justifyLeft')">⬅</button>
+                    <button class="tool-btn" onclick="exec('justifyCenter')">➖</button>
+                    <button class="tool-btn" onclick="exec('justifyRight')">➡</button>
+                    
+                    <button class="tool-btn" onclick="exec('insertUnorderedList')">• List</button>
+                    <button class="tool-btn" onclick="exec('insertOrderedList')">1. List</button>
+
+                    <select class="tool-select" onchange="exec('fontSize', this.value)">
+                        <option value="3">Size</option><option value="2">Small</option><option value="4">Medium</option><option value="6">Large</option>
+                    </select>
+                    
                     <input type="color" class="tool-color" onchange="exec('foreColor', this.value)">
                     <button class="tool-btn" onclick="addCustomLink()">🔗</button>
                     <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
@@ -115,7 +123,11 @@
     let activeRelic = null, isDragging = false, isResizing = false, startX, startY, startW, startH, startL, startT;
     let longPressTimer;
 
-    function exec(cmd, val = null) { if(!isLocked) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); } }
+    function exec(cmd, val = null) { 
+        if(isLocked) return;
+        document.getElementById('note-body').focus();
+        document.execCommand(cmd, false, val);
+    }
     
     window.toggleEditMode = () => {
         isLocked = !isLocked;
@@ -132,7 +144,6 @@
 
     const isOverlapping = (r1, r2) => !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
 
-    // Global listener for table image resizing and interactions
     document.addEventListener('click', (e) => {
         if (!isLocked && e.target.tagName === 'IMG' && e.target.closest('td')) {
             const sz = prompt("Resize Table Image? (1:3cm Thumb, 2:Medium, 3:Full Width)", "1");
@@ -208,7 +219,6 @@
                 if (cell) {
                     const img = document.createElement('img'); 
                     img.src = ev.target.result;
-                    // Ensure the initial insertion follows the thumb rules
                     img.style.width = "3cm"; img.style.height = "3cm"; img.style.objectFit = "cover";
                     sel.getRangeAt(0).insertNode(img); return;
                 }
