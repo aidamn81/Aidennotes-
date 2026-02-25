@@ -6,9 +6,6 @@
     <title>AidenNotes | Fortress Final</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <style>
         :root { --oxblood: #1a0505; --crimson: #8b0000; --parchment: #f5e6d3; --ink: #0a0a0a; --silver: #a9a9a9; --gold: #ffd700; --link-green: #7cfc00; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -17,45 +14,42 @@
         .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
         #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; overflow-y: auto; z-index: 100; flex-shrink: 0; }
         
-        .folder-wrapper { border-bottom: 1px solid rgba(139,0,0,0.1); }
-        .folder-wrapper.dragging { opacity: 0.5; background: var(--crimson); }
-
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
-            #sidebar { width: 100%; height: 35vh; border-right: none; border-bottom: 2px solid var(--crimson); }
-            #main-editor { height: 65vh; width: 100%; }
+            #sidebar { width: 100%; height: 30vh; border-right: none; border-bottom: 2px solid var(--crimson); }
+            #main-editor { height: 70vh; width: 100%; }
         }
 
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; overflow: hidden; }
-        .sidebar-item { padding: 12px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
         .scroll-content { flex-grow: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; position: relative; }
         #note-title { width: 100%; background: transparent; border: none; color: var(--crimson); font-family: 'Cinzel'; font-size: 1.5rem; outline: none; }
         
-        /* CRITICAL CONSTRAINT: RELICS STAY IN BODY */
+        /* TOOLBAR STICKY TO STAY ON TOP OF CONTENT */
+        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; position: sticky; top: 0; z-index: 1500; }
+        .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.65rem; border-radius: 3px; outline: none; }
+        
+        /* RULE: CONTENT & RELICS STAY IN BODY */
         #note-body { min-height: 80vh; width: 100%; color: var(--parchment); font-size: 1.1rem; outline: none; line-height: 1.6; padding-bottom: 500px; position: relative; overflow: visible; }
 
-        #storage-container { padding: 15px; border-top: 1px solid var(--crimson); background: rgba(0,0,0,0.3); }
-        .meter-bg { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 5px; }
-        .meter-fill { height: 100%; background: var(--crimson); width: 0%; transition: width 0.5s; }
-
+        /* RELIC SYSTEM */
         .relic-container { position: absolute; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); touch-action: none; z-index: 5; }
-        .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 10; background: var(--crimson); display: none; align-items: center; justify-content: center;}
+        .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 10; background: var(--crimson); display: none; align-items: center; justify-content: center; }
         body:not(.locked-mode) .relic-container.active-relic .relic-footer { display: flex; }
         .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; height: 100%; }
-        .resize-handle { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; z-index: 11; background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); }
-        
-        .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
-        .relic-content[contenteditable="true"] { pointer-events: auto; }
-        img { width: 100%; height: 100%; object-fit: contain; }
-        table { border-collapse: collapse; width: 100%; border: 1px solid var(--crimson); }
-        td { border: 1px solid var(--crimson); padding: 5px; }
+        .resize-handle { position: absolute; bottom: 0; right: 0; width: 25px; height: 25px; cursor: nwse-resize; z-index: 11; background: transparent; }
+        body:not(.locked-mode) .relic-container.active-relic .resize-handle { background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); }
 
-        .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; z-index: 50; position: sticky; top: 0; }
-        .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.65rem; border-radius: 3px; outline: none; }
+        .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; pointer-events: none; }
+        .relic-content[contenteditable="true"] { pointer-events: auto; }
+        .relic-container img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
+        table { border-collapse: collapse; width: 100%; color: var(--parchment); border: 1px solid var(--crimson); }
+        td { border: 1px solid var(--crimson); padding: 5px; }
 
         #folder-picker-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
+        body:not(.locked-mode) .relic-container.active-relic { border: 2px solid var(--crimson); }
     </style>
 </head>
 <body class="locked-mode">
@@ -82,26 +76,20 @@
 <div class="app-container" id="app">
     <aside id="sidebar">
         <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:var(--oxblood); position:sticky; top:0; z-index:10;" onclick="startNewNote()">✨ NEW NOTE</div>
-        <div id="folder-list-sidebar" ondragover="handleFolderDragOver(event)"></div>
-        <div id="storage-container">
-            <div style="font-family:'Cinzel'; font-size:0.55rem; color:var(--silver); display:flex; justify-content:space-between;">
-                <span>STORAGE</span><span id="storage-text">0%</span>
-            </div>
-            <div class="meter-bg"><div id="storage-bar" class="meter-fill"></div></div>
-        </div>
+        <div id="folder-list-sidebar"></div>
         <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
     </aside>
 
     <main id="main-editor">
-        <div class="scroll-content">
-            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver); margin-bottom:5px;">Path: Recent Notes</div>
+        <div class="scroll-content" id="editor-viewport">
+            <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver); margin-bottom:10px;">Path: Recent Notes</div>
             <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
             <div class="sub-title-toolbar">
                 <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
                 <button class="tool-btn" onclick="exec('undo')">↶</button>
                 <button class="tool-btn" onclick="exec('redo')">↷</button>
                 <select class="tool-select" onchange="exec('fontSize', this.value)">
-                    <option value="3">Size</option><option value="2">S</option><option value="4">M</option><option value="6">L</option>
+                    <option value="3">Size</option><option value="2">Small</option><option value="4">Medium</option><option value="6">Large</option>
                 </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
                 <button class="tool-btn" onclick="exec('italic')">I</button>
@@ -111,7 +99,6 @@
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
                 <button class="tool-btn" onclick="addTable()">📊</button>
                 <button class="tool-btn" onclick="addTextBox()">📄</button>
-                <button class="tool-btn" onclick="exportToPDF()">PDF</button>
                 <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
                 <button class="tool-btn" onclick="openFolders()">DIR</button>
                 <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
@@ -130,162 +117,90 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
     const MASTER_UID = "L4aYFgfnNsPA7wy5FasTQkXPTpK2";
-
     let currentEditingId = null, currentFolderName = "Recent Notes", isLocked = true;
     let activeRelic = null, isDragging = false, isResizing = false, startX, startY, startW, startH, startL, startT;
-    let longPressTimer, draggedFolder = null;
+    let longPressTimer;
 
-    // FOLDER PICKER
+    function exec(cmd, val = null) { if(!isLocked) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); } }
+    window.toggleEditMode = () => { isLocked = !isLocked; document.body.classList.toggle('locked-mode', isLocked); document.getElementById('note-body').contentEditable = !isLocked; document.getElementById('note-title').readOnly = isLocked; document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK"; };
+    window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
+    auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
+
+    // FOLDER PICKER LOGIC
     window.openFolders = () => {
         const overlay = document.getElementById('folder-picker-overlay');
         const list = document.getElementById('picker-list');
         list.innerHTML = "";
         overlay.style.display = 'flex';
         const folders = new Set(["⚡️IMPORTANT⚡️", "Recent Notes"]);
-        document.querySelectorAll('.folder-wrapper').forEach(el => folders.add(el.dataset.folderName));
+        document.querySelectorAll('.folder-header').forEach(el => folders.add(el.innerText.replace('📁 ', '')));
         folders.forEach(f => {
-            const item = document.createElement('div');
-            item.className = 'sidebar-item';
-            item.innerHTML = `📁 ${f}`;
+            const item = document.createElement('div'); item.className = 'sidebar-item'; item.innerHTML = `📁 ${f}`;
             item.onclick = () => { currentFolderName = f; document.getElementById('current-path-display').innerText = "Path: " + f; closeFolderPicker(); };
             list.appendChild(item);
         });
     };
     window.closeFolderPicker = () => document.getElementById('folder-picker-overlay').style.display = 'none';
-    window.createNewFolderFromPicker = () => { const n = prompt("New folder name:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeFolderPicker(); } };
+    window.createNewFolderFromPicker = () => { const n = prompt("New folder:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; closeFolderPicker(); } };
 
-    // SIDEBAR DRAG
-    function handleFolderDragStart(e) { draggedFolder = e.currentTarget; e.currentTarget.classList.add('dragging'); }
-    function handleFolderDragEnd(e) { e.currentTarget.classList.remove('dragging'); draggedFolder = null; saveFolderOrder(); }
-    function handleFolderDragOver(e) {
-        e.preventDefault();
-        const container = document.getElementById('folder-list-sidebar');
-        const after = [...container.querySelectorAll('.folder-wrapper:not(.dragging)')].reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = e.clientY - box.top - box.height / 2;
-            return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-        after ? container.insertBefore(draggedFolder, after) : container.appendChild(draggedFolder);
-    }
-    function saveFolderOrder() { localStorage.setItem('aiden_folder_order', JSON.stringify([...document.querySelectorAll('.folder-wrapper')].map(el => el.dataset.folderName))); }
-
-    // AUTH & FIREBASE
-    auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
-    function handleLogin() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); }
-    function handleLogout() { auth.signOut().then(() => location.reload()); }
-
-    function initApp() {
-        db.ref('notes').on('value', (snap) => {
-            const data = snap.val() || {};
-            updateStorageMeter(data);
-            const side = document.getElementById('folder-list-sidebar');
-            side.innerHTML = "";
-            const tree = { "⚡️IMPORTANT⚡️": { _notes: [], _sub: {} }, "Recent Notes": { _notes: [], _sub: {} } };
-            Object.keys(data).forEach(id => {
-                const note = data[id]; const parts = (note.folder || "Recent Notes").split('/');
-                let cur = tree; parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i===parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; });
-            });
-            const saved = JSON.parse(localStorage.getItem('aiden_folder_order') || "[]");
-            Object.keys(tree).sort((a,b) => (a==="⚡️IMPORTANT⚡️" ? -1 : b==="⚡️IMPORTANT⚡️" ? 1 : saved.indexOf(a)-saved.indexOf(b))).forEach(k => renderFolder(k, tree[k], side, 0));
-        });
-    }
-
-    function renderFolder(name, data, cont, d) {
-        const id = "f_" + btoa(unescape(encodeURIComponent(name + d))).replace(/[^a-z0-9]/gi, '');
-        const wrap = document.createElement('div'); wrap.className = 'folder-wrapper'; wrap.draggable = true; wrap.dataset.folderName = name;
-        wrap.innerHTML = `<div class="sidebar-item" style="padding-left:${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${name}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`;
-        wrap.addEventListener('dragstart', handleFolderDragStart); wrap.addEventListener('dragend', handleFolderDragEnd);
-        cont.appendChild(wrap);
-        const sub = document.getElementById(id + "_sub");
-        Object.keys(data._sub).forEach(sn => renderFolder(sn, data._sub[sn], sub, d+1));
-        data._notes.forEach(n => sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:${25+(d*15)}px;" onclick="loadNote('${n.id}')"><span>📜 ${n.title}</span><span style="opacity:0.5;" onclick="deleteNote('${n.id}', event)">🗑️</span></div>`));
-    }
-
-    // EDITOR ENGINE
-    function exec(cmd, val=null) { if(!isLocked) { document.getElementById('note-body').focus(); document.execCommand(cmd, false, val); } }
-    window.toggleEditMode = () => {
-        isLocked = !isLocked; document.body.classList.toggle('locked-mode', isLocked);
-        document.getElementById('note-body').contentEditable = !isLocked;
-        document.getElementById('note-title').readOnly = isLocked;
-        document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
-    };
-
-    window.insertImg = (e) => {
-        const r = new FileReader(); r.onload = (ev) => document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "75px", "75px"));
-        r.readAsDataURL(e.target.files[0]);
-    };
-
-    window.addTextBox = () => {
-        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="true" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px"));
-    };
-
-    window.addTable = () => {
-        const r = prompt("Rows:", "2"), c = prompt("Cols:", "2");
-        let html = '<table style="width:100%; border-collapse:collapse; border:1px solid var(--crimson);">'; 
-        for(let i=0; i<r; i++){ html+='<tr>'; for(let j=0; j<c; j++){ html+='<td contenteditable="true" style="border:1px solid var(--crimson); padding:5px;">...</td>'; } html+='</tr>'; } 
-        html+='</table>';
-        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(html, "table-relic", "280px"));
-    };
-
-    window.addCustomLink = () => {
-        const t = prompt("Title:"); const u = prompt("URL:"); if (!t || !u) return;
-        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<a href="${u}" target="_blank" style="color:var(--link-green); text-decoration:none; font-weight:bold;">${t}</a>`, "link-relic", "160px"));
-    };
-
-    function wrapRelic(c, cls, w, h) { return `<div class="relic-container ${cls}" style="left:5px; top:5px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content">${c}</div><div class="relic-footer"><div class="drag-handle">DRAG</div><div class="resize-handle"></div></div></div>`; }
-
-    // TOUCH & DELETE ENGINE (CONSTRAINED TO NOTE-BODY)
+    // RELIC TOUCH SYSTEM (CONSTRAINED TO NOTE-BODY)
     document.addEventListener('touchstart', (e) => {
-        const t = e.target; const c = t.closest('.relic-container'); if(isLocked || !c) return;
-        activeRelic = c; 
-        longPressTimer = setTimeout(() => { if(confirm("Erase relic?")) c.remove(); }, 800);
+        const target = e.target; const container = target.closest('.relic-container'); if (isLocked) return;
+        if (!container) { if (activeRelic) activeRelic.classList.remove('active-relic'); activeRelic = null; return; }
+        activeRelic = container; activeRelic.classList.add('active-relic');
+        longPressTimer = setTimeout(() => { if (confirm("Delete relic?")) { activeRelic.remove(); activeRelic = null; } }, 800);
         const touch = e.touches[0];
-        if(t.classList.contains('drag-handle')){ 
-            clearTimeout(longPressTimer); isDragging=true; 
-            startX=touch.clientX; startY=touch.clientY; 
-            startL=c.offsetLeft; startT=c.offsetTop; e.preventDefault(); 
-        }
-        else if(t.classList.contains('resize-handle')){ 
-            clearTimeout(longPressTimer); isResizing=true; 
-            startX=touch.clientX; startY=touch.clientY; 
-            startW=c.offsetWidth; startH=c.offsetHeight; e.preventDefault(); 
-        }
+        if (target.classList.contains('drag-handle')) { clearTimeout(longPressTimer); isDragging = true; startX = touch.clientX; startY = touch.clientY; startL = activeRelic.offsetLeft; startT = activeRelic.offsetTop; e.preventDefault(); }
+        else if (target.classList.contains('resize-handle')) { clearTimeout(longPressTimer); isResizing = true; startX = touch.clientX; startY = touch.clientY; startW = activeRelic.offsetWidth; startH = activeRelic.offsetHeight; e.preventDefault(); }
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
-        clearTimeout(longPressTimer); if(!isDragging && !isResizing) return;
-        const touch = e.touches[0]; 
-        const rect = document.getElementById('note-body').getBoundingClientRect();
-        
-        if(isDragging){ 
-            // Percentage-based horizontal movement relative to container width
-            let newLeft = ((startL + (touch.clientX - startX)) / rect.width) * 100;
-            // Strict Left/Right bounds
-            newLeft = Math.max(0, Math.min(newLeft, 95));
-            activeRelic.style.left = newLeft + '%'; 
-            
-            // Vertical movement
-            let newTop = startT + (touch.clientY - startY);
-            newTop = Math.max(0, newTop); // Bottom limit is natural scroll height
-            activeRelic.style.top = newTop + 'px'; 
-        }
-        else if(isResizing){ 
-            activeRelic.style.width = Math.max(40, startW + (touch.clientX - startX)) + 'px'; 
-            activeRelic.style.height = Math.max(40, startH + (touch.clientY - startY)) + 'px'; 
+        if (!isDragging && !isResizing) return;
+        const touch = e.touches[0]; const rect = document.getElementById('note-body').getBoundingClientRect();
+        if (isDragging) {
+            let newL = Math.max(0, startL + (touch.clientX - startX)); 
+            let newT = Math.max(0, startT + (touch.clientY - startY));
+            activeRelic.style.left = ((newL / rect.width) * 100) + '%';
+            activeRelic.style.top = newT + 'px';
+        } else if (isResizing) {
+            activeRelic.style.width = Math.max(80, startW + (touch.clientX - startX)) + 'px';
+            activeRelic.style.height = Math.max(40, startH + (touch.clientY - startY)) + 'px';
         }
         e.preventDefault();
     }, {passive: false});
 
     document.addEventListener('touchend', () => { clearTimeout(longPressTimer); isDragging = false; isResizing = false; });
 
-    // STORAGE & SYSTEM
-    function updateStorageMeter(data) { const size = JSON.stringify(data).length; const p = ((size / (1024**3)) * 100).toFixed(4); document.getElementById('storage-bar').style.width = p + '%'; document.getElementById('storage-text').innerText = p + '%'; }
-    window.saveQuick = () => { const id = currentEditingId || db.ref('notes').push().key; db.ref('notes/'+id).set({ title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now(), id: id }).then(() => alert("Saved to " + currentFolderName)); };
-    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + n.folder; }); };
-    window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; };
-    window.deleteNote = (id, e) => { e.stopPropagation(); if(confirm("Erase?")) db.ref('notes/'+id).remove(); };
-    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; };
-    window.exportToPDF = async () => { const { jsPDF } = window.jspdf; const canvas = await html2canvas(document.getElementById('note-body'), { backgroundColor: "#0a0a0a", scale: 2, useCORS: true }); const pdf = new jsPDF('p', 'mm', 'a4'); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width); pdf.save(`${document.getElementById('note-title').value || 'Note'}.pdf`); };
+    // EDITOR FUNCTIONS
+    function wrapRelic(content, cls, w="200px", h="auto") { return `<div class="relic-container ${cls}" style="left:5%; top:10px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content" contenteditable="false">${content}</div><div class="relic-footer" contenteditable="false"><div class="drag-handle" contenteditable="false">DRAG</div><div class="resize-handle" contenteditable="false"></div></div></div>`; }
+    window.addCustomLink = () => { const t = prompt("Title:"); const u = prompt("URL:", "https://"); if(t && u) document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<a href="${u}" target="_blank" style="color:var(--link-green)">${t}</a>`, "link-relic", "160px")); };
+    window.addTextBox = () => { document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="true" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px")); };
+    window.addTable = () => { const r = prompt("Rows:", "2"), c = prompt("Cols:", "2"); let html = '<table>'; for(let i=0; i<r; i++) { html += '<tr>'; for(let j=0; j<c; j++) { html += '<td contenteditable="true">...</td>'; } html += '</tr>'; } html += '</table>'; document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(html, "table-relic", "280px", "auto")); };
+    window.insertImg = (e) => { const reader = new FileReader(); reader.onload = (ev) => { document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "150px", "150px")); }; reader.readAsDataURL(e.target.files[0]); };
+
+    // SYSTEM
+    window.saveQuick = () => { const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now() }; db.ref('notes/' + (currentEditingId || db.ref('notes').push().key)).set(data).then(() => alert("Saved.")); };
+    function initApp() {
+        db.ref('notes').on('value', (snap) => {
+            const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
+            const data = snap.val(), notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [], tree = { "⚡️IMPORTANT⚡️": { _notes: [], _sub: {} }, "Recent Notes": { _notes: [], _sub: {} } };
+            notes.forEach(note => { const parts = (note.folder || "Recent Notes").split('/'); let cur = tree; parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i === parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; }); });
+            function render(obj, cont, d = 0) {
+                Object.keys(obj).sort((a,b) => (a==="⚡️IMPORTANT⚡️" ? -1 : b==="⚡️IMPORTANT⚡️" ? 1 : a.localeCompare(b))).forEach(key => {
+                    const id = "f_" + btoa(unescape(encodeURIComponent(key + d))).replace(/[^a-z0-9]/gi, '');
+                    cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`);
+                    const sub = document.getElementById(id + "_sub"); render(obj[key]._sub, sub, d+1);
+                    obj[key]._notes.forEach(n => { sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;" onclick="loadNote('${n.id}')"><span>📜 ${n.title}</span><span style="color:var(--silver); opacity:0.5;" onclick="deleteNote('${n.id}', event)">🗑️</span></div>`); });
+                });
+            }
+            render(tree, side);
+        });
+    }
+    window.loadNote = (id) => { db.ref('notes/'+id).once('value', (s) => { const n = s.val(); currentEditingId = id; currentFolderName = n.folder; document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body; document.getElementById('current-path-display').innerText = "Path: " + n.folder; if(!isLocked) toggleEditMode(); }); };
+    window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
+    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
+    window.handleLogout = () => auth.signOut().then(() => location.reload());
+    window.deleteNote = (id, e) => { e.stopPropagation(); if(confirm("Erase note?")) db.ref('notes/'+id).remove(); };
 </script>
 </body>
 </html>
