@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>AidenNotes | Fortress Elite</title>
+    <title>AidenNotes | Fortress Final</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -42,10 +42,13 @@
         .resize-handle { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; cursor: nwse-resize; z-index: 1200; background: linear-gradient(135deg, transparent 50%, var(--gold) 50%); }
         
         .relic-content { width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+        .relic-content[contenteditable="true"] { pointer-events: auto; }
         img { width: 100%; height: 100%; object-fit: contain; }
+        table { border-collapse: collapse; width: 100%; border: 1px solid var(--crimson); }
+        td { border: 1px solid var(--crimson); padding: 5px; }
 
         .sub-title-toolbar { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid var(--crimson); margin-bottom: 15px; align-items: center; background: rgba(0,0,0,0.4); border-radius: 5px; }
-        .tool-btn { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.65rem; border-radius: 3px; }
+        .tool-btn, .tool-select, .tool-color { background: var(--ink); border: 1px solid var(--crimson); color: var(--parchment); padding: 6px 8px; cursor: pointer; font-family: 'Cinzel'; font-size: 0.65rem; border-radius: 3px; outline: none; }
 
         #folder-picker-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:3000; align-items:center; justify-content:center; }
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 2000; display: flex; align-items: center; justify-content: center; }
@@ -92,8 +95,18 @@
             <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
             <div class="sub-title-toolbar">
                 <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
+                <button class="tool-btn" onclick="exec('undo')">↶</button>
+                <button class="tool-btn" onclick="exec('redo')">↷</button>
+                <select class="tool-select" onchange="exec('fontSize', this.value)">
+                    <option value="3">Size</option><option value="2">S</option><option value="4">M</option><option value="6">L</option>
+                </select>
                 <button class="tool-btn" onclick="exec('bold')">B</button>
+                <button class="tool-btn" onclick="exec('italic')">I</button>
+                <button class="tool-btn" onclick="exec('underline')">U</button>
+                <input type="color" class="tool-color" onchange="exec('foreColor', this.value)">
+                <button class="tool-btn" onclick="addCustomLink()">🔗</button>
                 <button class="tool-btn" onclick="document.getElementById('imgInput').click()">📷</button>
+                <button class="tool-btn" onclick="addTable()">📊</button>
                 <button class="tool-btn" onclick="addTextBox()">📄</button>
                 <button class="tool-btn" onclick="exportToPDF()">PDF</button>
                 <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
@@ -198,6 +211,24 @@
         const r = new FileReader(); r.onload = (ev) => document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "75px", "75px"));
         r.readAsDataURL(e.target.files[0]);
     };
+
+    window.addTextBox = () => {
+        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="true" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px"));
+    };
+
+    window.addTable = () => {
+        const r = prompt("Rows:", "2"), c = prompt("Cols:", "2");
+        let html = '<table style="width:100%; border-collapse:collapse; border:1px solid var(--crimson);">'; 
+        for(let i=0; i<r; i++){ html+='<tr>'; for(let j=0; j<c; j++){ html+='<td contenteditable="true" style="border:1px solid var(--crimson); padding:5px;">...</td>'; } html+='</tr>'; } 
+        html+='</table>';
+        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(html, "table-relic", "280px"));
+    };
+
+    window.addCustomLink = () => {
+        const t = prompt("Title:"); const u = prompt("URL:"); if (!t || !u) return;
+        document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<a href="${u}" target="_blank" style="color:var(--link-green); text-decoration:none; font-weight:bold;">${t}</a>`, "link-relic", "160px"));
+    };
+
     function wrapRelic(c, cls, w, h) { return `<div class="relic-container ${cls}" style="left:5%; top:10px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content">${c}</div><div class="relic-footer"><div class="drag-handle">DRAG</div><div class="resize-handle"></div></div></div>`; }
 
     // TOUCH & DELETE ENGINE
@@ -226,7 +257,7 @@
     window.toggleFolder = (id) => { const el = document.getElementById(id); el.style.display = el.style.display === 'block' ? 'none' : 'block'; };
     window.deleteNote = (id, e) => { e.stopPropagation(); if(confirm("Erase?")) db.ref('notes/'+id).remove(); };
     window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; };
-    window.exportToPDF = async () => { const { jsPDF } = window.jspdf; const canvas = await html2canvas(document.getElementById('note-body'), { backgroundColor: "#0a0a0a", scale: 2 }); const pdf = new jsPDF('p', 'mm', 'a4'); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width); pdf.save(`${document.getElementById('note-title').value}.pdf`); };
+    window.exportToPDF = async () => { const { jsPDF } = window.jspdf; const canvas = await html2canvas(document.getElementById('note-body'), { backgroundColor: "#0a0a0a", scale: 2, useCORS: true }); const pdf = new jsPDF('p', 'mm', 'a4'); pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width); pdf.save(`${document.getElementById('note-title').value || 'Note'}.pdf`); };
 </script>
 </body>
 </html>
