@@ -68,6 +68,9 @@
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 3000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
         body:not(.locked-mode) .relic-container.active-relic { border: 2px solid var(--crimson); }
+        .note-actions { display: flex; gap: 8px; align-items: center; }
+        .action-icon { opacity: 0.4; transition: opacity 0.2s; }
+        .action-icon:hover { opacity: 1; }
     </style>
 </head>
 <body class="locked-mode">
@@ -219,7 +222,6 @@
                 parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i === parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; });
             });
             function render(obj, cont, d = 0) {
-                // PINNING LOGIC: Sort with pins at top
                 const keys = Object.keys(obj).sort((a, b) => {
                     if (a === "Recent Notes" || a === "⚡️IMPORTANT ⚡️") return -1;
                     if (b === "Recent Notes" || b === "⚡️IMPORTANT ⚡️") return 1;
@@ -229,12 +231,24 @@
                     const id = "f_" + btoa(unescape(encodeURIComponent(key + d))).replace(/[^a-z0-9]/gi, '');
                     cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`);
                     const sub = document.getElementById(id + "_sub"); render(obj[key]._sub, sub, d+1);
-                    obj[key]._notes.forEach(n => { sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;" onclick="loadNote('${n.id}')"><span>📜 ${n.title}</span><span style="color:var(--silver); opacity:0.5;" onclick="deleteNote('${n.id}', event)">🗑️</span></div>`); });
+                    obj[key]._notes.forEach(n => { sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;" onclick="loadNote('${n.id}')"><span>📜 ${n.title}</span><div class="note-actions"><span class="action-icon" onclick="moveNote('${n.id}', event)">📁</span><span class="action-icon" style="color:var(--silver); opacity:0.5;" onclick="deleteNote('${n.id}', event)">🗑️</span></div></div>`); });
                 });
             }
             render(tree, side);
         });
     }
+
+    window.moveNote = (id, e) => {
+        e.stopPropagation();
+        const newPath = prompt("Enter new folder path (e.g. ⚡️IMPORTANT ⚡️/Archive):");
+        if(newPath) {
+            db.ref('notes/' + id).update({ folder: newPath });
+            if(currentEditingId === id) {
+                currentFolderName = newPath;
+                document.getElementById('current-path-display').innerText = "Path: " + newPath;
+            }
+        }
+    };
 
     window.loadNote = (id) => { 
         db.ref('notes/'+id).once('value', (s) => { 
@@ -249,7 +263,7 @@
     window.openFolders = () => { const n = prompt("Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.handleLogout = () => auth.signOut().then(() => location.reload());
-    window.deleteNote = (id, e) => { e.stopPropagation(); if(confirm("Erase note?")) db.ref('notes/'+id).remove(); };
+    window.deleteNote = (id, e) => { e.stopPropagation(); if(confirm("Are you sure you want to erase this note? This cannot be undone.")) db.ref('notes/'+id).remove(); };
 </script>
 </body>
 </html>
