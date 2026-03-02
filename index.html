@@ -64,7 +64,6 @@
         table { border-collapse: collapse; width: 100%; color: var(--parchment); border: 1px solid var(--crimson); table-layout: fixed; }
         td { border: 1px solid var(--crimson); padding: 8px; min-height: 35px; word-wrap: break-word; vertical-align: top; overflow: hidden; }
         td img { width: 3cm; height: 3cm; object-fit: cover; display: block; cursor: pointer; align-self: flex-start; margin-bottom: 5px; -webkit-user-select: auto; user-select: auto; pointer-events: auto !important; }
-        .relic-container:not(.table-relic) img { width: 100%; height: 100%; display: block; object-fit: contain; pointer-events: none; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 3000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
@@ -158,56 +157,22 @@
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
 
-    const isOverlapping = (r1, r2) => !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
-
-    document.addEventListener('click', (e) => {
-        if (!isLocked && e.target.tagName === 'IMG' && e.target.closest('td')) {
-            const sz = prompt("Resize Table Image? (1:3cm Thumb, 2:Medium, 3:Full Width)", "1");
-            if (sz === "1") { e.target.style.width = "3cm"; e.target.style.height = "3cm"; e.target.style.objectFit = "cover"; }
-            else if (sz === "2") { e.target.style.width = "60%"; e.target.style.height = "auto"; e.target.style.objectFit = "contain"; }
-            else if (sz === "3") { e.target.style.width = "100%"; e.target.style.height = "auto"; e.target.style.objectFit = "contain"; }
-        }
-    });
-
     document.addEventListener('touchstart', (e) => {
         const target = e.target;
         const container = target.closest('.relic-container'); if (isLocked) return;
         if (!container) { if (activeRelic) activeRelic.classList.remove('active-relic'); activeRelic = null; return; }
-        
         activeRelic = container; activeRelic.classList.add('active-relic');
         longPressTimer = setTimeout(() => { if (confirm("Delete relic?")) { activeRelic.remove(); activeRelic = null; } }, 800);
-        
         const touch = e.touches[0];
-        if (target.classList.contains('drag-handle')) {
-            clearTimeout(longPressTimer); isDragging = true; startX = touch.clientX; startY = touch.clientY;
-            startL = activeRelic.offsetLeft; startT = activeRelic.offsetTop; e.preventDefault();
-        } else if (target.classList.contains('resize-handle')) {
-            clearTimeout(longPressTimer); isResizing = true; startX = touch.clientX; startY = touch.clientY;
-            startW = activeRelic.offsetWidth; startH = activeRelic.offsetHeight; e.preventDefault();
-        }
+        if (target.classList.contains('drag-handle')) { clearTimeout(longPressTimer); isDragging = true; startX = touch.clientX; startY = touch.clientY; startL = activeRelic.offsetLeft; startT = activeRelic.offsetTop; e.preventDefault(); }
+        else if (target.classList.contains('resize-handle')) { clearTimeout(longPressTimer); isResizing = true; startX = touch.clientX; startY = touch.clientY; startW = activeRelic.offsetWidth; startH = activeRelic.offsetHeight; e.preventDefault(); }
     }, {passive: false});
 
     document.addEventListener('touchmove', (e) => {
         if (!isDragging && !isResizing) return;
-        const touch = e.touches[0]; const rect = document.getElementById('note-body').getBoundingClientRect();
-        const others = Array.from(document.querySelectorAll('.relic-container')).filter(r => r !== activeRelic);
-        let pL = activeRelic.style.left, pT = activeRelic.style.top, pW = activeRelic.style.width, pH = activeRelic.style.height;
-
-        if (isDragging) {
-            let nL = startL + (touch.clientX - startX); let nT = startT + (touch.clientY - startY);
-            pL = ((nL / rect.width) * 100) + '%'; pT = nT + 'px';
-        } else if (isResizing) {
-            pW = Math.max(80, startW + (touch.clientX - startX)) + 'px';
-            pH = Math.max(40, startH + (touch.clientY - startY)) + 'px';
-        }
-
-        const oldL = activeRelic.style.left, oldT = activeRelic.style.top, oldW = activeRelic.style.width, oldH = activeRelic.style.height;
-        activeRelic.style.left = pL; activeRelic.style.top = pT; activeRelic.style.width = pW; activeRelic.style.height = pH;
-
-        const cRect = activeRelic.getBoundingClientRect();
-        if (others.some(o => isOverlapping(cRect, o.getBoundingClientRect()))) {
-            activeRelic.style.left = oldL; activeRelic.style.top = oldT; activeRelic.style.width = oldW; activeRelic.style.height = oldH;
-        }
+        const touch = e.touches[0];
+        if (isDragging) { activeRelic.style.left = (startL + (touch.clientX - startX)) + 'px'; activeRelic.style.top = (startT + (touch.clientY - startY)) + 'px'; }
+        else if (isResizing) { activeRelic.style.width = (startW + (touch.clientX - startX)) + 'px'; activeRelic.style.height = (startH + (touch.clientY - startY)) + 'px'; }
         e.preventDefault();
     }, {passive: false});
 
@@ -229,33 +194,17 @@
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const sel = window.getSelection();
-            if (sel.rangeCount > 0) {
-                const cell = sel.getRangeAt(0).startContainer.parentElement?.closest('td');
-                if (cell) {
-                    const img = document.createElement('img'); 
-                    img.src = ev.target.result;
-                    img.style.width = "3cm"; img.style.height = "3cm"; img.style.objectFit = "cover";
-                    sel.getRangeAt(0).insertNode(img); return;
-                }
-            }
-            document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "250px", "200px") + "<span>&nbsp;</span>");
+            document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}" style="width:3cm; height:3cm; object-fit:cover;">`, "img-relic", "250px", "200px") + "<span>&nbsp;</span>");
         };
         reader.readAsDataURL(e.target.files[0]);
     };
 
     window.saveQuick = () => {
         const noteId = currentEditingId || db.ref('notes').push().key;
-        const data = { 
-            title: document.getElementById('note-title').value || "Untitled", 
-            body: document.getElementById('note-body').innerHTML, 
-            folder: currentFolderName, 
-            timestamp: Date.now() 
-        };
+        const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now() };
         db.ref('notes/' + noteId).set(data).then(() => {
             currentEditingId = noteId;
-            const now = new Date();
-            document.getElementById('save-status').innerText = "Last Saved: " + now.toLocaleTimeString();
+            document.getElementById('save-status').innerText = "Last Saved: " + new Date().toLocaleTimeString();
             document.getElementById('save-status').style.color = "var(--link-green)";
             setTimeout(() => document.getElementById('save-status').style.color = "var(--silver)", 2000);
         });
@@ -264,13 +213,19 @@
     function initApp() {
         db.ref('notes').on('value', (snap) => {
             const side = document.getElementById('folder-list-sidebar'); side.innerHTML = "";
-            const data = snap.val(), notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [], tree = { "Recent Notes": { _notes: [], _sub: {} } };
+            const data = snap.val(), notes = data ? Object.keys(data).map(k => ({id:k, ...data[k]})).reverse() : [], tree = { "Recent Notes": { _notes: [], _sub: {} }, "⚡️IMPORTANT ⚡️": { _notes: [], _sub: {} } };
             notes.forEach(note => {
                 const parts = (note.folder || "Recent Notes").split('/'); let cur = tree;
                 parts.forEach((p, i) => { if(!cur[p]) cur[p] = {_notes:[], _sub:{}}; if(i === parts.length-1) cur[p]._notes.push(note); cur = cur[p]._sub; });
             });
             function render(obj, cont, d = 0) {
-                Object.keys(obj).sort().forEach(key => {
+                // PINNING LOGIC: Sort with pins at top
+                const keys = Object.keys(obj).sort((a, b) => {
+                    if (a === "Recent Notes" || a === "⚡️IMPORTANT ⚡️") return -1;
+                    if (b === "Recent Notes" || b === "⚡️IMPORTANT ⚡️") return 1;
+                    return a.localeCompare(b);
+                });
+                keys.forEach(key => {
                     const id = "f_" + btoa(unescape(encodeURIComponent(key + d))).replace(/[^a-z0-9]/gi, '');
                     cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`);
                     const sub = document.getElementById(id + "_sub"); render(obj[key]._sub, sub, d+1);
@@ -283,28 +238,16 @@
 
     window.loadNote = (id) => { 
         db.ref('notes/'+id).once('value', (s) => { 
-            const n = s.val(); 
-            currentEditingId = id; 
-            currentFolderName = n.folder || "Recent Notes"; 
-            document.getElementById('note-title').value = n.title; 
-            document.getElementById('note-body').innerHTML = n.body; 
-            document.getElementById('current-path-display').innerText = "Path: " + currentFolderName; 
-            document.getElementById('save-status').innerText = "Fragment Loaded";
+            const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes";
+            document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body;
+            document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
             if(isLocked) toggleEditMode(); 
         }); 
     };
     
+    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
     window.openFolders = () => { const n = prompt("Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
     window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
-    
-    window.startNewNote = () => { 
-        currentEditingId = null; 
-        document.getElementById('note-title').value = ""; 
-        document.getElementById('note-body').innerHTML = ""; 
-        document.getElementById('save-status').innerText = "New Fragment Initialized";
-        if(isLocked) toggleEditMode(); 
-    };
-
     window.handleLogout = () => auth.signOut().then(() => location.reload());
     window.deleteNote = (id, e) => { e.stopPropagation(); if(confirm("Erase note?")) db.ref('notes/'+id).remove(); };
 </script>
