@@ -55,6 +55,10 @@
 
         .relic-container { position: absolute; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); touch-action: none; z-index: 5; display: flex; flex-direction: column; }
         .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+        
+        /* Updated for scaling image relics */
+        .img-relic .relic-content img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+
         .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 1100; background: var(--crimson); display: none; align-items: center; justify-content: center; }
         body:not(.locked-mode) .relic-container.active-relic .relic-footer { display: flex; }
         .drag-handle { flex-grow: 1; color: white; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel'; font-size: 9px; font-weight: bold; cursor: move; height: 100%; }
@@ -63,13 +67,13 @@
 
         table { border-collapse: collapse; width: 100%; color: var(--parchment); border: 1px solid var(--crimson); table-layout: fixed; }
         td { border: 1px solid var(--crimson); padding: 8px; min-height: 35px; word-wrap: break-word; vertical-align: top; overflow: hidden; }
-        td img { width: 3cm; height: 3cm; object-fit: cover; display: block; cursor: pointer; align-self: flex-start; margin-bottom: 5px; -webkit-user-select: auto; user-select: auto; pointer-events: auto !important; }
+        td img { width: 3cm; height: 3cm; object-fit: cover; display: block; cursor: pointer; align-self: flex-start; margin-bottom: 5px; }
 
         #login-screen { position: fixed; inset: 0; background: var(--ink); z-index: 3000; display: flex; align-items: center; justify-content: center; }
         .locked-mode .sub-title-toolbar > *:not(.mode-toggle-btn) { display: none !important; }
         body:not(.locked-mode) .relic-container.active-relic { border: 2px solid var(--crimson); }
         .note-actions { display: flex; gap: 8px; align-items: center; }
-        .action-icon { opacity: 0.4; transition: opacity 0.2s; }
+        .action-icon { opacity: 0.4; transition: opacity 0.2s; cursor: pointer; }
         .action-icon:hover { opacity: 1; }
     </style>
 </head>
@@ -181,7 +185,17 @@
 
     document.addEventListener('touchend', () => { clearTimeout(longPressTimer); isDragging = false; isResizing = false; });
 
-    function wrapRelic(content, cls = "", w="200px", h="auto") {
+    // Handles Table image scaling choices
+    document.addEventListener('click', (e) => {
+        if (!isLocked && e.target.tagName === 'IMG' && e.target.closest('td')) {
+            const sz = prompt("Resize Table Image? (1:3cm Thumb, 2:Medium, 3:Full Width)", "1");
+            if (sz === "1") { e.target.style.width = "3cm"; e.target.style.height = "3cm"; e.target.style.objectFit = "cover"; }
+            else if (sz === "2") { e.target.style.width = "60%"; e.target.style.height = "auto"; e.target.style.objectFit = "contain"; }
+            else if (sz === "3") { e.target.style.width = "100%"; e.target.style.height = "auto"; e.target.style.objectFit = "contain"; }
+        }
+    });
+
+    function wrapRelic(content, cls = "", w="3cm", h="3cm") {
         return `<div class="relic-container ${cls}" style="left:5%; top:10px; width:${w}; height:${h};" contenteditable="false"><div class="relic-content" contenteditable="false">${content}</div><div class="relic-footer" contenteditable="false"><div class="drag-handle" contenteditable="false">DRAG</div><div class="resize-handle" contenteditable="false"></div></div></div>`;
     }
 
@@ -189,15 +203,29 @@
         const state = isLocked ? "false" : "true";
         document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<div contenteditable="${state}" style="width:100%; height:100%; outline:none; color:inherit; padding:10px;">Text...</div>`, "text-box-relic", "200px", "100px") + "<div><br></div>");
     };
+
     window.addTable = () => {
         const r = prompt("Rows:", "2"), c = prompt("Cols:", "2"); const state = isLocked ? "false" : "true";
         let html = '<table>'; for(let i=0; i<r; i++) { html += '<tr>'; for(let j=0; j<c; j++) { html += `<td contenteditable="${state}">...</td>`; } html += '</tr>'; } html += '</table>';
         document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(html, "table-relic", "280px", "auto") + "<div><br></div>");
     };
+
     window.insertImg = (e) => {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}" style="width:3cm; height:3cm; object-fit:cover;">`, "img-relic", "250px", "200px") + "<span>&nbsp;</span>");
+            const sel = window.getSelection();
+            const cell = (sel.rangeCount > 0) ? sel.getRangeAt(0).startContainer.parentElement?.closest('td') : null;
+            
+            if (cell) {
+                // Table Cell Insert: Fixed 3x3cm Thumbnail
+                const img = document.createElement('img'); 
+                img.src = ev.target.result;
+                img.style.width = "3cm"; img.style.height = "3cm"; img.style.objectFit = "cover";
+                sel.getRangeAt(0).insertNode(img);
+            } else {
+                // Free Relic Insert: Default 3x3cm but scaled to frame
+                document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "3cm", "3cm") + "<span>&nbsp;</span>");
+            }
         };
         reader.readAsDataURL(e.target.files[0]);
     };
