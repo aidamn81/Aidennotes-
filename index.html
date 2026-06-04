@@ -12,7 +12,7 @@
         html, body { height: 100%; margin: 0; overflow: hidden; background-color: var(--ink); color: var(--parchment); font-family: 'Playfair Display', serif; }
         
         @media print {
-            #sidebar, .sub-title-toolbar, #login-screen, .relic-footer, #current-path-display, #edit-lock-btn, #save-status { display: none !important; }
+            #top-nav-bar, .sub-title-toolbar, #login-screen, .relic-footer, #current-path-display, #edit-lock-btn, #save-status { display: none !important; }
             #main-editor { background: var(--parchment) !important; color: #000 !important; width: 100% !important; height: auto !important; position: static !important; }
             #note-title { color: #000 !important; border-bottom: 2px solid #000 !important; }
             #note-body { color: #000 !important; padding: 0 !important; }
@@ -21,14 +21,37 @@
             .app-container { display: block !important; }
         }
 
-        .app-container { display: none; height: 100vh; width: 100vw; flex-direction: row; }
-        #sidebar { width: 240px; background-color: var(--oxblood); border-right: 1px solid var(--crimson); display: flex; flex-direction: column; overflow-y: auto; z-index: 100; flex-shrink: 0; }
+        .app-container { display: none; height: 100vh; width: 100vw; flex-direction: column; }
         
-        @media (max-width: 768px) {
-            .app-container { flex-direction: column; }
-            #sidebar { width: 100%; height: 30vh; border-right: none; border-bottom: 2px solid var(--crimson); }
-            #main-editor { height: 70vh; width: 100%; }
+        /* Floating Dropdown and Top Nav Hierarchy */
+        #top-nav-bar { 
+            background-color: var(--oxblood); 
+            border-bottom: 1px solid var(--crimson); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 8px 15px; 
+            z-index: 2500; 
+            position: relative; 
         }
+        .nav-brand { font-family: 'Cinzel'; font-size: 0.9rem; color: var(--crimson); letter-spacing: 1px; }
+        .nav-controls { display: flex; gap: 8px; align-items: center; }
+
+        #folder-dropdown-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 60vh;
+            background-color: var(--oxblood);
+            border-bottom: 2px solid var(--crimson);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 2400;
+        }
+        #folder-dropdown-container.show { display: flex; }
 
         #main-editor { flex-grow: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #1a0505 0%, #0a0a0a 100%); position: relative; overflow: hidden; }
         .sidebar-item { padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(139,0,0,0.1); font-family: 'Cinzel'; font-size: 0.7rem; display: flex; justify-content: space-between; align-items: center; }
@@ -56,7 +79,6 @@
         .relic-container { position: absolute; border: 1px solid rgba(139,0,0,0.2); background: rgba(0,0,0,0.3); touch-action: none; z-index: 5; display: flex; flex-direction: column; }
         .relic-content { width: 100%; height: 100%; overflow: hidden; position: relative; display: flex; flex-direction: column; }
         
-        /* Updated for scaling image relics */
         .img-relic .relic-content img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 
         .relic-footer { position: absolute; bottom: -35px; left: -2px; width: calc(100% + 4px); height: 35px; z-index: 1100; background: var(--crimson); display: none; align-items: center; justify-content: center; }
@@ -89,11 +111,20 @@
 </div>
 
 <div class="app-container" id="app">
-    <aside id="sidebar">
-        <div class="sidebar-item" style="color:var(--crimson); font-weight:bold; justify-content:center; background:var(--oxblood); position:sticky; top:0; z-index:10;" onclick="startNewNote()">✨ NEW NOTE</div>
-        <div id="folder-list-sidebar"></div>
-        <div class="sidebar-item" style="color:var(--silver); margin-top:auto;" onclick="handleLogout()">🚪 EXIT</div>
-    </aside>
+    <!-- Pinned Nav Bar on top of Editing Platform -->
+    <header id="top-nav-bar">
+        <div class="nav-brand">FORTRESS</div>
+        <div class="nav-controls">
+            <button class="tool-btn" style="background:var(--crimson); font-weight:bold;" onclick="toggleFolderDropdown(event)">📁 DIR / FOLDERS</button>
+            <button class="tool-btn" onclick="startNewNote()">✨ NEW NOTE</button>
+            <button class="tool-btn" style="color:var(--silver);" onclick="handleLogout()">🚪 EXIT</button>
+        </div>
+        
+        <!-- Collapsible scrollable menu shelf -->
+        <div id="folder-dropdown-container">
+            <div id="folder-list-sidebar"></div>
+        </div>
+    </header>
 
     <main id="main-editor">
         <div class="scroll-content" id="editor-viewport">
@@ -122,7 +153,7 @@
                     <button class="tool-btn" onclick="addTextBox()">📄</button>
                     <button class="tool-btn" onclick="window.print()">📄 PDF</button>
                     <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
-                    <button class="tool-btn" onclick="openFolders()">DIR</button>
+                    <button class="tool-btn" onclick="openFolders()">NEW PATH</button>
                     <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
                 </div>
             </div>
@@ -161,6 +192,19 @@
         innerEditables.forEach(el => el.setAttribute('contenteditable', !isLocked));
     };
 
+    window.toggleFolderDropdown = (e) => {
+        if(e) e.stopPropagation();
+        document.getElementById('folder-dropdown-container').classList.toggle('show');
+    };
+
+    // Close the navigation drop shelf safely when tapping outside
+    document.addEventListener('click', (e) => {
+        const shelf = document.getElementById('folder-dropdown-container');
+        if(shelf && shelf.classList.contains('show') && !e.target.closest('#top-nav-bar')) {
+            shelf.classList.remove('show');
+        }
+    });
+
     window.handleLogin = () => { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); };
     auth.onAuthStateChanged(u => { if(u && u.uid === MASTER_UID) { document.getElementById('app').style.display='flex'; document.getElementById('login-screen').style.display='none'; initApp(); } });
 
@@ -185,7 +229,6 @@
 
     document.addEventListener('touchend', () => { clearTimeout(longPressTimer); isDragging = false; isResizing = false; });
 
-    // Handles Table image scaling choices
     document.addEventListener('click', (e) => {
         if (!isLocked && e.target.tagName === 'IMG' && e.target.closest('td')) {
             const sz = prompt("Resize Table Image? (1:3cm Thumb, 2:Medium, 3:Full Width)", "1");
@@ -217,13 +260,11 @@
             const cell = (sel.rangeCount > 0) ? sel.getRangeAt(0).startContainer.parentElement?.closest('td') : null;
             
             if (cell) {
-                // Table Cell Insert: Fixed 3x3cm Thumbnail
                 const img = document.createElement('img'); 
                 img.src = ev.target.result;
                 img.style.width = "3cm"; img.style.height = "3cm"; img.style.objectFit = "cover";
                 sel.getRangeAt(0).insertNode(img);
             } else {
-                // Free Relic Insert: Default 3x3cm but scaled to frame
                 document.getElementById('note-body').insertAdjacentHTML('beforeend', wrapRelic(`<img src="${ev.target.result}">`, "img-relic", "3cm", "3cm") + "<span>&nbsp;</span>");
             }
         };
@@ -257,7 +298,7 @@
                 });
                 keys.forEach(key => {
                     const id = "f_" + btoa(unescape(encodeURIComponent(key + d))).replace(/[^a-z0-9]/gi, '');
-                    cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}')">📁 ${key}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`);
+                    cont.insertAdjacentHTML('beforeend', `<div class="sidebar-item folder-header" style="padding-left: ${12+(d*15)}px" onclick="toggleFolder('${id}', event)">📁 ${key}</div><div id="${id}" style="display:none;"><div id="${id}_sub"></div></div>`);
                     const sub = document.getElementById(id + "_sub"); render(obj[key]._sub, sub, d+1);
                     obj[key]._notes.forEach(n => { sub.insertAdjacentHTML('beforeend', `<div class="sidebar-item" style="font-size:0.6rem; padding-left:20px;" onclick="loadNote('${n.id}')"><span>📜 ${n.title}</span><div class="note-actions"><span class="action-icon" onclick="moveNote('${n.id}', event)">📁</span><span class="action-icon" style="color:var(--silver); opacity:0.5;" onclick="deleteNote('${n.id}', event)">🗑️</span></div></div>`); });
                 });
@@ -284,12 +325,13 @@
             document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body;
             document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
             if(isLocked) toggleEditMode(); 
+            document.getElementById('folder-dropdown-container').classList.remove('show');
         }); 
     };
     
-    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); };
+    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); document.getElementById('folder-dropdown-container').classList.remove('show'); };
     window.openFolders = () => { const n = prompt("Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
-    window.toggleFolder = (id) => { const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
+    window.toggleFolder = (id, e) => { if(e) e.stopPropagation(); const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.handleLogout = () => auth.signOut().then(() => location.reload());
     window.deleteNote = (id, e) => { e.stopPropagation(); if(confirm("Are you sure you want to erase this note? This cannot be undone.")) db.ref('notes/'+id).remove(); };
 </script>
