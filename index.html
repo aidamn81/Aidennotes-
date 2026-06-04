@@ -99,7 +99,7 @@
         .action-icon:hover { opacity: 1; }
     </style>
 </head>
-<body class="locked-mode">
+<body class="unlocked-mode"> <!-- Boot straight into an editable state -->
 
 <div id="login-screen">
     <div class="login-box" style="background:var(--oxblood); padding:40px; border:2px solid var(--crimson); text-align:center;">
@@ -129,10 +129,10 @@
     <main id="main-editor">
         <div class="scroll-content" id="editor-viewport">
             <div class="sticky-header">
-                <input type="text" id="note-title" placeholder="Untitled Fragment..." readonly>
+                <input type="text" id="note-title" placeholder="Untitled Fragment...">
                 <div id="current-path-display" style="font-family:'Cinzel'; font-size:0.6rem; color:var(--silver);">Path: Recent Notes</div>
                 <div class="sub-title-toolbar">
-                    <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🛡️ EDIT</button>
+                    <button class="tool-btn mode-toggle-btn" id="edit-lock-btn" onclick="toggleEditMode()">🔓 LOCK</button>
                     <button class="tool-btn" onclick="exec('undo')">↶</button>
                     <button class="tool-btn" onclick="exec('redo')">↷</button>
                     <button class="tool-btn" onclick="exec('bold')">B</button>
@@ -152,12 +152,12 @@
                     <button class="tool-btn" onclick="addTable()">📊</button>
                     <button class="tool-btn" onclick="addTextBox()">📄</button>
                     <button class="tool-btn" onclick="window.print()">📄 PDF</button>
-                    <button class="tool-btn" style="background:var(--crimson); margin-left:auto;" onclick="saveQuick()">SAVE</button>
+                    <button class="tool-btn" style="background:var(--crimson); font-weight:bold; margin-left:auto;" onclick="saveAndLock()">💾 SAVE & LOCK</button>
                     <button class="tool-btn" onclick="openFolders()">NEW PATH</button>
                     <input type="file" id="imgInput" hidden accept="image/*" onchange="insertImg(event)">
                 </div>
             </div>
-            <div id="note-body" contenteditable="false"></div>
+            <div id="note-body" contenteditable="true"></div>
             <div id="save-status">Note Status: Fragment Loaded</div>
         </div>
     </main>
@@ -172,7 +172,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database(), auth = firebase.auth();
     const MASTER_UID = "L4aYFgfnNsPA7wy5FasTQkXPTpK2";
-    let currentEditingId = null, currentFolderName = "Recent Notes", isLocked = true;
+    let currentEditingId = null, currentFolderName = "Recent Notes", isLocked = false; // Start initialized as open
     let activeRelic = null, isDragging = false, isResizing = false, startX, startY, startW, startH, startL, startT;
     let longPressTimer;
 
@@ -182,9 +182,15 @@
         document.execCommand(cmd, false, val);
     }
     
-    window.toggleEditMode = () => {
-        isLocked = !isLocked;
-        document.body.classList.toggle('locked-mode', isLocked);
+    window.setLockState = (shouldLock) => {
+        isLocked = shouldLock;
+        if(isLocked) {
+            document.body.classList.remove('unlocked-mode');
+            document.body.classList.add('locked-mode');
+        } else {
+            document.body.classList.remove('locked-mode');
+            document.body.classList.add('unlocked-mode');
+        }
         document.getElementById('note-body').contentEditable = !isLocked;
         document.getElementById('note-title').readOnly = isLocked;
         document.getElementById('edit-lock-btn').innerHTML = isLocked ? "🛡️ EDIT" : "🔓 LOCK";
@@ -192,12 +198,15 @@
         innerEditables.forEach(el => el.setAttribute('contenteditable', !isLocked));
     };
 
+    window.toggleEditMode = () => {
+        setLockState(!isLocked);
+    };
+
     window.toggleFolderDropdown = (e) => {
         if(e) e.stopPropagation();
         document.getElementById('folder-dropdown-container').classList.toggle('show');
     };
 
-    // Close the navigation drop shelf safely when tapping outside
     document.addEventListener('click', (e) => {
         const shelf = document.getElementById('folder-dropdown-container');
         if(shelf && shelf.classList.contains('show') && !e.target.closest('#top-nav-bar')) {
@@ -274,11 +283,17 @@
     window.saveQuick = () => {
         const noteId = currentEditingId || db.ref('notes').push().key;
         const data = { title: document.getElementById('note-title').value || "Untitled", body: document.getElementById('note-body').innerHTML, folder: currentFolderName, timestamp: Date.now() };
-        db.ref('notes/' + noteId).set(data).then(() => {
+        return db.ref('notes/' + noteId).set(data).then(() => {
             currentEditingId = noteId;
             document.getElementById('save-status').innerText = "Last Saved: " + new Date().toLocaleTimeString();
             document.getElementById('save-status').style.color = "var(--link-green)";
             setTimeout(() => document.getElementById('save-status').style.color = "var(--silver)", 2000);
+        });
+    };
+
+    window.saveAndLock = () => {
+        saveQuick().then(() => {
+            setLockState(true);
         });
     };
 
@@ -305,6 +320,8 @@
             }
             render(tree, side);
         });
+        // Assure editor is hot on start
+        setLockState(false);
     }
 
     window.moveNote = (id, e) => {
@@ -324,12 +341,12 @@
             const n = s.val(); currentEditingId = id; currentFolderName = n.folder || "Recent Notes";
             document.getElementById('note-title').value = n.title; document.getElementById('note-body').innerHTML = n.body;
             document.getElementById('current-path-display').innerText = "Path: " + currentFolderName;
-            if(isLocked) toggleEditMode(); 
+            setLockState(false); // Automatically make loaded notes editable instantly
             document.getElementById('folder-dropdown-container').classList.remove('show');
         }); 
     };
     
-    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; if(isLocked) toggleEditMode(); document.getElementById('folder-dropdown-container').classList.remove('show'); };
+    window.startNewNote = () => { currentEditingId = null; document.getElementById('note-title').value = ""; document.getElementById('note-body').innerHTML = ""; setLockState(false); document.getElementById('folder-dropdown-container').classList.remove('show'); };
     window.openFolders = () => { const n = prompt("Path:"); if(n) { currentFolderName = n; document.getElementById('current-path-display').innerText = "Path: " + n; } };
     window.toggleFolder = (id, e) => { if(e) e.stopPropagation(); const el = document.getElementById(id); if(el) el.style.display = (el.style.display === 'block') ? 'none' : 'block'; };
     window.handleLogout = () => auth.signOut().then(() => location.reload());
